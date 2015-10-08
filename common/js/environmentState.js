@@ -26,23 +26,21 @@ EnvironmentState.prototype.step = function(){
 
 	ret.food = [];
 	for(var x = 0; x < this.food.length; x++){
-		ret.food.push(this.food[x]);
+		var temp = this.food[x].step()
+		temp && ret.food.push(temp);
 	}
 
-	for(var x = this.food.length; x < Settings.foodStartAmount; x++){
+	for(var x = ret.food.length; x < Settings.foodStartAmount; x++){
+		console.log("!")
 		ret.food.push(new Food(true));
 	}
 	
 
 	for(var x = 0; x < ret.players.length; x++){
 		for(var y = 0; y < ret.food.length; y++){
-			if (ret.players[x].places[0].dist(ret.food[y].location) < Settings.foodMaxSize){
-				console.log("!")
-				ret.players[x] = ret.players[x].eatFood();
-				ret.players[x] = ret.players[x].eatFood();
-				ret.players[x] = ret.players[x].eatFood();
-				ret.players[x] = ret.players[x].eatFood();
-				ret.food.splice(y,1);
+			if (ret.players[x].places[0].dist(ret.food[y].location) < Settings.foodMaxSize && !ret.food[y].shrinking){
+				ret.players[x] = ret.players[x].eatFood(Settings.foodValue);
+				ret.food[y].shrinking = true;
 			}
 		}
 	}

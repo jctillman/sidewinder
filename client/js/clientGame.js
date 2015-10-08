@@ -9,9 +9,9 @@ var playGame = function(gameState, appState, playerIndex){
 
 	//console.log("!")
 
-	var graphicsLoop = setInterval(Utilities.timed(true, function(){
+	var graphicsLoop = setInterval(Utilities.timed(false, function(){
 
-		//console.log("!");
+
 		Draw.clear(appState, gameState, playerIndex);
 		Draw.self(appState, gameState, playerIndex);
 		Draw.others(appState, gameState, playerIndex);

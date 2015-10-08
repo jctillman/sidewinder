@@ -6,13 +6,12 @@ var characterDraw = function(ctx, cnv, plyr, off){
   ctx.strokeStyle = "#ff0000";
   ctx.lineWidth = 3;
   pth.moveTo(plyr.places[0].x+off.x, plyr.places[0].y+off.y);
-  for(var x = 1; x < plyr.places.length; x++){
+  for(var x = 0; x < plyr.places.length - 1; x++){
   	if (x % 25 == 0){
-  		ctx.strokeStyle = ((ctx.strokeStyle.toString() == '#ff0000') ? "#000" : "#f00");
-  		console.log(ctx.strokeStyle.toString()); 
   		ctx.stroke(pth);
-  		var pth = new Path2D();
-  		pth.moveTo(plyr.places[x-1].x+off.x, plyr.places[x-1].y+off.y);
+  		pth = new Path2D();
+  		ctx.strokeStyle = ((ctx.strokeStyle.toString() == '#ff0000') ? "#000000" : "#ff0000");
+  		pth.moveTo(plyr.places[x].x+off.x, plyr.places[x].y+off.y);
   	}
   	pth.lineTo(plyr.places[x].x+off.x,plyr.places[x].y+off.y)
   }
@@ -63,24 +62,20 @@ var Draw = {
 		var off = new Vector( -playSpot.x+0.5*cnv.width, -playSpot.y+0.5*cnv.height);
 		gameState.players.forEach(function(plyr, index){
 			(playerIndex != index) && characterDraw(ctx, appState.game.canvas, plyr, off);
-		});
+		}); 
 
 		for (var x = 0; x < gameState.food.length; x++) {
 			var f = gameState.food[x]
 			if (f.location.dist(playSpot) < 1500){
 				var fs = f.location.add(off)
 				var max = Settings.foodMaxSize;
-				if (f.age > 0){
-					var size = 0.9 * max + 0.1 * max * Math.cos( f.age / Settings.foodCycleTime * 2 * Math.PI );
-				}else{
-					var size = max + (f.age / Settings.foodCycleTime * max);
-				}
+				var size = f.size;
+				// console.log(size);
 				ctx.beginPath();
 				ctx.arc(fs.x, fs.y, size, 0, 2 * Math.PI, false);
 				ctx.lineWidth = 1; 
-				ctx.fillStyle=f.color;
 				ctx.strokeStyle = f.color;
-				ctx.fill();
+				ctx.stroke();
 			}
 		}
 

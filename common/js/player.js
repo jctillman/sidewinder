@@ -24,6 +24,7 @@ var initializeLocation = function(x,y, direction, length){
 function Player(x,y, direction, length){
 	if(typeof x == 'number'){
 		this.mouseVector = new Vector(0,0);
+		this.amountToGrow = 0;
 		this.speed = 1;
 		this.segDist = 2;
 		this.kink = 0;
@@ -31,6 +32,7 @@ function Player(x,y, direction, length){
 	  	this.avLocation = averageSpot(this.places);		
 	}else{
 		this.speed = x.speed;
+		this.amountToGrow = x.amountToGrow;
 		this.segDist = x.segDist;
 		this.kink = x.kink;
 		this.mouseVector = Vector.copy(x.mouseVector);
@@ -57,11 +59,9 @@ Player.prototype.setMove = function(mv) {
 	this.mouseVector = mv.aim;
 };
 
-Player.prototype.eatFood = function(){
+Player.prototype.eatFood = function(amount){
 	var ret = new Player(this);
-	var last = ret.places[this.places.length-1];
-	var penu = ret.places[this.places.length-2];
-	ret.places.push(last.add(penu.sub(last)));
+	ret.amountToGrow = ret.amountToGrow + amount;
 	return ret;
 }
 
@@ -75,6 +75,13 @@ Player.prototype.step = function(mousePos){
 		ret.avLocation = ret.places.reduce(function(build, stuff){
 			return build.add(stuff); 
 		}, new Vector(0,0)).scale(1/ret.places.length);
+
+		if (ret.amountToGrow > 0){
+			var last = ret.places[ret.places.length-1];
+			var penu = ret.places[ret.places.length-2];
+			ret.places.push(last.sub(penu.sub(last).scale(0.01)));
+			ret.amountToGrow = ret.amountToGrow - 1;
+		}
 
 
 		var goal = ret.places[0].sub(ret.places[1]).toUnit().scale(3);

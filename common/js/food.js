@@ -13,25 +13,40 @@ var possibleColors = [
 
 
 var Food = function(grow){
-
 	this.location = new Vector(Math.random() * Settings.boardSize, Math.random() * Settings.boardSize);
-	if(grow === true){
-		this.age = -Settings.foodCycleTime;
-	}else{
-		this.age = Math.random() * Settings.foodCycleTime;
-	} 
+	this.growing = !!grow;
+	this.shrinking = false;
+	this.size = (!!grow) ? 0 : Settings.foodMaxSize;
 	this.color = possibleColors[Math.floor(Math.random() * possibleColors.length)];
-	
+	if(this.growing){
+		console.log(this);
+	}
 }
 
 Food.prototype.step = function(){
 	var ret = new Food();
+
 	ret.location = this.location;
+	ret.growing = this.growing;
+	ret.shrinking = this.shrinking;
 	ret.color = this.color;
-	ret.age = this.age + Settings.physicsRate;
-	if (ret.age > Settings.foodCycleTime){
-		ret.age = ret.age - Settings.foodCycleTime;
+	ret.size = this.size;
+
+	if(ret.growing){
+		ret.size = this.size + Settings.foodGrowthRate;
+		if(ret.size >= Settings.foodMaxSize){
+			ret.size = Settings.foodMaxSize;
+			ret.growing = false;
+		}
 	}
+	if(this.shrinking){
+		ret.size = this.size - Settings.foodGrowthRate;
+		if(ret.size <= 0){
+			ret = undefined;
+		}
+	}
+
+	
 	return ret;
 }
 

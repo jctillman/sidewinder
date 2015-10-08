@@ -20,9 +20,8 @@ var playGame = function playGame(gameState, appState, playerIndex) {
 
 	//console.log("!")
 
-	var graphicsLoop = setInterval(Utilities.timed(true, function () {
+	var graphicsLoop = setInterval(Utilities.timed(false, function () {
 
-		//console.log("!");
 		Draw.clear(appState, gameState, playerIndex);
 		Draw.self(appState, gameState, playerIndex);
 		Draw.others(appState, gameState, playerIndex);
@@ -75,13 +74,12 @@ var characterDraw = function characterDraw(ctx, cnv, plyr, off) {
 	ctx.strokeStyle = "#ff0000";
 	ctx.lineWidth = 3;
 	pth.moveTo(plyr.places[0].x + off.x, plyr.places[0].y + off.y);
-	for (var x = 1; x < plyr.places.length; x++) {
+	for (var x = 0; x < plyr.places.length - 1; x++) {
 		if (x % 25 == 0) {
-			ctx.strokeStyle = ctx.strokeStyle.toString() == '#ff0000' ? "#000" : "#f00";
-			console.log(ctx.strokeStyle.toString());
 			ctx.stroke(pth);
-			var pth = new Path2D();
-			pth.moveTo(plyr.places[x - 1].x + off.x, plyr.places[x - 1].y + off.y);
+			pth = new Path2D();
+			ctx.strokeStyle = ctx.strokeStyle.toString() == '#ff0000' ? "#000000" : "#ff0000";
+			pth.moveTo(plyr.places[x].x + off.x, plyr.places[x].y + off.y);
 		}
 		pth.lineTo(plyr.places[x].x + off.x, plyr.places[x].y + off.y);
 	}
@@ -139,17 +137,13 @@ var Draw = {
 			if (f.location.dist(playSpot) < 1500) {
 				var fs = f.location.add(off);
 				var max = Settings.foodMaxSize;
-				if (f.age > 0) {
-					var size = 0.9 * max + 0.1 * max * Math.cos(f.age / Settings.foodCycleTime * 2 * Math.PI);
-				} else {
-					var size = max + f.age / Settings.foodCycleTime * max;
-				}
+				var size = f.size;
+				// console.log(size);
 				ctx.beginPath();
 				ctx.arc(fs.x, fs.y, size, 0, 2 * Math.PI, false);
 				ctx.lineWidth = 1;
-				ctx.fillStyle = f.color;
 				ctx.strokeStyle = f.color;
-				ctx.fill();
+				ctx.stroke();
 			}
 		}
 	}
@@ -274,22 +268,20 @@ EnvironmentState.prototype.step = function () {
 
 	ret.food = [];
 	for (var x = 0; x < this.food.length; x++) {
-		ret.food.push(this.food[x]);
+		var temp = this.food[x].step();
+		temp && ret.food.push(temp);
 	}
 
-	for (var x = this.food.length; x < Settings.foodStartAmount; x++) {
+	for (var x = ret.food.length; x < Settings.foodStartAmount; x++) {
+		console.log("!");
 		ret.food.push(new Food(true));
 	}
 
 	for (var x = 0; x < ret.players.length; x++) {
 		for (var y = 0; y < ret.food.length; y++) {
-			if (ret.players[x].places[0].dist(ret.food[y].location) < Settings.foodMaxSize) {
-				console.log("!");
-				ret.players[x] = ret.players[x].eatFood();
-				ret.players[x] = ret.players[x].eatFood();
-				ret.players[x] = ret.players[x].eatFood();
-				ret.players[x] = ret.players[x].eatFood();
-				ret.food.splice(y, 1);
+			if (ret.players[x].places[0].dist(ret.food[y].location) < Settings.foodMaxSize && !ret.food[y].shrinking) {
+				ret.players[x] = ret.players[x].eatFood(Settings.foodValue);
+				ret.food[y].shrinking = true;
 			}
 		}
 	}
@@ -324,24 +316,39 @@ var Settings = require('../../common/js/settings.js');
 var possibleColors = ['red', 'orange', 'blue', 'green', 'gray', 'purple', 'maroon'];
 
 var Food = function Food(grow) {
-
 	this.location = new Vector(Math.random() * Settings.boardSize, Math.random() * Settings.boardSize);
-	if (grow === true) {
-		this.age = -Settings.foodCycleTime;
-	} else {
-		this.age = Math.random() * Settings.foodCycleTime;
-	}
+	this.growing = !!grow;
+	this.shrinking = false;
+	this.size = !!grow ? 0 : Settings.foodMaxSize;
 	this.color = possibleColors[Math.floor(Math.random() * possibleColors.length)];
+	if (this.growing) {
+		console.log(this);
+	}
 };
 
 Food.prototype.step = function () {
 	var ret = new Food();
+
 	ret.location = this.location;
+	ret.growing = this.growing;
+	ret.shrinking = this.shrinking;
 	ret.color = this.color;
-	ret.age = this.age + Settings.physicsRate;
-	if (ret.age > Settings.foodCycleTime) {
-		ret.age = ret.age - Settings.foodCycleTime;
+	ret.size = this.size;
+
+	if (ret.growing) {
+		ret.size = this.size + Settings.foodGrowthRate;
+		if (ret.size >= Settings.foodMaxSize) {
+			ret.size = Settings.foodMaxSize;
+			ret.growing = false;
+		}
 	}
+	if (this.shrinking) {
+		ret.size = this.size - Settings.foodGrowthRate;
+		if (ret.size <= 0) {
+			ret = undefined;
+		}
+	}
+
 	return ret;
 };
 
@@ -407,6 +414,7 @@ var initializeLocation = function initializeLocation(x, y, direction, length) {
 function Player(x, y, direction, length) {
 	if (typeof x == 'number') {
 		this.mouseVector = new Vector(0, 0);
+		this.amountToGrow = 0;
 		this.speed = 1;
 		this.segDist = 2;
 		this.kink = 0;
@@ -414,6 +422,7 @@ function Player(x, y, direction, length) {
 		this.avLocation = averageSpot(this.places);
 	} else {
 		this.speed = x.speed;
+		this.amountToGrow = x.amountToGrow;
 		this.segDist = x.segDist;
 		this.kink = x.kink;
 		this.mouseVector = Vector.copy(x.mouseVector);
@@ -439,11 +448,9 @@ Player.prototype.setMove = function (mv) {
 	this.mouseVector = mv.aim;
 };
 
-Player.prototype.eatFood = function () {
+Player.prototype.eatFood = function (amount) {
 	var ret = new Player(this);
-	var last = ret.places[this.places.length - 1];
-	var penu = ret.places[this.places.length - 2];
-	ret.places.push(last.add(penu.sub(last)));
+	ret.amountToGrow = ret.amountToGrow + amount;
 	return ret;
 };
 
@@ -457,6 +464,13 @@ Player.prototype.step = function (mousePos) {
 	ret.avLocation = ret.places.reduce(function (build, stuff) {
 		return build.add(stuff);
 	}, new Vector(0, 0)).scale(1 / ret.places.length);
+
+	if (ret.amountToGrow > 0) {
+		var last = ret.places[ret.places.length - 1];
+		var penu = ret.places[ret.places.length - 2];
+		ret.places.push(last.sub(penu.sub(last).scale(0.01)));
+		ret.amountToGrow = ret.amountToGrow - 1;
+	}
 
 	var goal = ret.places[0].sub(ret.places[1]).toUnit().scale(3);
 	var pointing = this.mouseVector.sub(ret.places[0]).toUnit();
@@ -477,11 +491,13 @@ module.exports = {
 	resizeRate: 50,
 	physicsRate: 25,
 
-	boardSize: 10000,
-	foodStartAmount: 3000,
+	boardSize: 500,
+	foodStartAmount: 10,
 	foodSpawnRate: 100, //Per map, per second
 	foodCycleTime: 2500,
-	foodMaxSize: 5,
+	foodGrowthRate: 0.5,
+	foodValue: 5,
+	foodMaxSize: 15,
 	gridSpace: 20,
 	gridColor: '#BBB',
 

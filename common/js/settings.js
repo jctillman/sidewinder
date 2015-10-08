@@ -3,11 +3,13 @@ module.exports = {
 	resizeRate: 50,
 	physicsRate: 25,
 
-	boardSize: 10000,
-	foodStartAmount: 3000,
+	boardSize: 500,
+	foodStartAmount: 10,
 	foodSpawnRate: 100,     //Per map, per second
 	foodCycleTime: 2500,
-	foodMaxSize: 5,
+	foodGrowthRate: 0.5,
+	foodValue: 5,
+	foodMaxSize: 15,
 	gridSpace: 20,
 	gridColor: '#BBB', 
 
