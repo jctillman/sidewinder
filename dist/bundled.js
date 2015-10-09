@@ -15,12 +15,27 @@ var Draw = require('../../client/js/draw.js');
 var Settings = require('../../common/js/settings.js');
 var Utilities = require('../../common/js/utilities.js');
 var Move = require('../../common/js/move.js');
+var View = require('../../common/js/view.js');
+var Vector = require('../../common/js/vector.js');
 
 var playGame = function playGame(gameState, appState, playerId) {
 
-	var physicsLoops = setInterval(Utilities.timed(false, function () {
+	var physicsLoops = setInterval(Utilities.timed(true, function () {
 
-		//gameState = gameState.step();
+		gameState = gameState.step();
+
+		var plyr = gameState.element(playerId);
+		var movr = new Move({
+			mousePosition: appState.game.mousePosition(),
+			player: plyr
+		});
+		plyr.setMove(movr);
+
+		var tempView = new View(appState.game.canvas, plyr.location);
+
+		gameState.draw(appState.game.context, tempView);
+		//console.log("!");
+		//console.log(gameState)
 		//Draw.clear(appState, gameState, playerIndex);
 		//Draw.self(appState, gameState, playerIndex);
 		//Draw.others(appState, gameState, playerIndex);
@@ -32,7 +47,6 @@ var playGame = function playGame(gameState, appState, playerId) {
 
 		//gameState.setMove(playerIndex, move);
 		//gameState = gameState.step();
-
 	}), Settings.physicsRate);
 };
 
@@ -42,17 +56,20 @@ module.exports = function (appState) {
 	//For now, just as stop
 
 	var gameState = new EnvironmentState();
-	//gameState.addPlayer(100,100,10,10);
+	gameState.addElement('grid', new Vector(0, 0), {});
+	var playerId = gameState.addElement('player', new Vector(55, 55), {});
+
 	//gameState.addPlayer(100,150,10,10);
-	console.log(gameState);
-	var gs = gameState.step('dsd');
-	console.log(gs);
-	var ms = gs.step('dsds');
-	console.log(ms);
-	playGame(gameState, appState, 0);
+	// console.log(gameState)
+	// var gs = gameState.step('dsd');
+	// console.log(gs)
+	// var ms = gs.step('dsds');
+	// console.log(ms);
+
+	playGame(gameState, appState, playerId);
 };
 
-},{"../../client/js/draw.js":5,"../../common/js/environmentState.js":9,"../../common/js/move.js":11,"../../common/js/settings.js":13,"../../common/js/utilities.js":14}],3:[function(require,module,exports){
+},{"../../client/js/draw.js":5,"../../common/js/environmentState.js":10,"../../common/js/move.js":12,"../../common/js/settings.js":14,"../../common/js/utilities.js":15,"../../common/js/vector.js":16,"../../common/js/view.js":17}],3:[function(require,module,exports){
 "use strict";
 
 module.exports = function (state) {
@@ -156,7 +173,7 @@ var Draw = {
 
 module.exports = Draw;
 
-},{"../../common/js/settings.js":13,"../../common/js/vector.js":15}],6:[function(require,module,exports){
+},{"../../common/js/settings.js":14,"../../common/js/vector.js":16}],6:[function(require,module,exports){
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
@@ -240,7 +257,7 @@ module.exports = function (opt) {
 	};
 };
 
-},{"../../common/js/settings.js":13,"../../common/js/vector.js":15}],7:[function(require,module,exports){
+},{"../../common/js/settings.js":14,"../../common/js/vector.js":16}],7:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -264,10 +281,8 @@ var reqFunc = {
 		}],
 		explanations: ["Expected a context object as the first argument, but did not recieve one.", "Expected a View object as the second argument, but didn't get one."]
 	},
-	step: {
-		checks: [],
-		explanations: []
-	},
+	step: { checks: [], explanations: [] },
+	copy: { checks: [], explanations: [] },
 	matters: {
 		checks: [function (a) {
 			return a.isAnElement == true;
@@ -303,7 +318,7 @@ var Element = function Element(options) {
 	};
 
 	//Add the rest of the functions.
-	var protFunc = ['draw', 'step', 'matters'];
+	var protFunc = ['draw', 'step', 'matters', 'copy'];
 	protFunc.forEach(function (fn) {
 		//Make sure that it has the function in question in the options.
 		if (typeof options[fn] != 'function') {
@@ -328,57 +343,67 @@ var Element = function Element(options) {
 		};
 	});
 
+	//Add the functions that are not required, with stuff.
+	Object.keys(options).filter(function (func) {
+		return protFunc.indexOf(func) == -1 && func != 'construct';
+	}).forEach(function (fn) {
+		console.log(fn);
+		ret.prototype[fn] = function () {
+			var args = [];
+			for (var y = 0; y < arguments.length; y++) {
+				args.push(arguments[y]);
+			}
+			var rtrn = options[fn].apply(this, args);
+			return rtrn;
+		};
+	});
+
 	return ret;
 };
 
 module.exports = Element;
 
-},{"../../common/js/utilities.js":14,"../../common/js/vector.js":15,"../../common/js/view.js":16}],8:[function(require,module,exports){
+},{"../../common/js/utilities.js":15,"../../common/js/vector.js":16,"../../common/js/view.js":17}],8:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
 var Settings = require('../../common/js/settings.js');
 var Vector = require('../../common/js/vector.js');
+var Utilities = require('../../common/js/utilities.js');
 
 var ElementGrid = Element({
 	//Constructor actually ignores required things, because this is such a background.. thing.
 	construct: function construct(location, options) {
-		this.location = new Vector(0, 0);
-		this.gridSize = Settings.gridSize;
-		this.gridSpacing = Settings.gridSpacing;
+		//mandatory
 		this.type = 'grid';
 		this.priority = 0;
+		//optional
+		this.location = new Vector(0, 0);
+		this.gridSize = Settings.gridSize;
+		this.gridSpace = Settings.gridSpace;
 	},
 	draw: function draw(context, view) {
-
 		//Setup
 		var path = new Path2D();
 		var off = view.off;
 		var gsi = this.gridSize;
-		var gsp = this.gridSpacing;
-
+		var gsp = this.gridSpace;
 		//Draw the grid.
-		for (var x = 0; x <= Settings.gsi; x = x + Settings.gsi) {
+		for (var x = 0; x <= gsi; x = x + gsp) {
 			path.moveTo(off.x, x + off.y);
-			path.lineTo(off.x + Settings.gsi, x + off.y);
+			path.lineTo(off.x + gsi, x + off.y);
 			path.moveTo(off.x + x, off.y);
-			path.lineTo(off.x + x, Settings.gsi + off.y);
+			path.lineTo(off.x + x, gsi + off.y);
 		}
 		context.strokeStyle = Settings.gridColor;
 		context.lineWidth = 1;
 		context.stroke(path);
 	},
 	step: function step() {
-		return this;
-		// console.log("!!!!!!")
-		// var ret = {};
-		// console.log(this);
-		// var props = Object.keys(this).filter(function(n){return this.hasOwnProperty(n)});
-		// for(var x = 0; x < props.length; x++){
-		// 	ret[props[x]] = this[props[x]];
-		// 	console.log(props[x])
-		// }
-		// return this;
+		return this.copy();
+	},
+	copy: function copy() {
+		return Utilities.shallowCopy(this);
 	},
 	matters: function matters(element) {
 		return false;
@@ -387,78 +412,144 @@ var ElementGrid = Element({
 
 module.exports = ElementGrid;
 
-},{"../../common/js/element.js":7,"../../common/js/settings.js":13,"../../common/js/vector.js":15}],9:[function(require,module,exports){
+},{"../../common/js/element.js":7,"../../common/js/settings.js":14,"../../common/js/utilities.js":15,"../../common/js/vector.js":16}],9:[function(require,module,exports){
+'use strict';
+
+var Element = require('../../common/js/element.js');
+var Settings = require('../../common/js/settings.js');
+var Vector = require('../../common/js/vector.js');
+var Utilities = require('../../common/js/utilities.js');
+
+var ElementPlayer = Element({
+	//Constructor actually ignores required things, because this is such a background.. thing.
+	construct: function construct(location, options) {
+		//Mandatory
+		this.type = 'player';
+		this.priority = 1;
+		//Optional
+		this.places = Vector.chain(location, {
+			segments: Settings.startSegments,
+			spacing: Settings.startSpacing
+		});
+		this.location = Vector.average(this.places);
+		this.aim = new Vector(0, 0);
+		this.amountToGrow = 0;
+		this.speed = 1;
+		this.kink = 0;
+	},
+	draw: function draw(context, view) {
+		//console.log("!");
+		var off = view.off;
+		for (var x = 0; x < this.places.length - 1; x++) {
+			if ((Math.floor(x / 25) + 1) % 2 == 0) {
+				context.strokeStyle = '#000000';
+			} else {
+				context.strokeStyle = "#ff0000";
+			}
+			var pth = new Path2D();
+			pth.moveTo(this.places[x].x + off.x, this.places[x].y + off.y);
+			pth.lineTo(this.places[x + 1].x + off.x, this.places[x + 1].y + off.y);
+			context.lineWidth = 3;
+			context.stroke(pth);
+		}
+	},
+	step: function step() {
+
+		var kinkiness = function kinkiness(v) {
+			var kinkiness = 0;
+			for (var x = 3; x < v.places.length - 3; x++) {
+				var pointing = v.places[x].sub(v.places[x + 3]).toUnit();
+				var otherPoint = v.places[x - 3].sub(v.places[x]).toUnit();
+				var diff = pointing.dist(otherPoint);
+				kinkiness = kinkiness + diff;
+			}
+			return kinkiness;
+		};
+
+		var ret = this.copy();
+
+		ret.speed = ret.kink / Math.sqrt(ret.places.length) + 1;
+		ret.location = Vector.average(ret.places);
+		if (ret.amountToGrow > 0) {
+			var last = ret.places[ret.places.length - 1];
+			var penu = ret.places[ret.places.length - 2];
+			ret.places.push(last.sub(penu.sub(last).scale(0.01)));
+			ret.amountToGrow = ret.amountToGrow - 1;
+		}
+		var goal = ret.places[0].sub(ret.places[1]).toUnit().scale(3);
+		var pointing = this.aim.sub(ret.places[0]).toUnit();
+		var directionScaled = goal.add(pointing).toUnit().scale(ret.speed);
+		var addendum = ret.places[0].add(directionScaled);
+		ret.places.unshift(addendum);
+		ret.places.pop();
+		ret.kink = kinkiness(ret);
+		return ret;
+	},
+	copy: function copy() {
+		var ret = Utilities.shallowCopy(this);
+		ret.places = this.places.map(function (n) {
+			return Vector.copy(n);
+		});
+		ret.aim = Vector.copy(this.aim);
+		ret.location = Vector.average(ret.places);
+		return ret;
+	},
+	//needs to be fixed.
+	matters: function matters(element) {
+		return false;
+	},
+	setMove: function setMove(move) {
+		this.aim = move.aim;
+	}
+});
+
+module.exports = ElementPlayer;
+
+},{"../../common/js/element.js":7,"../../common/js/settings.js":14,"../../common/js/utilities.js":15,"../../common/js/vector.js":16}],10:[function(require,module,exports){
 'use strict';
 
 var Player = require('../../common/js/player.js');
 var Food = require('../../common/js/food.js');
 var Settings = require('../../common/js/settings.js');
 
-var ElementGrid = require('../../common/js/elementGrid.js');
-
-var EnvironmentState = function EnvironmentState() {
-
-	this.elements = [];
-
-	this.elements.push(new ElementGrid());
-
-	// if(!toCopy){
-	// 	this.players = [];
-	// 	this.food = [];
-	// 	for(var x = 0; x < Settings.foodStartAmount; x++){
-	// 		this.food.push(new Food());
-	// 	}
-	// }else{
-	// 	this.players = toCopy.players.map(function(n){return new Player(n)});
-	// 	this.food = toCopy.food.slice(); 
+var members = {
+	grid: require('../../common/js/elementgrid.js'),
+	player: require('../../common/js/elementplayer.js')
 };
 
-EnvironmentState.draw = function (context, view) {
+var EnvironmentState = function EnvironmentState() {
+	this.elements = [];
+};
+
+EnvironmentState.prototype.draw = function (context, view) {
+
+	//Clear shit
+	context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+
+	//Draw shit
 	this.elements.forEach(function (element) {
 		element.draw(context, view);
 	});
 };
 
+EnvironmentState.prototype.element = function (id) {
+	return this.elements.filter(function (n) {
+		return n.id === id;
+	})[0];
+};
+
+EnvironmentState.prototype.addElement = function (name, location, options) {
+	var nw = new (members[name.toLowerCase()])(location, options);
+	this.elements.push(nw);
+	return nw.id;
+};
+
 EnvironmentState.prototype.step = function () {
-
 	var ret = new EnvironmentState();
-
 	ret.elements = this.elements.map(function (element) {
 		return element.step();
 	});
-
 	return ret;
-
-	// ret.players = [];
-	// for(var x = 0; x < this.players.length; x++){
-	// 	ret.players.push( this.players[x].step() );
-	// }
-
-	// ret.food = [];
-	// for(var x = 0; x < this.food.length; x++){
-	// 	var temp = this.food[x].step()
-	// 	temp && ret.food.push(temp);
-	// }
-
-	// for(var x = ret.food.length; x < Settings.foodStartAmount; x++){
-	// 	console.log("!")
-	// 	ret.food.push(new Food(true));
-	// }
-
-	// for(var x = 0; x < ret.players.length; x++){
-	// 	for(var y = 0; y < ret.food.length; y++){
-	// 		if (ret.players[x].places[0].dist(ret.food[y].location) < Settings.foodMaxSize && !ret.food[y].shrinking){
-	// 			ret.players[x] = ret.players[x].eatFood(Settings.foodValue);
-	// 			ret.food[y].shrinking = true;
-	// 		}
-	// 	}
-	// }
-
-	// return ret;
-};
-
-EnvironmentState.prototype.addPlayer = function (a, b, c, d) {
-	//this.elements.push(new Player(a,b,c,d));
 };
 
 EnvironmentState.prototype.advance = function (num) {
@@ -469,13 +560,9 @@ EnvironmentState.prototype.advance = function (num) {
 	return ret;
 };
 
-EnvironmentState.prototype.setMove = function (playerIndex, move) {
-	this.players[playerIndex].setMove(move);
-};
-
 module.exports = EnvironmentState;
 
-},{"../../common/js/elementGrid.js":8,"../../common/js/food.js":10,"../../common/js/player.js":12,"../../common/js/settings.js":13}],10:[function(require,module,exports){
+},{"../../common/js/elementgrid.js":8,"../../common/js/elementplayer.js":9,"../../common/js/food.js":11,"../../common/js/player.js":13,"../../common/js/settings.js":14}],11:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -522,10 +609,11 @@ Food.prototype.step = function () {
 
 module.exports = Food;
 
-},{"../../common/js/settings.js":13,"../../common/js/vector.js":15}],11:[function(require,module,exports){
-"use strict";
+},{"../../common/js/settings.js":14,"../../common/js/vector.js":16}],12:[function(require,module,exports){
+'use strict';
 
 var Vector = require('../../common/js/vector.js');
+var Settings = require('../../common/js/settings.js');
 
 var Move = function Move(options) {
 
@@ -539,7 +627,7 @@ var Move = function Move(options) {
 
 	if (options.mousePosition) {
 
-		var playSpot = options.player.avLocation;
+		var playSpot = options.player.location;
 		var off = new Vector(-playSpot.x + cnv.width * 0.5, -playSpot.y + cnv.height * 0.5);
 		//console.log(options.mousePosition)
 		this.aim = options.mousePosition.sub(off);
@@ -551,12 +639,15 @@ var Move = function Move(options) {
 		}
 	}
 
+	this.aim.x = Math.max(Math.min(Settings.gridSize, this.aim.x), 0);
+	this.aim.y = Math.max(Math.min(Settings.gridSize, this.aim.y), 0);
+
 	this.split = options.split || false;
 };
 
 module.exports = Move;
 
-},{"../../common/js/vector.js":15}],12:[function(require,module,exports){
+},{"../../common/js/settings.js":14,"../../common/js/vector.js":16}],13:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -565,18 +656,6 @@ var averageSpot = function averageSpot(arr) {
 	return arr.reduce(function (build, stuff) {
 		return build.add(stuff);
 	}, new Vector(0, 0)).scale(1 / arr.length);
-};
-
-var initializeLocation = function initializeLocation(x, y, direction, length) {
-	var radians = 2 * direction / 360 * Math.PI;
-	var distX = Math.sin(radians);
-	var distY = Math.cos(radians);
-
-	var places = [];
-	for (var i = 0; i < length; i++) {
-		places.push(new Vector(x + Settings.segmentSpacing * distX * i + Math.random() / 100, y + Settings.segmentSpacing * distY * i + Math.random() / 100));
-	}
-	return places;
 };
 
 function Player(x, y, direction, length) {
@@ -651,7 +730,7 @@ Player.prototype.step = function (mousePos) {
 
 module.exports = Player;
 
-},{"../../common/js/settings.js":13,"../../common/js/vector.js":15}],13:[function(require,module,exports){
+},{"../../common/js/settings.js":14,"../../common/js/vector.js":16}],14:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -660,27 +739,43 @@ module.exports = {
 	physicsRate: 25,
 
 	gridSize: 500,
+	gridSpace: 20,
+	gridColor: '#111',
+
+	startSegments: 150,
+	startSpacing: 1,
+
 	foodStartAmount: 10,
 	foodSpawnRate: 100, //Per map, per second
 	foodCycleTime: 2500,
 	foodGrowthRate: 0.5,
 	foodValue: 5,
 	foodMaxSize: 15,
-	gridSpace: 20,
-	gridColor: '#BBB',
 
 	segmentSpacing: 2
 
 };
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 module.exports = {
 
+	shallowCopy: function shallowCopy(obj) {
+		var keys = Object.keys(obj);
+		var ret = {};
+		for (var x = 0; x < keys.length; x++) {
+			if (obj.hasOwnProperty(keys[x])) {
+				ret[keys[x]] = obj[keys[x]];
+			}
+		}
+		ret.__proto__ = obj.__proto__;
+		return ret;
+	},
+
 	makeUniqueId: function makeUniqueId() {
 		var length = 24;
-		var chars = ['abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'];
+		var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 		var uniqueId = '';
 		for (var x = 0; x < length; x++) {
 			uniqueId = uniqueId + chars[Math.floor(Math.random() * chars.length)];
@@ -700,19 +795,47 @@ module.exports = {
 
 };
 
-},{}],15:[function(require,module,exports){
-"use strict";
+},{}],16:[function(require,module,exports){
+'use strict';
 
 function Vector(x, y) {
+	if (typeof x != 'number' || typeof y != 'number') {
+		throw new Error("Need to pass vector numbers!");
+	}
 	this.x = x;
 	this.y = y;
 }
 
+//Statics
 Vector.copy = function (vector) {
-	var ret = new Vector();
+	var ret = new Vector(0, 0);
 	ret.x = vector.x;
 	ret.y = vector.y;
 	return ret;
+};
+
+Vector.chain = function (start, options) {
+	//direction, length){
+	var segments = options.segments || 10;
+	var spacing = options.spacing || 1;
+	var direction = options.direction || 0;
+	var radians = options.direction !== 0 ? 2 * direction / 360 * Math.PI : 0;
+	var components = new Vector(Math.sin(radians), Math.cos(radians));
+
+	var chain = [];
+	for (var i = 0; i < segments; i++) {
+		var factor = spacing * i;
+		var addendum = start.add(new Vector(factor * components.x + Math.random() / 100, factor * components.y + Math.random() / 100));
+		console.log(addendum);
+		chain.push(addendum);
+	}
+	return chain;
+};
+
+Vector.average = function (arr) {
+	return arr.reduce(function (build, stuff) {
+		return build.add(stuff);
+	}, new Vector(0, 0)).scale(1 / arr.length);
 };
 
 Vector.prototype.add = function (vector) {
@@ -753,11 +876,15 @@ Vector.prototype.toUnit = function () {
 
 module.exports = Vector;
 
-},{}],16:[function(require,module,exports){
-"use strict";
+},{}],17:[function(require,module,exports){
+'use strict';
 
-var View = function View() {};
+var Vector = require('../../common/js/vector.js');
+
+var View = function View(cnv, center) {
+	this.off = new Vector(-center.x + cnv.width * 0.5, -center.y + cnv.height * 0.5);
+};
 
 module.exports = View;
 
-},{}]},{},[1]);
+},{"../../common/js/vector.js":16}]},{},[1]);

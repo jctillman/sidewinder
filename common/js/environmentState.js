@@ -2,75 +2,47 @@ var Player = require('../../common/js/player.js');
 var Food = require('../../common/js/food.js');
 var Settings = require('../../common/js/settings.js');
 
-var ElementGrid = require('../../common/js/elementGrid.js');
-
-var EnvironmentState = function(){ 
-
-	this.elements = [];
-
-	this.elements.push(new ElementGrid())
-
-
-	// if(!toCopy){
-	// 	this.players = [];
-	// 	this.food = []; 
-	// 	for(var x = 0; x < Settings.foodStartAmount; x++){
-	// 		this.food.push(new Food());
-	// 	}
-	// }else{
-	// 	this.players = toCopy.players.map(function(n){return new Player(n)});
-	// 	this.food = toCopy.food.slice();   
+var members = {
+	grid: require('../../common/js/elementgrid.js'),
+	player: require('../../common/js/elementplayer.js')
 }
 
-EnvironmentState.draw = function(context, view){
+var EnvironmentState = function(){ 
+	this.elements = [];
+}
+
+EnvironmentState.prototype.draw = function(context, view){
+
+	//Clear shit
+	context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+
+	//Draw shit
 	this.elements.forEach(function(element){
 		element.draw(context, view);
 	});
+
+};
+
+EnvironmentState.prototype.element = function(id){
+	return this.elements.filter(function(n){
+		return n.id === id;
+	})[0]
+}
+
+EnvironmentState.prototype.addElement = function(name, location, options){
+	var nw = new members[name.toLowerCase()](location, options);
+	this.elements.push(nw);
+	return nw.id;
 }
 
 EnvironmentState.prototype.step = function(){
-	
-	var ret = new EnvironmentState()
-
+	var ret = new EnvironmentState();
 	ret.elements = this.elements.map(function(element){
 		return element.step();
 	});
-
 	return ret;
-
-	// ret.players = [];
-	// for(var x = 0; x < this.players.length; x++){
-	// 	ret.players.push( this.players[x].step() );
-	// }
-
-	// ret.food = [];
-	// for(var x = 0; x < this.food.length; x++){
-	// 	var temp = this.food[x].step()
-	// 	temp && ret.food.push(temp);
-	// }
-
-	// for(var x = ret.food.length; x < Settings.foodStartAmount; x++){
-	// 	console.log("!")
-	// 	ret.food.push(new Food(true));
-	// }
-	
-
-	// for(var x = 0; x < ret.players.length; x++){
-	// 	for(var y = 0; y < ret.food.length; y++){
-	// 		if (ret.players[x].places[0].dist(ret.food[y].location) < Settings.foodMaxSize && !ret.food[y].shrinking){
-	// 			ret.players[x] = ret.players[x].eatFood(Settings.foodValue);
-	// 			ret.food[y].shrinking = true;
-	// 		}
-	// 	}
-	// }
-
-	// return ret;
-
 }
 
-EnvironmentState.prototype.addPlayer = function(a,b,c,d){
-	//this.elements.push(new Player(a,b,c,d));
-}
 
 EnvironmentState.prototype.advance = function(num){
 	var ret = new EnvironmentState(this);
@@ -78,10 +50,6 @@ EnvironmentState.prototype.advance = function(num){
 		ret = ret.step();
 	}
 	return ret;
-}
-
-EnvironmentState.prototype.setMove = function(playerIndex, move){
-	this.players[playerIndex].setMove(move);
 }
 
 module.exports = EnvironmentState

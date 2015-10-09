@@ -6,21 +6,6 @@ var averageSpot = function(arr){
 	}, new Vector(0,0)).scale(1/arr.length);
 }
 
-var initializeLocation = function(x,y, direction, length){
-	var radians = 2 * direction / 360 * Math.PI;
-	var distX = Math.sin(radians);
-	var distY = Math.cos(radians); 
-
-	var places = [];
-	for(var i = 0; i < length; i++){
-  		places.push(new Vector(
-  			x+Settings.segmentSpacing*distX*i+Math.random()/100,
-  			y+Settings.segmentSpacing*distY*i+Math.random()/100
-  		)); 
-  	}
-  	return places;
-}
-
 function Player(x,y, direction, length){
 	if(typeof x == 'number'){
 		this.mouseVector = new Vector(0,0);
@@ -82,8 +67,7 @@ Player.prototype.step = function(mousePos){
 			ret.places.push(last.sub(penu.sub(last).scale(0.01)));
 			ret.amountToGrow = ret.amountToGrow - 1;
 		}
-
-
+		
 		var goal = ret.places[0].sub(ret.places[1]).toUnit().scale(3);
 		var pointing = this.mouseVector.sub(ret.places[0]).toUnit();
 		var directionScaled = goal.add(pointing).toUnit().scale(ret.speed);

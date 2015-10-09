@@ -1,4 +1,5 @@
 var Vector = require('../../common/js/vector.js');
+var Settings = require('../../common/js/settings.js');
 
 var Move = function(options){
 
@@ -12,7 +13,7 @@ var Move = function(options){
 
 	if(options.mousePosition){
 
-		var playSpot = options.player.avLocation;
+		var playSpot = options.player.location;
 		var off = new Vector( -playSpot.x+cnv.width*0.5, -playSpot.y+cnv.height*0.5);
 		//console.log(options.mousePosition)
 		this.aim = options.mousePosition.sub(off);
@@ -24,6 +25,9 @@ var Move = function(options){
 			this.aim = options.aim;
 		}
 	}
+
+	this.aim.x = Math.max(Math.min(Settings.gridSize, this.aim.x), 0) 
+	this.aim.y = Math.max(Math.min(Settings.gridSize, this.aim.y), 0)
 
 	this.split = options.split || false;
 }

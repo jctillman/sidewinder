@@ -24,10 +24,8 @@ var reqFunc = {
 			"Expected a View object as the second argument, but didn't get one."
 		]
 	},
-	step: {
-		checks: [],
-		explanations: []
-	}, 
+	step: { checks: [], explanations: [] }, 
+	copy: { checks: [], explanations: [] },
 	matters: {
 		checks:[
 			function(a) { return (a.isAnElement == true)}
@@ -65,7 +63,7 @@ var Element = function(options){
 	}
 
 	//Add the rest of the functions.
-	var protFunc = ['draw', 'step', 'matters']
+	var protFunc = ['draw', 'step', 'matters', 'copy'];
 	protFunc.forEach(function(fn){
 		//Make sure that it has the function in question in the options.
 		if(typeof options[fn] != 'function'){
@@ -84,6 +82,21 @@ var Element = function(options){
 				}else{
 					throw new Error("An incorrect value: " + reqFunc[fn].explanations[y])
 				}
+			}
+			var rtrn = options[fn].apply(this, args);
+			return rtrn;
+		}
+	});
+
+	//Add the functions that are not required, with stuff.
+	Object.keys(options).filter(function(func){
+		return protFunc.indexOf(func) == -1 && func != 'construct';
+	}).forEach(function(fn){
+		console.log(fn)
+		ret.prototype[fn] = function(){
+			var args = [];
+			for(var y = 0; y < arguments.length; y++){
+				args.push(arguments[y])
 			}
 			var rtrn = options[fn].apply(this, args);
 			return rtrn;
