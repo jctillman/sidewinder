@@ -5,24 +5,23 @@ var Utilities = require('../../common/js/utilities.js');
 var Move = require('../../common/js/move.js');
 
 
-var playGame = function(gameState, appState, playerIndex){
-
-	//console.log("!")
-
-	var graphicsLoop = setInterval(Utilities.timed(false, function(){
+var playGame = function(gameState, appState, playerId){
 
 
-		Draw.clear(appState, gameState, playerIndex);
-		Draw.self(appState, gameState, playerIndex);
-		Draw.others(appState, gameState, playerIndex);
+	var physicsLoops = setInterval(Utilities.timed(false, function(){
 
-		var move = new Move({
-			mousePosition: appState.game.mousePosition(),
-			player: gameState.players[playerIndex]
-		});
+		//gameState = gameState.step();
+		//Draw.clear(appState, gameState, playerIndex);
+		//Draw.self(appState, gameState, playerIndex);
+		//Draw.others(appState, gameState, playerIndex);
 
-		gameState.setMove(playerIndex, move);
-		gameState = gameState.step();
+		//var move = new Move({
+		//	mousePosition: appState.game.mousePosition(),
+		//	player: gameState.players[playerIndex]
+		//});
+
+		//gameState.setMove(playerIndex, move);
+		//gameState = gameState.step();
 
 
 
@@ -38,8 +37,13 @@ module.exports = function(appState){
 	//For now, just as stop
 
 	var gameState = new EnvironmentState();
-	gameState.addPlayer(100,100,10,10);
-	gameState.addPlayer(100,150,10,10);
+	//gameState.addPlayer(100,100,10,10);
+	//gameState.addPlayer(100,150,10,10);
+	console.log(gameState)
+	var gs = gameState.step('dsd');
+	console.log(gs)
+	var ms = gs.step('dsds');
+	console.log(ms);
 	playGame(gameState, appState, 0)
 
 

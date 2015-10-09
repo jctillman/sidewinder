@@ -3,7 +3,7 @@ module.exports = {
 	resizeRate: 50,
 	physicsRate: 25,
 
-	boardSize: 500,
+	gridSize: 500,
 	foodStartAmount: 10,
 	foodSpawnRate: 100,     //Per map, per second
 	foodCycleTime: 2500,
