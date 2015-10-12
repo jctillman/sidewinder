@@ -18,58 +18,48 @@ var Move = require('../../common/js/move.js');
 var View = require('../../common/js/view.js');
 var Vector = require('../../common/js/vector.js');
 
-var playGame = function playGame(gameState, appState, playerId) {
+var playGame = function playGame(gameState, appState, playerId, finished) {
 
-	var physicsLoops = setInterval(Utilities.timed(true, function () {
+	var physicsLoops = setInterval(Utilities.timed(false, function () {
 
-		gameState = gameState.step();
+		//Grab the player, and set the players move.
+		var plyr = gameState.getElement(playerId);
 
-		var plyr = gameState.element(playerId);
 		var movr = new Move({
 			mousePosition: appState.game.mousePosition(),
 			player: plyr
 		});
 		plyr.setMove(movr);
 
+		//View is what is used in rendering.
 		var tempView = new View(appState.game.canvas, plyr.location);
-
 		gameState.draw(appState.game.context, tempView);
-		//console.log("!");
-		//console.log(gameState)
-		//Draw.clear(appState, gameState, playerIndex);
-		//Draw.self(appState, gameState, playerIndex);
-		//Draw.others(appState, gameState, playerIndex);
 
-		//var move = new Move({
-		//	mousePosition: appState.game.mousePosition(),
-		//	player: gameState.players[playerIndex]
-		//});
+		//set this shit
+		gameState = gameState.step([require('../../common/js/foodManager.js')]);
 
-		//gameState.setMove(playerIndex, move);
-		//gameState = gameState.step();
+		var plyr = gameState.getElement(playerId);
+		if (plyr == undefined) {
+			window.clearInterval(physicsLoops);
+			console.log(physicsLoops);
+			finished();
+		}
 	}), Settings.physicsRate);
 };
 
-module.exports = function (appState) {
-
-	//Get game
-	//For now, just as stop
+module.exports = function (appState, finished) {
 
 	var gameState = new EnvironmentState();
-	gameState.addElement('grid', new Vector(0, 0), {});
+	var gridId = gameState.addElement('grid', new Vector(0, 0), {});
+	for (var x = 0; x < Settings.foodStartAmount; x++) {
+		gameState.addElement('food', new Vector(Math.random() * Settings.gridSize, Math.random() * Settings.gridSize), {});
+	}
 	var playerId = gameState.addElement('player', new Vector(55, 55), {});
 
-	//gameState.addPlayer(100,150,10,10);
-	// console.log(gameState)
-	// var gs = gameState.step('dsd');
-	// console.log(gs)
-	// var ms = gs.step('dsds');
-	// console.log(ms);
-
-	playGame(gameState, appState, playerId);
+	playGame(gameState, appState, playerId, finished);
 };
 
-},{"../../client/js/draw.js":5,"../../common/js/environmentState.js":10,"../../common/js/move.js":12,"../../common/js/settings.js":14,"../../common/js/utilities.js":15,"../../common/js/vector.js":16,"../../common/js/view.js":17}],3:[function(require,module,exports){
+},{"../../client/js/draw.js":5,"../../common/js/environmentState.js":12,"../../common/js/foodManager.js":13,"../../common/js/move.js":14,"../../common/js/settings.js":15,"../../common/js/utilities.js":16,"../../common/js/vector.js":17,"../../common/js/view.js":18}],3:[function(require,module,exports){
 "use strict";
 
 module.exports = function (state) {
@@ -173,7 +163,7 @@ var Draw = {
 
 module.exports = Draw;
 
-},{"../../common/js/settings.js":14,"../../common/js/vector.js":16}],6:[function(require,module,exports){
+},{"../../common/js/settings.js":15,"../../common/js/vector.js":17}],6:[function(require,module,exports){
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
@@ -240,24 +230,30 @@ module.exports = function (opt) {
 		}
 	};
 
+	var goBack = function goBack() {
+		cnv.style.display = "none";
+		menu.style.display = "block";
+		console.log("Go Back Callback invoked.");
+	};
+
 	playbutton.onclick = function () {
 		cnv.style.display = "block";
 		menu.style.display = "none";
 		console.log(options);
-		options.playGame(state);
+		options.playGame(state, goBack);
 	};
 
 	watchbutton.onclick = function () {
 		console.log("This feature has not been added!");
-		options.watchGame(state);
+		options.watchGame(state, goBack);
 	};
 
 	loginbutton.onclick = function () {
-		options.login(state);
+		options.login(state, goBack);
 	};
 };
 
-},{"../../common/js/settings.js":14,"../../common/js/vector.js":16}],7:[function(require,module,exports){
+},{"../../common/js/settings.js":15,"../../common/js/vector.js":17}],7:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -287,13 +283,20 @@ var reqFunc = {
 		checks: [function (a) {
 			return a.isAnElement == true;
 		}],
-		explanations: ["Expected an object which was created by the element factory, but didn't get one"]
+		explanations: ["Expected an object which was created by the element factory, but didn't get one."]
+	},
+	encounters: {
+		checks: [function (a) {
+			return a.isAnElement === true;
+		}],
+		explanations: ["Expected an object created by the element factory, but did not get one."]
 	}
 };
 
 var Element = function Element(options) {
 
 	//Make stub constructoor function.
+
 	var ret = function ret() {
 		//Mark it as belonging to this kind of prototype-like thing.
 		this.isAnElement = true;
@@ -315,14 +318,18 @@ var Element = function Element(options) {
 		if (this.priority === undefined) {
 			throw new Error("Constructor function must add .priority property for drawing purposes.");
 		}
+		if (this.nothingMatters !== true && this.nothingMatters !== false) {
+			throw new Error("Constructor function must set .nothingMatters property to be true or false at some point during invocation.");
+		}
 	};
 
 	//Add the rest of the functions.
-	var protFunc = ['draw', 'step', 'matters', 'copy'];
+	var protFunc = ['draw', 'step', 'matters', 'copy', 'encounters'];
 	protFunc.forEach(function (fn) {
 		//Make sure that it has the function in question in the options.
+		console.log(fn);
 		if (typeof options[fn] != 'function') {
-			throw new Error("'Options' object passed to element required an '" + fn + "'' function.");
+			throw new Error("'options' object passed to element required an '" + fn + "'' function.");
 		}
 		//Make sure the arity of the function passed is what it should be.
 		if (options[fn].length != reqFunc[fn].checks.length) {
@@ -363,7 +370,133 @@ var Element = function Element(options) {
 
 module.exports = Element;
 
-},{"../../common/js/utilities.js":15,"../../common/js/vector.js":16,"../../common/js/view.js":17}],8:[function(require,module,exports){
+},{"../../common/js/utilities.js":16,"../../common/js/vector.js":17,"../../common/js/view.js":18}],8:[function(require,module,exports){
+'use strict';
+
+var Element = require('../../common/js/element.js');
+var Settings = require('../../common/js/settings.js');
+var Vector = require('../../common/js/vector.js');
+var Utilities = require('../../common/js/utilities.js');
+
+var ElementFood = Element({
+	construct: function construct(location, options) {
+		//Mandatory
+		this.type = 'food';
+		this.nothingMatters = false;
+		this.priority = 1;
+		//Non-mandatory
+		this.location = location;
+		this.growing = options.growing || false;
+		this.shrinking = false;
+		this.size = options.growing ? 0 : Settings.foodMaxSize;
+		this.color = Settings.foodPossibleColors[Math.floor(Math.random() * Settings.foodPossibleColors.length)];
+	},
+	draw: function draw(context, view) {
+		var off = view.off;
+		var fs = this.location.add(off);
+		var size = this.size;
+		// console.log(size);
+		context.beginPath();
+		context.arc(fs.x, fs.y, size, 1, 2 * Math.PI, false);
+		context.lineWidth = 1;
+		context.strokeStyle = this.color;
+		context.stroke();
+	},
+	step: function step() {
+		var ret = this.copy();
+		if (ret.shrinking) {
+			ret.size = ret.size - Settings.foodGrowthRate;
+		}
+		if (ret.growing) {
+			ret.size = ret.size + Settings.foodGrowthRate;
+		}
+		if (ret.size >= Settings.foodMaxSize) {
+			ret.size = Settings.foodMaxSize;
+			ret.growing = false;
+		}
+		return ret.size <= 0 ? undefined : ret;
+	},
+	copy: function copy() {
+		var ret = Utilities.shallowCopy(this);
+		ret.location = Vector.copy(this.location);
+		return ret;
+	},
+	matters: function matters(element) {
+		return Utilities.foodPlayerCollision(this, element);
+	},
+	encounters: function encounters(element) {
+		var ret = this.copy();
+		ret.shrinking = true;
+		return ret;
+	}
+});
+
+module.exports = ElementFood;
+
+},{"../../common/js/element.js":7,"../../common/js/settings.js":15,"../../common/js/utilities.js":16,"../../common/js/vector.js":17}],9:[function(require,module,exports){
+'use strict';
+
+var Element = require('../../common/js/element.js');
+var Settings = require('../../common/js/settings.js');
+var Vector = require('../../common/js/vector.js');
+var Utilities = require('../../common/js/utilities.js');
+
+var ElementFood = Element({
+	construct: function construct(location, options) {
+		//Mandatory
+		this.type = 'food';
+		this.nothingMatters = false;
+		this.priority = 1;
+		//Non-mandatory
+		this.location = location;
+		this.growing = options.growing || false;
+		this.shrinking = false;
+		this.size = options.growing ? 0 : Settings.foodMaxSize;
+		this.color = Settings.foodPossibleColors[Math.floor(Math.random() * Settings.foodPossibleColors.length)];
+	},
+	draw: function draw(context, view) {
+		var off = view.off;
+		var fs = this.location.add(off);
+		var size = this.size;
+		// console.log(size);
+		context.beginPath();
+		context.arc(fs.x, fs.y, size, 1, 2 * Math.PI, false);
+		context.lineWidth = 1;
+		context.strokeStyle = this.color;
+		context.stroke();
+	},
+	step: function step() {
+		var ret = this.copy();
+		if (ret.shrinking) {
+			ret.size = ret.size - Settings.foodGrowthRate;
+		}
+		if (ret.growing) {
+			ret.size = ret.size + Settings.foodGrowthRate;
+		}
+		if (ret.size >= Settings.foodMaxSize) {
+			ret.size = Settings.foodMaxSize;
+			ret.growing = false;
+		}
+		return ret.size <= 0 ? undefined : ret;
+	},
+	copy: function copy() {
+		var ret = Utilities.shallowCopy(this);
+		ret.location = Vector.copy(this.location);
+		return ret;
+	},
+	matters: function matters(element) {
+		return Utilities.foodPlayerCollision(this, element);
+	},
+	encounters: function encounters(element) {
+		var ret = this.copy();
+		ret.shrinking = true;
+		return ret;
+	}
+});
+
+module.exports = ElementFood;
+
+},{"../../common/js/element.js":7,"../../common/js/settings.js":15,"../../common/js/utilities.js":16,"../../common/js/vector.js":17}],10:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -376,6 +509,7 @@ var ElementGrid = Element({
 	construct: function construct(location, options) {
 		//mandatory
 		this.type = 'grid';
+		this.nothingMatters = true;
 		this.priority = 0;
 		//optional
 		this.location = new Vector(0, 0);
@@ -403,16 +537,21 @@ var ElementGrid = Element({
 		return this.copy();
 	},
 	copy: function copy() {
-		return Utilities.shallowCopy(this);
+		var ret = Utilities.shallowCopy(this);
+		ret.location = Vector.copy(this.location);
+		return ret;
 	},
 	matters: function matters(element) {
 		return false;
+	},
+	encounters: function encounters(element) {
+		throw new Error('This should never be called, because .nothingMatters is set to be true.');
 	}
 });
 
 module.exports = ElementGrid;
 
-},{"../../common/js/element.js":7,"../../common/js/settings.js":14,"../../common/js/utilities.js":15,"../../common/js/vector.js":16}],9:[function(require,module,exports){
+},{"../../common/js/element.js":7,"../../common/js/settings.js":15,"../../common/js/utilities.js":16,"../../common/js/vector.js":17}],11:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -426,6 +565,7 @@ var ElementPlayer = Element({
 		//Mandatory
 		this.type = 'player';
 		this.priority = 1;
+		this.nothingMatters = false;
 		//Optional
 		this.places = Vector.chain(location, {
 			segments: Settings.startSegments,
@@ -441,7 +581,7 @@ var ElementPlayer = Element({
 		//console.log("!");
 		var off = view.off;
 		for (var x = 0; x < this.places.length - 1; x++) {
-			if ((Math.floor(x / 25) + 1) % 2 == 0) {
+			if ((Math.floor(x / 1) + 1) % 2 == 0) {
 				context.strokeStyle = '#000000';
 			} else {
 				context.strokeStyle = "#ff0000";
@@ -455,6 +595,10 @@ var ElementPlayer = Element({
 	},
 	step: function step() {
 
+		if (this.dying == true) {
+			return undefined;
+		}
+
 		var kinkiness = function kinkiness(v) {
 			var kinkiness = 0;
 			for (var x = 3; x < v.places.length - 3; x++) {
@@ -467,7 +611,6 @@ var ElementPlayer = Element({
 		};
 
 		var ret = this.copy();
-
 		ret.speed = ret.kink / Math.sqrt(ret.places.length) + 1;
 		ret.location = Vector.average(ret.places);
 		if (ret.amountToGrow > 0) {
@@ -494,27 +637,44 @@ var ElementPlayer = Element({
 		ret.location = Vector.average(ret.places);
 		return ret;
 	},
-	//needs to be fixed.
 	matters: function matters(element) {
-		return false;
+		return Utilities.foodPlayerCollision(element, this) || Utilities.playerPlayer(element, this);
 	},
 	setMove: function setMove(move) {
 		this.aim = move.aim;
+	},
+	encounters: function encounters(element) {
+		if (element.type == 'food') {
+			var ret = this.copy();
+			ret.amountToGrow = ret.amountToGrow + Settings.foodValue;
+			return ret;
+		}
+		if (element.type == 'player') {
+			var p1 = this.places[0];
+			var p2 = this.places[1];
+			for (var x = 2; x < element.places.length - 1; x++) {
+				if (Utilities.collision(p1, p2, element.places[x], element.places[x + 1])) {
+					var ret = this.copy();
+					ret.dying = true;
+					return ret;
+				}
+			}
+			return this.copy();
+		}
 	}
 });
 
 module.exports = ElementPlayer;
 
-},{"../../common/js/element.js":7,"../../common/js/settings.js":14,"../../common/js/utilities.js":15,"../../common/js/vector.js":16}],10:[function(require,module,exports){
+},{"../../common/js/element.js":7,"../../common/js/settings.js":15,"../../common/js/utilities.js":16,"../../common/js/vector.js":17}],12:[function(require,module,exports){
 'use strict';
 
-var Player = require('../../common/js/player.js');
-var Food = require('../../common/js/food.js');
 var Settings = require('../../common/js/settings.js');
 
 var members = {
 	grid: require('../../common/js/elementgrid.js'),
-	player: require('../../common/js/elementplayer.js')
+	player: require('../../common/js/elementplayer.js'),
+	food: require('../../common/js/elementfood.js')
 };
 
 var EnvironmentState = function EnvironmentState() {
@@ -522,17 +682,13 @@ var EnvironmentState = function EnvironmentState() {
 };
 
 EnvironmentState.prototype.draw = function (context, view) {
-
-	//Clear shit
 	context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-
-	//Draw shit
-	this.elements.forEach(function (element) {
-		element.draw(context, view);
-	});
+	for (var x = 0, len = this.elements.length; x < len; x++) {
+		this.elements[x].draw(context, view);
+	}
 };
 
-EnvironmentState.prototype.element = function (id) {
+EnvironmentState.prototype.getElement = function (id) {
 	return this.elements.filter(function (n) {
 		return n.id === id;
 	})[0];
@@ -544,72 +700,67 @@ EnvironmentState.prototype.addElement = function (name, location, options) {
 	return nw.id;
 };
 
-EnvironmentState.prototype.step = function () {
+EnvironmentState.prototype.step = function (mods) {
+	var self = this;
+	//Grab elements, as stepped forward.
+	var filteredElements = this.elements.reduce(function (building, element, outerIndex) {
+		var temp = element.step();
+		if (temp !== undefined && temp.type !== element.type) {
+			throw new Error("After step, something returned something not an element of the same kind and not an undefined");
+		} else {
+			return temp == undefined ? building : building.concat(temp);
+		}
+	}, []);
+	//Alter them in accord with any, by which they need to be altered.
+	var alteredElements = [];
+	for (var x = 0; x < filteredElements.length; x++) {
+		var element = filteredElements[x].copy();
+		if (element.nothingMatters === false) {
+			for (var y = 0; y < filteredElements.length; y++) {
+				var otherElement = filteredElements[y].copy();
+				if (element.matters(otherElement)) {
+					element = element.encounters(otherElement);
+				}
+			}
+		}
+		alteredElements.push(element);
+	}
+	//Make new thing, and return it.
 	var ret = new EnvironmentState();
-	ret.elements = this.elements.map(function (element) {
-		return element.step();
-	});
-	return ret;
-};
-
-EnvironmentState.prototype.advance = function (num) {
-	var ret = new EnvironmentState(this);
-	for (var x = 0; x < num; x++) {
-		ret = ret.step();
+	ret.elements = alteredElements;
+	mods = mods || [];
+	for (var x = 0; x < mods.length; x++) {
+		mods[x](ret);
 	}
 	return ret;
 };
 
 module.exports = EnvironmentState;
 
-},{"../../common/js/elementgrid.js":8,"../../common/js/elementplayer.js":9,"../../common/js/food.js":11,"../../common/js/player.js":13,"../../common/js/settings.js":14}],11:[function(require,module,exports){
+},{"../../common/js/elementfood.js":9,"../../common/js/elementgrid.js":10,"../../common/js/elementplayer.js":11,"../../common/js/settings.js":15}],13:[function(require,module,exports){
 'use strict';
 
-var Vector = require('../../common/js/vector.js');
+var Food = require('../../common/js/elementFood.js');
 var Settings = require('../../common/js/settings.js');
+var Vector = require('../../common/js/vector.js');
 
-var possibleColors = ['red', 'orange', 'blue', 'green', 'gray', 'purple', 'maroon'];
+//This is passed into the step function.  The step function, for the
+//state manager.
+var foodManager = function foodManager(elementManager) {
 
-var Food = function Food(grow) {
-	this.location = new Vector(Math.random() * Settings.boardSize, Math.random() * Settings.boardSize);
-	this.growing = !!grow;
-	this.shrinking = false;
-	this.size = !!grow ? 0 : Settings.foodMaxSize;
-	this.color = possibleColors[Math.floor(Math.random() * possibleColors.length)];
-	if (this.growing) {
-		console.log(this);
+	var foodCount = elementManager.elements.filter(function (ele) {
+		return ele.type == 'food';
+	}).length;
+
+	var ret = [];
+	for (var x = foodCount, len = Settings.foodStartAmount; x < len; x++) {
+		elementManager.addElement('food', new Vector(Math.random() * Settings.gridSize, Math.random() * Settings.gridSize), { growing: true });
 	}
 };
 
-Food.prototype.step = function () {
-	var ret = new Food();
+module.exports = foodManager;
 
-	ret.location = this.location;
-	ret.growing = this.growing;
-	ret.shrinking = this.shrinking;
-	ret.color = this.color;
-	ret.size = this.size;
-
-	if (ret.growing) {
-		ret.size = this.size + Settings.foodGrowthRate;
-		if (ret.size >= Settings.foodMaxSize) {
-			ret.size = Settings.foodMaxSize;
-			ret.growing = false;
-		}
-	}
-	if (this.shrinking) {
-		ret.size = this.size - Settings.foodGrowthRate;
-		if (ret.size <= 0) {
-			ret = undefined;
-		}
-	}
-
-	return ret;
-};
-
-module.exports = Food;
-
-},{"../../common/js/settings.js":14,"../../common/js/vector.js":16}],12:[function(require,module,exports){
+},{"../../common/js/elementFood.js":8,"../../common/js/settings.js":15,"../../common/js/vector.js":17}],14:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -647,90 +798,7 @@ var Move = function Move(options) {
 
 module.exports = Move;
 
-},{"../../common/js/settings.js":14,"../../common/js/vector.js":16}],13:[function(require,module,exports){
-'use strict';
-
-var Vector = require('../../common/js/vector.js');
-var Settings = require('../../common/js/settings.js');
-var averageSpot = function averageSpot(arr) {
-	return arr.reduce(function (build, stuff) {
-		return build.add(stuff);
-	}, new Vector(0, 0)).scale(1 / arr.length);
-};
-
-function Player(x, y, direction, length) {
-	if (typeof x == 'number') {
-		this.mouseVector = new Vector(0, 0);
-		this.amountToGrow = 0;
-		this.speed = 1;
-		this.segDist = 2;
-		this.kink = 0;
-		this.places = initializeLocation(x, y, direction, length);
-		this.avLocation = averageSpot(this.places);
-	} else {
-		this.speed = x.speed;
-		this.amountToGrow = x.amountToGrow;
-		this.segDist = x.segDist;
-		this.kink = x.kink;
-		this.mouseVector = Vector.copy(x.mouseVector);
-		this.places = x.places.map(Vector.copy);
-		this.avLocation = x.avLocation;
-	}
-}
-
-Player.prototype.kinkiness = function () {
-
-	var kinkiness = 0;
-	for (var x = 3; x < this.places.length - 3; x++) {
-
-		var pointing = this.places[x].sub(this.places[x + 3]).toUnit();
-		var otherPoint = this.places[x - 3].sub(this.places[x]).toUnit();
-		var diff = pointing.dist(otherPoint);
-		kinkiness = kinkiness + diff;
-	}
-	return kinkiness;
-};
-
-Player.prototype.setMove = function (mv) {
-	this.mouseVector = mv.aim;
-};
-
-Player.prototype.eatFood = function (amount) {
-	var ret = new Player(this);
-	ret.amountToGrow = ret.amountToGrow + amount;
-	return ret;
-};
-
-Player.prototype.step = function (mousePos) {
-
-	var ret = new Player(this);
-
-	ret.kink = ret.kinkiness();
-	ret.speed = ret.kink / Math.sqrt(ret.places.length) + 1;
-
-	ret.avLocation = ret.places.reduce(function (build, stuff) {
-		return build.add(stuff);
-	}, new Vector(0, 0)).scale(1 / ret.places.length);
-
-	if (ret.amountToGrow > 0) {
-		var last = ret.places[ret.places.length - 1];
-		var penu = ret.places[ret.places.length - 2];
-		ret.places.push(last.sub(penu.sub(last).scale(0.01)));
-		ret.amountToGrow = ret.amountToGrow - 1;
-	}
-
-	var goal = ret.places[0].sub(ret.places[1]).toUnit().scale(3);
-	var pointing = this.mouseVector.sub(ret.places[0]).toUnit();
-	var directionScaled = goal.add(pointing).toUnit().scale(ret.speed);
-	ret.places.unshift(ret.places[0].add(directionScaled));
-	ret.places.pop();
-
-	return ret;
-};
-
-module.exports = Player;
-
-},{"../../common/js/settings.js":14,"../../common/js/vector.js":16}],14:[function(require,module,exports){
+},{"../../common/js/settings.js":15,"../../common/js/vector.js":17}],15:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -745,21 +813,40 @@ module.exports = {
 	startSegments: 150,
 	startSpacing: 1,
 
-	foodStartAmount: 10,
-	foodSpawnRate: 100, //Per map, per second
+	foodStartAmount: 100,
+	foodPossibleColors: ['red', 'orange', 'blue', 'green', 'gray', 'purple', 'maroon'],
 	foodCycleTime: 2500,
 	foodGrowthRate: 0.5,
-	foodValue: 5,
+	foodValue: 15,
 	foodMaxSize: 15,
 
 	segmentSpacing: 2
 
 };
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
+var Vector = require('../../common/js/vector.js');
+
 module.exports = {
+
+	collision: function collision(p0, p1, p2, p3) {
+		var s1 = p1.sub(p0);
+		var s2 = p3.sub(p2);
+		var temp = -s2.x * s1.y + s1.x * s2.y;
+		var s = (-s1.y * (p0.x - p2.x) + s1.x * (p0.y - p2.y)) / temp;
+		var t = (s2.x * (p0.y - p2.y) - s2.y * (p0.x - p2.x)) / temp;
+		return s >= 0 && s <= 1 && t >= 0 && t <= 1 ? true : false;
+	},
+
+	playerPlayer: function playerPlayer(one, two) {
+		return one.type == 'player' && two.type == 'player';
+	},
+
+	foodPlayerCollision: function foodPlayerCollision(food, player) {
+		return food.type == 'food' && !food.growing && !food.shrinking && player.type == 'player' && food.location.dist(player.places[0]) < food.size;
+	},
 
 	shallowCopy: function shallowCopy(obj) {
 		var keys = Object.keys(obj);
@@ -795,7 +882,7 @@ module.exports = {
 
 };
 
-},{}],16:[function(require,module,exports){
+},{"../../common/js/vector.js":17}],17:[function(require,module,exports){
 'use strict';
 
 function Vector(x, y) {
@@ -826,7 +913,6 @@ Vector.chain = function (start, options) {
 	for (var i = 0; i < segments; i++) {
 		var factor = spacing * i;
 		var addendum = start.add(new Vector(factor * components.x + Math.random() / 100, factor * components.y + Math.random() / 100));
-		console.log(addendum);
 		chain.push(addendum);
 	}
 	return chain;
@@ -876,7 +962,7 @@ Vector.prototype.toUnit = function () {
 
 module.exports = Vector;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -887,4 +973,4 @@ var View = function View(cnv, center) {
 
 module.exports = View;
 
-},{"../../common/js/vector.js":16}]},{},[1]);
+},{"../../common/js/vector.js":17}]},{},[1]);

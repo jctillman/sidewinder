@@ -10,6 +10,7 @@ var ElementPlayer = Element({
 		//Mandatory
 		this.type = 'player' 
 		this.priority = 1;
+		this.nothingMatters = false;
 		//Optional
 		this.places = Vector.chain(location, {
 			segments: Settings.startSegments,
@@ -20,13 +21,12 @@ var ElementPlayer = Element({
 		this.amountToGrow = 0;
 		this.speed = 1;
 		this.kink = 0; 
-
 	},
 	draw: function(context, view){
 	  //console.log("!");
 	  var off = view.off
 	  for(var x = 0; x < this.places.length - 1; x++){
-	  	if ( (Math.floor(x / 25)+1) % 2 == 0 ) {
+	  	if ( (Math.floor(x / 1)+1) % 2 == 0 ) {
 	  		context.strokeStyle = '#000000'
 	  	}else{
 	  		context.strokeStyle = "#ff0000"
@@ -40,6 +40,10 @@ var ElementPlayer = Element({
 	},
 	step: function(){
 
+		if (this.dying == true){
+			return undefined;
+		}
+
 		var kinkiness = function(v){ 
 			var kinkiness = 0;
 			for(var x = 3; x < v.places.length-3; x++){
@@ -52,7 +56,6 @@ var ElementPlayer = Element({
 		}
 
 		var ret = this.copy();
-		
 		ret.speed = ret.kink / Math.sqrt(ret.places.length) + 1;
 		ret.location = Vector.average(ret.places);
 		if (ret.amountToGrow > 0){
@@ -77,13 +80,33 @@ var ElementPlayer = Element({
 		ret.location = Vector.average(ret.places);
 		return ret;
 	},
-	//needs to be fixed.
 	matters: function(element){
-		return false;
+		return Utilities.foodPlayerCollision(element, this) || Utilities.playerPlayer(element, this);
 	},
 	setMove: function(move){
 		this.aim = move.aim;
+	},
+	encounters: function(element){
+		if (element.type == 'food'){
+		        var ret = this.copy();
+			ret.amountToGrow = ret.amountToGrow + Settings.foodValue;
+	    		return ret;
+		}
+		if (element.type == 'player'){
+			var p1 = this.places[0];
+			var p2 = this.places[1];
+			for(var x = 2; x < element.places.length-1; x++){
+				if (Utilities.collision(p1,p2, element.places[x], element.places[x+1])){
+					var ret = this.copy();
+					ret.dying = true;
+					return ret;
+				}
+			}
+			return this.copy();
+		}
 	}
 });
+
+
 
 module.exports = ElementPlayer;

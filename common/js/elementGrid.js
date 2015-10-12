@@ -3,12 +3,12 @@ var Settings = require('../../common/js/settings.js');
 var Vector = require('../../common/js/vector.js');
 var Utilities = require('../../common/js/utilities.js');
 
-
 var ElementGrid = Element({
 	//Constructor actually ignores required things, because this is such a background.. thing.
 	construct: function(location, options){
 		//mandatory
 		this.type = 'grid' 
+		this.nothingMatters = true;
 		this.priority = 0;
 		//optional
 		this.location = new Vector(0,0);
@@ -32,14 +32,19 @@ var ElementGrid = Element({
 		context.lineWidth = 1
 		context.stroke(path); 
 	},
-	step: function(){
+	step: function(){ 
 		return this.copy();
 	},
 	copy: function(){
-		return Utilities.shallowCopy(this);
+		var ret = Utilities.shallowCopy(this);
+		ret.location = Vector.copy(this.location);
+		return ret;
 	},
 	matters: function(element){
 		return false;
+	},
+	encounters: function(element){
+		throw new Error('This should never be called, because .nothingMatters is set to be true.');
 	}
 });
 

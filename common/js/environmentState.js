@@ -1,31 +1,26 @@
-var Player = require('../../common/js/player.js');
-var Food = require('../../common/js/food.js');
 var Settings = require('../../common/js/settings.js');
 
 var members = {
 	grid: require('../../common/js/elementgrid.js'),
-	player: require('../../common/js/elementplayer.js')
+	player: require('../../common/js/elementplayer.js'),
+	food: require('../../common/js/elementfood.js')
 }
+
 
 var EnvironmentState = function(){ 
 	this.elements = [];
 }
 
 EnvironmentState.prototype.draw = function(context, view){
-
-	//Clear shit
 	context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-
-	//Draw shit
-	this.elements.forEach(function(element){
-		element.draw(context, view);
-	});
-
+	for(var x = 0, len = this.elements.length; x < len; x++){
+		this.elements[x].draw(context, view);
+	}
 };
 
-EnvironmentState.prototype.element = function(id){
+EnvironmentState.prototype.getElement = function(id){
 	return this.elements.filter(function(n){
-		return n.id === id;
+		return n.id === id; 
 	})[0]
 }
 
@@ -35,19 +30,37 @@ EnvironmentState.prototype.addElement = function(name, location, options){
 	return nw.id;
 }
 
-EnvironmentState.prototype.step = function(){
+EnvironmentState.prototype.step = function(mods){
+	var self = this;
+	//Grab elements, as stepped forward.
+	var filteredElements = this.elements.reduce(function(building, element, outerIndex){
+		var temp = element.step();
+		if (temp !== undefined && temp.type !== element.type){
+			throw new Error("After step, something returned something not an element of the same kind and not an undefined");
+		}else{
+			return (temp == undefined) ? building : building.concat(temp)
+		}
+	}, []);		
+	//Alter them in accord with any, by which they need to be altered.
+    var alteredElements = [];
+	for(var x = 0; x < filteredElements.length; x++){
+		var element = filteredElements[x].copy();
+		if(element.nothingMatters === false){
+			for(var y = 0; y < filteredElements.length; y++){
+				var otherElement = filteredElements[y].copy();
+				if( element.matters(otherElement) ){
+					element = element.encounters(otherElement);
+				}
+			}
+		}
+		alteredElements.push(element);
+	}
+	//Make new thing, and return it.
 	var ret = new EnvironmentState();
-	ret.elements = this.elements.map(function(element){
-		return element.step();
-	});
-	return ret;
-}
-
-
-EnvironmentState.prototype.advance = function(num){
-	var ret = new EnvironmentState(this);
-	for(var x = 0; x < num; x++){
-		ret = ret.step();
+	ret.elements = alteredElements;	
+	mods = mods || [];
+	for(var x = 0; x < mods.length; x++){
+		mods[x](ret);
 	}
 	return ret;
 }

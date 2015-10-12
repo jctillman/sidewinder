@@ -29,7 +29,6 @@ Vector.chain = function(start, options){ //direction, length){
   			factor*components.x+Math.random()/100,
   			factor*components.y+Math.random()/100
   		));
-  		console.log(addendum)
   		chain.push(addendum);
   	}
   	return chain;

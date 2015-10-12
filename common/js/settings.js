@@ -10,11 +10,11 @@ module.exports = {
 	startSegments: 150,
 	startSpacing: 1,
 
-	foodStartAmount: 10,
-	foodSpawnRate: 100,     //Per map, per second
+	foodStartAmount: 100,
+	foodPossibleColors: [ 'red', 'orange', 'blue', 'green', 'gray', 'purple', 'maroon'],
 	foodCycleTime: 2500,
 	foodGrowthRate: 0.5,
-	foodValue: 5,
+	foodValue: 15,
 	foodMaxSize: 15,
 	
 	

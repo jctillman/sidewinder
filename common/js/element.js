@@ -31,14 +31,23 @@ var reqFunc = {
 			function(a) { return (a.isAnElement == true)}
 		],
 		explanations:[
-			"Expected an object which was created by the element factory, but didn't get one"
+			"Expected an object which was created by the element factory, but didn't get one."
 		]
-	}
+	},
+	encounters: {
+		checks: [
+			function(a) {return a.isAnElement === true}
+			],
+		explanations: [
+			"Expected an object created by the element factory, but did not get one."
+			]	
+	 }
 }
 
-var Element = function(options){
+var Element = function(options){ 
 	
 	//Make stub constructoor function.
+
 	var ret = function(){
 		//Mark it as belonging to this kind of prototype-like thing.
 		this.isAnElement = true;
@@ -60,14 +69,18 @@ var Element = function(options){
 		if(this.priority === undefined){
 			throw new Error("Constructor function must add .priority property for drawing purposes.")
 		}
+		if( (this.nothingMatters !== true) && (this.nothingMatters !== false) ){
+			throw new Error("Constructor function must set .nothingMatters property to be true or false at some point during invocation.");	
+		}
 	}
 
 	//Add the rest of the functions.
-	var protFunc = ['draw', 'step', 'matters', 'copy'];
+	var protFunc = ['draw', 'step', 'matters', 'copy', 'encounters'];
 	protFunc.forEach(function(fn){
 		//Make sure that it has the function in question in the options.
+		console.log(fn);
 		if(typeof options[fn] != 'function'){
-			throw new Error("'Options' object passed to element required an '" + fn + "'' function.");
+			throw new Error("'options' object passed to element required an '" + fn + "'' function.");
 		}
 		//Make sure the arity of the function passed is what it should be.
 		if(options[fn].length != reqFunc[fn].checks.length){

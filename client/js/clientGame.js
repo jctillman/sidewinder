@@ -6,39 +6,33 @@ var Move = require('../../common/js/move.js');
 var View = require('../../common/js/view.js');
 var Vector = require('../../common/js/vector.js');
 
-var playGame = function(gameState, appState, playerId){
+var playGame = function(gameState, appState, playerId, finished){
 
 
-	var physicsLoops = setInterval(Utilities.timed(true, function(){
+	var physicsLoops = setInterval(Utilities.timed(false, function(){
 
-		gameState = gameState.step();
+		//Grab the player, and set the players move.
+		var plyr = gameState.getElement(playerId)
 
-		var plyr = gameState.element(playerId)
 		var movr = new Move({
 			mousePosition: appState.game.mousePosition(),
 			player: plyr
 		});
 		plyr.setMove(movr);
 
-
+		//View is what is used in rendering.
 		var tempView = new View(appState.game.canvas, plyr.location);
-
 		gameState.draw(appState.game.context, tempView);
-		//console.log("!");
-		//console.log(gameState)
-		//Draw.clear(appState, gameState, playerIndex);
-		//Draw.self(appState, gameState, playerIndex);
-		//Draw.others(appState, gameState, playerIndex);
 
-		//var move = new Move({
-		//	mousePosition: appState.game.mousePosition(),
-		//	player: gameState.players[playerIndex]
-		//});
+		//set this shit
+		gameState = gameState.step([require('../../common/js/foodManager.js')]);
 
-		//gameState.setMove(playerIndex, move);
-		//gameState = gameState.step();
-
-
+		var plyr = gameState.getElement(playerId)
+		if(plyr == undefined){
+			window.clearInterval(physicsLoops)
+			console.log(physicsLoops)
+			finished();
+		}
 
 	}), Settings.physicsRate)
 
@@ -46,23 +40,18 @@ var playGame = function(gameState, appState, playerId){
 
 
  
-module.exports = function(appState){
+module.exports = function(appState, finished){
 
-	//Get game
-	//For now, just as stop
 
 	var gameState = new EnvironmentState();
-	gameState.addElement('grid', new Vector(0,0), {});
+	var gridId =   gameState.addElement('grid', new Vector(0,0), {});
+	for(var x = 0; x < Settings.foodStartAmount; x++){
+		gameState.addElement('food', new Vector(Math.random()*Settings.gridSize, Math.random()*Settings.gridSize),{})
+	}
 	var playerId = gameState.addElement('player', new Vector(55,55),{});
 
-	//gameState.addPlayer(100,150,10,10);
-	// console.log(gameState)
-	// var gs = gameState.step('dsd');
-	// console.log(gs)
-	// var ms = gs.step('dsds');
-	// console.log(ms);
-
-	playGame(gameState, appState, playerId)
+	
+	playGame(gameState, appState, playerId, finished)
 
 
 }

@@ -35,5 +35,8 @@ gulp.task('css', function(){
 
 
 gulp.task('default', function(){
+  gulp.start('copy');
+  gulp.start('browserify');
+  gulp.start('css');
   gulp.watch(path.ALL, ['copy', 'browserify','css']);
 });

@@ -63,20 +63,26 @@ module.exports = function(opt){
 		}
 	}; 
 
+	var goBack = function(){
+		cnv.style.display="none";
+		menu.style.display="block";
+		console.log("Go Back Callback invoked.");
+	}
+
 	playbutton.onclick = function(){ 
 		cnv.style.display="block";
 		menu.style.display="none";
 		console.log(options)
-		options.playGame(state);
+		options.playGame(state, goBack);
 	}
 
 	watchbutton.onclick = function(){
 		console.log("This feature has not been added!")
-		options.watchGame(state);
+		options.watchGame(state, goBack);
 	}
 
 	loginbutton.onclick = function(){
-		options.login(state);
+		options.login(state, goBack);
 	}
 
 }
