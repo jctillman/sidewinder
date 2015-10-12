@@ -10,7 +10,7 @@ require('../../client/js/pageSetUp.js')({
 },{"../../client/js/clientGame.js":2,"../../client/js/clientLogin.js":3,"../../client/js/clientWatch.js":4,"../../client/js/pageSetUp.js":6}],2:[function(require,module,exports){
 'use strict';
 
-var EnvironmentState = require('../../common/js/environmentState.js');
+var ElementManager = require('../../common/js/ElementManager.js');
 var Draw = require('../../client/js/draw.js');
 var Settings = require('../../common/js/settings.js');
 var Utilities = require('../../common/js/utilities.js');
@@ -20,7 +20,7 @@ var Vector = require('../../common/js/vector.js');
 
 var playGame = function playGame(gameState, appState, playerId, finished) {
 
-	var physicsLoops = setInterval(Utilities.timed(false, function () {
+	var physicsLoops = setInterval(Utilities.timed(true, function () {
 
 		//Grab the player, and set the players move.
 		var plyr = gameState.getElement(playerId);
@@ -36,7 +36,7 @@ var playGame = function playGame(gameState, appState, playerId, finished) {
 		gameState.draw(appState.game.context, tempView);
 
 		//set this shit
-		gameState = gameState.step([require('../../common/js/foodManager.js')]);
+		gameState = gameState.step([require('../../common/js/elementManagerFood.js'), require('../../common/js/elementManagerAi.js')]);
 
 		var plyr = gameState.getElement(playerId);
 		if (plyr == undefined) {
@@ -49,17 +49,21 @@ var playGame = function playGame(gameState, appState, playerId, finished) {
 
 module.exports = function (appState, finished) {
 
-	var gameState = new EnvironmentState();
+	var gameState = new ElementManager();
 	var gridId = gameState.addElement('grid', new Vector(0, 0), {});
 	for (var x = 0; x < Settings.foodStartAmount; x++) {
 		gameState.addElement('food', new Vector(Math.random() * Settings.gridSize, Math.random() * Settings.gridSize), {});
 	}
 	var playerId = gameState.addElement('player', new Vector(55, 55), {});
 
+	gameState.addElement('player', new Vector(255, 255), { isHuman: false });
+
+	//gameState.addElement('player', new Vector(255,255), {isHuman: false});
+
 	playGame(gameState, appState, playerId, finished);
 };
 
-},{"../../client/js/draw.js":5,"../../common/js/environmentState.js":12,"../../common/js/foodManager.js":13,"../../common/js/move.js":14,"../../common/js/settings.js":15,"../../common/js/utilities.js":16,"../../common/js/vector.js":17,"../../common/js/view.js":18}],3:[function(require,module,exports){
+},{"../../client/js/draw.js":5,"../../common/js/ElementManager.js":7,"../../common/js/elementManagerAi.js":10,"../../common/js/elementManagerFood.js":11,"../../common/js/move.js":15,"../../common/js/settings.js":16,"../../common/js/utilities.js":17,"../../common/js/vector.js":18,"../../common/js/view.js":19}],3:[function(require,module,exports){
 "use strict";
 
 module.exports = function (state) {
@@ -163,7 +167,7 @@ var Draw = {
 
 module.exports = Draw;
 
-},{"../../common/js/settings.js":15,"../../common/js/vector.js":17}],6:[function(require,module,exports){
+},{"../../common/js/settings.js":16,"../../common/js/vector.js":18}],6:[function(require,module,exports){
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
@@ -253,7 +257,78 @@ module.exports = function (opt) {
 	};
 };
 
-},{"../../common/js/settings.js":15,"../../common/js/vector.js":17}],7:[function(require,module,exports){
+},{"../../common/js/settings.js":16,"../../common/js/vector.js":18}],7:[function(require,module,exports){
+'use strict';
+
+var Settings = require('../../common/js/settings.js');
+
+var members = {
+	grid: require('../../common/js/elementgrid.js'),
+	player: require('../../common/js/elementplayer.js'),
+	food: require('../../common/js/elementfood.js')
+};
+
+var ElementManager = function ElementManager() {
+	this.elements = [];
+};
+
+ElementManager.prototype.draw = function (context, view) {
+	context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+	for (var x = 0, len = this.elements.length; x < len; x++) {
+		this.elements[x].draw(context, view);
+	}
+};
+
+ElementManager.prototype.getElement = function (id) {
+	return this.elements.filter(function (n) {
+		return n.id === id;
+	})[0];
+};
+
+ElementManager.prototype.addElement = function (name, location, options) {
+	var nw = new (members[name.toLowerCase()])(location, options);
+	this.elements.push(nw);
+	return nw.id;
+};
+
+ElementManager.prototype.step = function (mods) {
+	var self = this;
+	//Grab elements, as stepped forward.
+	var filteredElements = this.elements.reduce(function (building, element, outerIndex) {
+		var temp = element.step();
+		if (temp !== undefined && temp.type !== element.type) {
+			throw new Error("After step, something returned something not an element of the same kind and not an undefined");
+		} else {
+			return temp == undefined ? building : building.concat(temp);
+		}
+	}, []);
+	//Alter them in accord with any, by which they need to be altered.
+	var alteredElements = [];
+	for (var x = 0; x < filteredElements.length; x++) {
+		var element = filteredElements[x].copy();
+		if (element.nothingMatters === false) {
+			for (var y = 0; y < filteredElements.length; y++) {
+				var otherElement = filteredElements[y].copy();
+				if (element.matters(otherElement)) {
+					element = element.encounters(otherElement);
+				}
+			}
+		}
+		alteredElements.push(element);
+	}
+	//Make new thing, and return it.
+	var ret = new ElementManager();
+	ret.elements = alteredElements;
+	mods = mods || [];
+	for (var x = 0; x < mods.length; x++) {
+		mods[x](ret);
+	}
+	return ret;
+};
+
+module.exports = ElementManager;
+
+},{"../../common/js/elementfood.js":12,"../../common/js/elementgrid.js":13,"../../common/js/elementplayer.js":14,"../../common/js/settings.js":16}],8:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -370,7 +445,7 @@ var Element = function Element(options) {
 
 module.exports = Element;
 
-},{"../../common/js/utilities.js":16,"../../common/js/vector.js":17,"../../common/js/view.js":18}],8:[function(require,module,exports){
+},{"../../common/js/utilities.js":17,"../../common/js/vector.js":18,"../../common/js/view.js":19}],9:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -397,7 +472,7 @@ var ElementFood = Element({
 		var size = this.size;
 		// console.log(size);
 		context.beginPath();
-		context.arc(fs.x, fs.y, size, 1, 2 * Math.PI, false);
+		context.arc(fs.x, fs.y, size, 0, 2 * Math.PI, false);
 		context.lineWidth = 1;
 		context.strokeStyle = this.color;
 		context.stroke();
@@ -433,7 +508,80 @@ var ElementFood = Element({
 
 module.exports = ElementFood;
 
-},{"../../common/js/element.js":7,"../../common/js/settings.js":15,"../../common/js/utilities.js":16,"../../common/js/vector.js":17}],9:[function(require,module,exports){
+},{"../../common/js/element.js":8,"../../common/js/settings.js":16,"../../common/js/utilities.js":17,"../../common/js/vector.js":18}],10:[function(require,module,exports){
+'use strict';
+
+var Food = require('../../common/js/elementFood.js');
+var Settings = require('../../common/js/settings.js');
+var Vector = require('../../common/js/vector.js');
+var Utilities = require('../../common/js/vector.js');
+var Move = require('../../common/js/move.js');
+
+//This is passed into the step function.  The step function, for the
+//state manager.
+var time = 0;
+
+//This needs to be made waaay cleaner than it is, and
+//also needs to be made so that the AI doesn't suicide
+//so easily.
+var elementManagerAi = function elementManagerAi(elementManager) {
+	time++;
+	var AIs = elementManager.elements.filter(function (ele) {
+		return ele.type == 'player' && ele.isHuman == false;
+	});
+
+	var Feed = elementManager.elements.filter(function (ele) {
+		return ele.type == 'food';
+	});
+
+	if (time % Settings.aiCheckFrequency == 0) {
+		for (var x = 0, len = AIs.length; x < len; x++) {
+
+			var dist = Settings.gridSize;
+			var index = 0;
+			var spot = new Vector(0, 0);
+			for (var y = 0; y < Feed.length; y++) {
+
+				if (Feed[y].location.dist(AIs[x].location) < dist) {
+					spot = Vector.copy(Feed[y].location);
+				}
+			}
+
+			AIs[x].setMove(new Move({ aim: spot }));
+		}
+	}
+	console.log(AIs.length, Settings.aiMinimum);
+	if (AIs.length < Settings.aiMinimum) {
+		elementManager.addElement('player', new Vector(Math.random() * Settings.gridSize, Math.random() * Settings.gridSize), { isHuman: false });
+	}
+};
+
+module.exports = elementManagerAi;
+
+},{"../../common/js/elementFood.js":9,"../../common/js/move.js":15,"../../common/js/settings.js":16,"../../common/js/vector.js":18}],11:[function(require,module,exports){
+'use strict';
+
+var Food = require('../../common/js/elementFood.js');
+var Settings = require('../../common/js/settings.js');
+var Vector = require('../../common/js/vector.js');
+
+//This is passed into the step function.  The step function, for the
+//state manager.
+var elementFoodManager = function elementFoodManager(elementManager) {
+
+	var foodCount = elementManager.elements.filter(function (ele) {
+		return ele.type == 'food';
+	}).length;
+
+	var ret = [];
+	for (var x = foodCount, len = Settings.foodStartAmount; x < len; x++) {
+		elementManager.addElement('food', new Vector(Math.random() * Settings.gridSize, Math.random() * Settings.gridSize), { growing: true });
+	}
+};
+
+module.exports = elementFoodManager;
+
+},{"../../common/js/elementFood.js":9,"../../common/js/settings.js":16,"../../common/js/vector.js":18}],12:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -460,7 +608,7 @@ var ElementFood = Element({
 		var size = this.size;
 		// console.log(size);
 		context.beginPath();
-		context.arc(fs.x, fs.y, size, 1, 2 * Math.PI, false);
+		context.arc(fs.x, fs.y, size, 0, 2 * Math.PI, false);
 		context.lineWidth = 1;
 		context.strokeStyle = this.color;
 		context.stroke();
@@ -496,7 +644,7 @@ var ElementFood = Element({
 
 module.exports = ElementFood;
 
-},{"../../common/js/element.js":7,"../../common/js/settings.js":15,"../../common/js/utilities.js":16,"../../common/js/vector.js":17}],10:[function(require,module,exports){
+},{"../../common/js/element.js":8,"../../common/js/settings.js":16,"../../common/js/utilities.js":17,"../../common/js/vector.js":18}],13:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -551,7 +699,7 @@ var ElementGrid = Element({
 
 module.exports = ElementGrid;
 
-},{"../../common/js/element.js":7,"../../common/js/settings.js":15,"../../common/js/utilities.js":16,"../../common/js/vector.js":17}],11:[function(require,module,exports){
+},{"../../common/js/element.js":8,"../../common/js/settings.js":16,"../../common/js/utilities.js":17,"../../common/js/vector.js":18}],14:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -567,6 +715,7 @@ var ElementPlayer = Element({
 		this.priority = 1;
 		this.nothingMatters = false;
 		//Optional
+		this.isHuman = options.isHuman === undefined ? true : options.isHuman;
 		this.places = Vector.chain(location, {
 			segments: Settings.startSegments,
 			spacing: Settings.startSpacing
@@ -655,6 +804,11 @@ var ElementPlayer = Element({
 			for (var x = 2; x < element.places.length - 1; x++) {
 				if (Utilities.collision(p1, p2, element.places[x], element.places[x + 1])) {
 					var ret = this.copy();
+					console.log("A death!");
+					console.log(this.id, x);
+					console.log(element.id);
+					console.log(p1, p2, element.places[x], element.places[x + 1]);
+
 					ret.dying = true;
 					return ret;
 				}
@@ -666,101 +820,7 @@ var ElementPlayer = Element({
 
 module.exports = ElementPlayer;
 
-},{"../../common/js/element.js":7,"../../common/js/settings.js":15,"../../common/js/utilities.js":16,"../../common/js/vector.js":17}],12:[function(require,module,exports){
-'use strict';
-
-var Settings = require('../../common/js/settings.js');
-
-var members = {
-	grid: require('../../common/js/elementgrid.js'),
-	player: require('../../common/js/elementplayer.js'),
-	food: require('../../common/js/elementfood.js')
-};
-
-var EnvironmentState = function EnvironmentState() {
-	this.elements = [];
-};
-
-EnvironmentState.prototype.draw = function (context, view) {
-	context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-	for (var x = 0, len = this.elements.length; x < len; x++) {
-		this.elements[x].draw(context, view);
-	}
-};
-
-EnvironmentState.prototype.getElement = function (id) {
-	return this.elements.filter(function (n) {
-		return n.id === id;
-	})[0];
-};
-
-EnvironmentState.prototype.addElement = function (name, location, options) {
-	var nw = new (members[name.toLowerCase()])(location, options);
-	this.elements.push(nw);
-	return nw.id;
-};
-
-EnvironmentState.prototype.step = function (mods) {
-	var self = this;
-	//Grab elements, as stepped forward.
-	var filteredElements = this.elements.reduce(function (building, element, outerIndex) {
-		var temp = element.step();
-		if (temp !== undefined && temp.type !== element.type) {
-			throw new Error("After step, something returned something not an element of the same kind and not an undefined");
-		} else {
-			return temp == undefined ? building : building.concat(temp);
-		}
-	}, []);
-	//Alter them in accord with any, by which they need to be altered.
-	var alteredElements = [];
-	for (var x = 0; x < filteredElements.length; x++) {
-		var element = filteredElements[x].copy();
-		if (element.nothingMatters === false) {
-			for (var y = 0; y < filteredElements.length; y++) {
-				var otherElement = filteredElements[y].copy();
-				if (element.matters(otherElement)) {
-					element = element.encounters(otherElement);
-				}
-			}
-		}
-		alteredElements.push(element);
-	}
-	//Make new thing, and return it.
-	var ret = new EnvironmentState();
-	ret.elements = alteredElements;
-	mods = mods || [];
-	for (var x = 0; x < mods.length; x++) {
-		mods[x](ret);
-	}
-	return ret;
-};
-
-module.exports = EnvironmentState;
-
-},{"../../common/js/elementfood.js":9,"../../common/js/elementgrid.js":10,"../../common/js/elementplayer.js":11,"../../common/js/settings.js":15}],13:[function(require,module,exports){
-'use strict';
-
-var Food = require('../../common/js/elementFood.js');
-var Settings = require('../../common/js/settings.js');
-var Vector = require('../../common/js/vector.js');
-
-//This is passed into the step function.  The step function, for the
-//state manager.
-var foodManager = function foodManager(elementManager) {
-
-	var foodCount = elementManager.elements.filter(function (ele) {
-		return ele.type == 'food';
-	}).length;
-
-	var ret = [];
-	for (var x = foodCount, len = Settings.foodStartAmount; x < len; x++) {
-		elementManager.addElement('food', new Vector(Math.random() * Settings.gridSize, Math.random() * Settings.gridSize), { growing: true });
-	}
-};
-
-module.exports = foodManager;
-
-},{"../../common/js/elementFood.js":8,"../../common/js/settings.js":15,"../../common/js/vector.js":17}],14:[function(require,module,exports){
+},{"../../common/js/element.js":8,"../../common/js/settings.js":16,"../../common/js/utilities.js":17,"../../common/js/vector.js":18}],15:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -798,7 +858,7 @@ var Move = function Move(options) {
 
 module.exports = Move;
 
-},{"../../common/js/settings.js":15,"../../common/js/vector.js":17}],15:[function(require,module,exports){
+},{"../../common/js/settings.js":16,"../../common/js/vector.js":18}],16:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -813,7 +873,10 @@ module.exports = {
 	startSegments: 150,
 	startSpacing: 1,
 
-	foodStartAmount: 100,
+	aiCheckFrequency: 10,
+	aiMinimum: 1,
+
+	foodStartAmount: 10,
 	foodPossibleColors: ['red', 'orange', 'blue', 'green', 'gray', 'purple', 'maroon'],
 	foodCycleTime: 2500,
 	foodGrowthRate: 0.5,
@@ -824,7 +887,7 @@ module.exports = {
 
 };
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -837,7 +900,7 @@ module.exports = {
 		var temp = -s2.x * s1.y + s1.x * s2.y;
 		var s = (-s1.y * (p0.x - p2.x) + s1.x * (p0.y - p2.y)) / temp;
 		var t = (s2.x * (p0.y - p2.y) - s2.y * (p0.x - p2.x)) / temp;
-		return s >= 0 && s <= 1 && t >= 0 && t <= 1 ? true : false;
+		return s > 0 && s < 1 && t > 0 && t < 1 ? true : false;
 	},
 
 	playerPlayer: function playerPlayer(one, two) {
@@ -882,7 +945,7 @@ module.exports = {
 
 };
 
-},{"../../common/js/vector.js":17}],17:[function(require,module,exports){
+},{"../../common/js/vector.js":18}],18:[function(require,module,exports){
 'use strict';
 
 function Vector(x, y) {
@@ -962,7 +1025,7 @@ Vector.prototype.toUnit = function () {
 
 module.exports = Vector;
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -973,4 +1036,4 @@ var View = function View(cnv, center) {
 
 module.exports = View;
 
-},{"../../common/js/vector.js":17}]},{},[1]);
+},{"../../common/js/vector.js":18}]},{},[1]);

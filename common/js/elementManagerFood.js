@@ -4,7 +4,7 @@ var Vector = require('../../common/js/vector.js');
 
 //This is passed into the step function.  The step function, for the 
 //state manager.
-var foodManager = function(elementManager){
+var elementFoodManager = function(elementManager){
 
 	var foodCount = elementManager.elements.filter(function(ele){return ele.type == 'food';}).length;
 
@@ -16,4 +16,4 @@ var foodManager = function(elementManager){
 
 }
 
-module.exports = foodManager;
+module.exports = elementFoodManager;

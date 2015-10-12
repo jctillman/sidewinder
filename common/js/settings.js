@@ -10,7 +10,10 @@ module.exports = {
 	startSegments: 150,
 	startSpacing: 1,
 
-	foodStartAmount: 100,
+	aiCheckFrequency: 10,
+	aiMinimum: 1,
+
+	foodStartAmount: 10,
 	foodPossibleColors: [ 'red', 'orange', 'blue', 'green', 'gray', 'purple', 'maroon'],
 	foodCycleTime: 2500,
 	foodGrowthRate: 0.5,
@@ -18,7 +21,6 @@ module.exports = {
 	foodMaxSize: 15,
 	
 	
-
 	segmentSpacing: 2
 
 }

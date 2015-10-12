@@ -8,7 +8,7 @@ module.exports = {
 		var temp = (-s2.x * s1.y + s1.x * s2.y) 
 		var s = (-s1.y *  (p0.x - p2.x) + s1.x * (p0.y - p2.y) ) / (temp);
 		var t = ( s2.x  * (p0.y - p2.y) - s2.y * (p0.x - p2.x) ) / (temp);
-		return (s >=0 && s <= 1 && t >= 0 && t <= 1) ? true : false;
+		return (s > 0 && s < 1 && t > 0 && t < 1) ? true : false;
 	},
 
 	playerPlayer: function(one, two){

@@ -22,7 +22,7 @@ var ElementFood = Element({
 		var size = this.size;
 		// console.log(size);
 		context.beginPath();
-		context.arc(fs.x, fs.y, size, 1, 2 * Math.PI, false);
+		context.arc(fs.x, fs.y, size, 0, 2 * Math.PI, false);
 		context.lineWidth = 1; 
 		context.strokeStyle = this.color;
 		context.stroke();

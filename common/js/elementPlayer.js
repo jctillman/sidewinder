@@ -12,6 +12,7 @@ var ElementPlayer = Element({
 		this.priority = 1;
 		this.nothingMatters = false;
 		//Optional
+		this.isHuman = (options.isHuman === undefined) ? true : options.isHuman;
 		this.places = Vector.chain(location, {
 			segments: Settings.startSegments,
 			spacing: Settings.startSpacing
@@ -98,6 +99,11 @@ var ElementPlayer = Element({
 			for(var x = 2; x < element.places.length-1; x++){
 				if (Utilities.collision(p1,p2, element.places[x], element.places[x+1])){
 					var ret = this.copy();
+					console.log("A death!");
+					console.log(this.id, x);
+					console.log(element.id);
+					console.log(p1, p2, element.places[x], element.places[x+1]);
+
 					ret.dying = true;
 					return ret;
 				}

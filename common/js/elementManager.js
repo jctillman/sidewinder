@@ -7,30 +7,30 @@ var members = {
 }
 
 
-var EnvironmentState = function(){ 
+var ElementManager = function(){ 
 	this.elements = [];
 }
 
-EnvironmentState.prototype.draw = function(context, view){
+ElementManager.prototype.draw = function(context, view){
 	context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 	for(var x = 0, len = this.elements.length; x < len; x++){
 		this.elements[x].draw(context, view);
 	}
 };
 
-EnvironmentState.prototype.getElement = function(id){
+ElementManager.prototype.getElement = function(id){
 	return this.elements.filter(function(n){
 		return n.id === id; 
 	})[0]
 }
 
-EnvironmentState.prototype.addElement = function(name, location, options){
+ElementManager.prototype.addElement = function(name, location, options){
 	var nw = new members[name.toLowerCase()](location, options);
 	this.elements.push(nw);
 	return nw.id;
 }
 
-EnvironmentState.prototype.step = function(mods){
+ElementManager.prototype.step = function(mods){
 	var self = this;
 	//Grab elements, as stepped forward.
 	var filteredElements = this.elements.reduce(function(building, element, outerIndex){
@@ -56,7 +56,8 @@ EnvironmentState.prototype.step = function(mods){
 		alteredElements.push(element);
 	}
 	//Make new thing, and return it.
-	var ret = new EnvironmentState();
+	var ret = new ElementManager
+();
 	ret.elements = alteredElements;	
 	mods = mods || [];
 	for(var x = 0; x < mods.length; x++){
@@ -65,4 +66,4 @@ EnvironmentState.prototype.step = function(mods){
 	return ret;
 }
 
-module.exports = EnvironmentState
+module.exports = ElementManager
