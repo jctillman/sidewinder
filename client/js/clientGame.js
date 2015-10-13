@@ -53,8 +53,6 @@ module.exports = function(appState, finished){
 	}
 	var playerId = gameState.addElement('player', new Vector(55,55),{});
 
-	gameState.addElement('player', new Vector(255,255), {isHuman: false});
-
 	//gameState.addElement('player', new Vector(255,255), {isHuman: false});
 
 	

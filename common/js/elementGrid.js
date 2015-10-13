@@ -40,8 +40,14 @@ var ElementGrid = Element({
 		ret.location = Vector.copy(this.location);
 		return ret;
 	},
+	relevantPoints: function(){
+		return Vector.copy(this.location);
+	},
 	matters: function(element){
 		return false;
+	},
+	relevantPoints: function(){
+		return [];
 	},
 	encounters: function(element){
 		throw new Error('This should never be called, because .nothingMatters is set to be true.');

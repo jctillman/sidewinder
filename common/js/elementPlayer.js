@@ -84,6 +84,9 @@ var ElementPlayer = Element({
 	matters: function(element){
 		return Utilities.foodPlayerCollision(element, this) || Utilities.playerPlayer(element, this);
 	},
+	relevantPoints: function(){
+		return this.places.map(function(n){return Vector.copy(n)});
+	},
 	setMove: function(move){
 		this.aim = move.aim;
 	},
@@ -96,14 +99,9 @@ var ElementPlayer = Element({
 		if (element.type == 'player'){
 			var p1 = this.places[0];
 			var p2 = this.places[1];
-			for(var x = 2; x < element.places.length-1; x++){
-				if (Utilities.collision(p1,p2, element.places[x], element.places[x+1])){
+			for(var x = 2; x < element.places.length-5; x=x+5){
+				if (Utilities.collision(p1,p2, element.places[x], element.places[x+5])){
 					var ret = this.copy();
-					console.log("A death!");
-					console.log(this.id, x);
-					console.log(element.id);
-					console.log(p1, p2, element.places[x], element.places[x+1]);
-
 					ret.dying = true;
 					return ret;
 				}

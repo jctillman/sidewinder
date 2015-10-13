@@ -42,17 +42,23 @@ var ElementFood = Element({
 		return (ret.size <= 0) ? undefined : ret;
 	},
 	copy: function(){
-		var ret = Utilities.shallowCopy(this);
-		ret.location = Vector.copy(this.location);
-		return ret;
+		return this;
+		// var ret = Utilities.shallowCopy(this);
+		// ret.location = Vector.copy(this.location);
+		// return ret;
+	},
+	relevantPoints: function(){
+		return [Vector.copy(this.location)];
 	},
 	matters: function(element){
 		return Utilities.foodPlayerCollision(this, element);
 	},
 	encounters: function(element){
-		var ret = this.copy();
-		ret.shrinking = true;
-		return ret;
+		if(element.type == 'player'){
+			var ret = this.copy();
+			ret.shrinking = true;
+			return ret;
+		}
 	}
 });
 

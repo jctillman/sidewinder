@@ -17,25 +17,27 @@ var elementManagerAi = function(elementManager){
 
 	var Feed = elementManager.elements.filter(function(ele){return ele.type == 'food'});
 
-	if ( (time % Settings.aiCheckFrequency) == 0){
-		for(var x = 0, len = AIs.length; x < len; x++){
+	// if ( (time % Settings.aiCheckFrequency) == 0){
+	// 	for(var x = 0, len = AIs.length; x < len; x++){
 
-			var dist = Settings.gridSize;
-			var index = 0;
-			var spot = new Vector(0,0);
-			for(var y = 0; y < Feed.length; y++){
+	// 		var dist = Settings.gridSize;
+	// 		var index = 0;
+	// 		var spot = new Vector(0,0);
+	// 		for(var y = 0; y < Feed.length; y++){
 
-				if (Feed[y].location.dist(AIs[x].location) < dist){
-					spot = Vector.copy(Feed[y].location);
-				}
+	// 			var newDist = Feed[y].location.dist(AIs[x].location)
+	// 			if (newDist < dist){
+	// 				spot = Vector.copy(Feed[y].location);
+	// 				dist = newDist;
+	// 			}
 
-			}
+	// 		}
 
-			AIs[x].setMove(new Move({aim: spot}));
+	// 		AIs[x].setMove(new Move({aim: spot}));
 
-		}
-	}
-	console.log(AIs.length, Settings.aiMinimum)
+	// 	}
+	// }
+	//console.log(AIs.length, Settings.aiMinimum)
 	if (AIs.length < Settings.aiMinimum){
 		elementManager.addElement('player', new Vector(Math.random()*Settings.gridSize, Math.random()*Settings.gridSize), {isHuman: false});
 	}

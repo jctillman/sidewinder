@@ -26,6 +26,7 @@ var reqFunc = {
 	},
 	step: { checks: [], explanations: [] }, 
 	copy: { checks: [], explanations: [] },
+	relevantPoints: { checks: [], explanations: [] },
 	matters: {
 		checks:[
 			function(a) { return (a.isAnElement == true)}
@@ -75,7 +76,7 @@ var Element = function(options){
 	}
 
 	//Add the rest of the functions.
-	var protFunc = ['draw', 'step', 'matters', 'copy', 'encounters'];
+	var protFunc = ['draw', 'step', 'matters', 'copy', 'encounters', 'relevantPoints'];
 	protFunc.forEach(function(fn){
 		//Make sure that it has the function in question in the options.
 		console.log(fn);

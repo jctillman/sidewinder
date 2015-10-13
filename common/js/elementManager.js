@@ -1,4 +1,5 @@
 var Settings = require('../../common/js/settings.js');
+var BoundingBoxer = require('../../common/js/boundingboxer.js');
 
 var members = {
 	grid: require('../../common/js/elementgrid.js'),
@@ -19,46 +20,51 @@ ElementManager.prototype.draw = function(context, view){
 };
 
 ElementManager.prototype.getElement = function(id){
-	return this.elements.filter(function(n){
-		return n.id === id; 
-	})[0]
+	for(var x = 0, len=this.elements.length; x < len; x++){
+		if(this.elements[x].id === id){
+			return this.elements[x];
+		}
+	}
+	return undefined;
 }
 
 ElementManager.prototype.addElement = function(name, location, options){
-	var nw = new members[name.toLowerCase()](location, options);
-	this.elements.push(nw);
-	return nw.id;
+	var temp = new members[name.toLowerCase()](location, options);
+	this.elements.push(temp);
+	return temp.id;
 }
 
 ElementManager.prototype.step = function(mods){
 	var self = this;
-	//Grab elements, as stepped forward.
-	var filteredElements = this.elements.reduce(function(building, element, outerIndex){
-		var temp = element.step();
-		if (temp !== undefined && temp.type !== element.type){
-			throw new Error("After step, something returned something not an element of the same kind and not an undefined");
-		}else{
-			return (temp == undefined) ? building : building.concat(temp)
+
+	var filteredElements = [];
+	for(var x = 0, len = this.elements.length; x < len; x++){
+		var temp = this.elements[x].step();
+		if (temp != undefined){
+			temp.boxes = BoundingBoxer.boxList(temp.relevantPoints());
+			filteredElements.push(temp);
 		}
-	}, []);		
-	//Alter them in accord with any, by which they need to be altered.
-    var alteredElements = [];
-	for(var x = 0; x < filteredElements.length; x++){
-		var element = filteredElements[x].copy();
-		if(element.nothingMatters === false){
-			for(var y = 0; y < filteredElements.length; y++){
-				var otherElement = filteredElements[y].copy();
-				if( element.matters(otherElement) ){
-					element = element.encounters(otherElement);
-				}
-			}
-		}
-		alteredElements.push(element);
 	}
+
+
+	//Alter them in accord with any, by which they need to be altered.
+ //    var alteredElements = [];
+	// for(var x = 0; x < filteredElements.length; x++){
+	// 	var element = filteredElements[x].copy();
+	// 	if(element.nothingMatters == false){
+	// 		for(var y = 0; y < filteredElements.length; y++){
+	// 			var otherElement = filteredElements[y].copy();
+	// 			var m = BoundingBoxer.shareBoxes(element.boxes, otherElement.boxes);
+	// 			if( m && element.matters(otherElement) ){
+	// 				element = element.encounters(otherElement);
+	// 			}
+	// 		}
+	// 	}
+	// 	alteredElements.push(element);
+	// }
 	//Make new thing, and return it.
-	var ret = new ElementManager
-();
-	ret.elements = alteredElements;	
+	var ret = new ElementManager();
+	ret.elements = filteredElements;//alteredElements;	
 	mods = mods || [];
 	for(var x = 0; x < mods.length; x++){
 		mods[x](ret);
