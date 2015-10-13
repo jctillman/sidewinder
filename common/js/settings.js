@@ -13,7 +13,7 @@ module.exports = {
 	aiCheckFrequency: 10,
 	aiMinimum: 10,
 
-	foodStartAmount: 500,
+	foodStartAmount: 2500,
 	foodPossibleColors: [ 'red', 'orange', 'blue', 'green', 'gray', 'purple', 'maroon'],
 	foodCycleTime: 2500,
 	foodGrowthRate: 0.5,

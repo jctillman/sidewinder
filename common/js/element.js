@@ -79,7 +79,6 @@ var Element = function(options){
 	var protFunc = ['draw', 'step', 'matters', 'copy', 'encounters', 'relevantPoints'];
 	protFunc.forEach(function(fn){
 		//Make sure that it has the function in question in the options.
-		console.log(fn);
 		if(typeof options[fn] != 'function'){
 			throw new Error("'options' object passed to element required an '" + fn + "'' function.");
 		}
@@ -87,34 +86,15 @@ var Element = function(options){
 		if(options[fn].length != reqFunc[fn].checks.length){
 			throw new Error("'" + fn + "' function in options requires an arity of " + reqFunc[fn].checks.length)
 		}
-		//Add the function, with error checking.
-		ret.prototype[fn] = function(){
-			var args = [];
-			for(var y = 0; y < arguments.length; y++){
-				if (reqFunc[fn].checks[y](arguments[y])){
-					args.push(arguments[y])
-				}else{
-					throw new Error("An incorrect value: " + reqFunc[fn].explanations[y])
-				}
-			}
-			var rtrn = options[fn].apply(this, args);
-			return rtrn;
-		}
+		//Add the function, without error checking.
+		ret.prototype[fn] = options[fn];
 	});
 
 	//Add the functions that are not required, with stuff.
 	Object.keys(options).filter(function(func){
 		return protFunc.indexOf(func) == -1 && func != 'construct';
 	}).forEach(function(fn){
-		console.log(fn)
-		ret.prototype[fn] = function(){
-			var args = [];
-			for(var y = 0; y < arguments.length; y++){
-				args.push(arguments[y])
-			}
-			var rtrn = options[fn].apply(this, args);
-			return rtrn;
-		}
+		ret.prototype[fn] = options[fn]
 	});
 
 	return ret;

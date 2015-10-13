@@ -1,5 +1,5 @@
 var Settings = require('../../common/js/settings.js');
-var BoundingBoxer = require('../../common/js/boundingboxer.js');
+var BoundingBox = require('../../common/js/boundingbox.js');
 
 var members = {
 	grid: require('../../common/js/elementgrid.js'),
@@ -15,7 +15,11 @@ var ElementManager = function(){
 ElementManager.prototype.draw = function(context, view){
 	context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 	for(var x = 0, len = this.elements.length; x < len; x++){
-		this.elements[x].draw(context, view);
+		var el = this.elements[x];
+		if (view.box.intersects(el.box)){
+			//debugger;
+			this.elements[x].draw(context, view);
+		}
 	}
 };
 
@@ -30,6 +34,7 @@ ElementManager.prototype.getElement = function(id){
 
 ElementManager.prototype.addElement = function(name, location, options){
 	var temp = new members[name.toLowerCase()](location, options);
+	temp.box = new BoundingBox(temp.relevantPoints())
 	this.elements.push(temp);
 	return temp.id;
 }
@@ -37,11 +42,13 @@ ElementManager.prototype.addElement = function(name, location, options){
 ElementManager.prototype.step = function(mods){
 	var self = this;
 
-	var filteredElements = [];
+	var filteredElements = []; 
 	for(var x = 0, len = this.elements.length; x < len; x++){
 		var temp = this.elements[x].step();
 		if (temp != undefined){
-			temp.boxes = BoundingBoxer.boxList(temp.relevantPoints());
+			var a = temp.relevantPoints()
+			var b = new BoundingBox(a);
+			temp.box = b;
 			filteredElements.push(temp);
 		}
 	}

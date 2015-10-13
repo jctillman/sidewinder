@@ -259,7 +259,7 @@ module.exports = function (opt) {
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
-var BoundingBoxer = require('../../common/js/boundingboxer.js');
+var BoundingBox = require('../../common/js/boundingbox.js');
 
 var members = {
 	grid: require('../../common/js/elementgrid.js'),
@@ -274,7 +274,11 @@ var ElementManager = function ElementManager() {
 ElementManager.prototype.draw = function (context, view) {
 	context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 	for (var x = 0, len = this.elements.length; x < len; x++) {
-		this.elements[x].draw(context, view);
+		var el = this.elements[x];
+		if (view.box.intersects(el.box)) {
+			//debugger;
+			this.elements[x].draw(context, view);
+		}
 	}
 };
 
@@ -289,6 +293,7 @@ ElementManager.prototype.getElement = function (id) {
 
 ElementManager.prototype.addElement = function (name, location, options) {
 	var temp = new (members[name.toLowerCase()])(location, options);
+	temp.box = new BoundingBox(temp.relevantPoints());
 	this.elements.push(temp);
 	return temp.id;
 };
@@ -300,7 +305,9 @@ ElementManager.prototype.step = function (mods) {
 	for (var x = 0, len = this.elements.length; x < len; x++) {
 		var temp = this.elements[x].step();
 		if (temp != undefined) {
-			temp.boxes = BoundingBoxer.boxList(temp.relevantPoints());
+			var a = temp.relevantPoints();
+			var b = new BoundingBox(a);
+			temp.box = b;
 			filteredElements.push(temp);
 		}
 	}
@@ -332,37 +339,31 @@ ElementManager.prototype.step = function (mods) {
 
 module.exports = ElementManager;
 
-},{"../../common/js/boundingboxer.js":8,"../../common/js/elementfood.js":13,"../../common/js/elementgrid.js":14,"../../common/js/elementplayer.js":15,"../../common/js/settings.js":17}],8:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":8,"../../common/js/elementfood.js":13,"../../common/js/elementgrid.js":14,"../../common/js/elementplayer.js":15,"../../common/js/settings.js":17}],8:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
 
-var BoundingBoxer = {
-
-	boxList: function boxList(pointArr) {
-		var ret = [];
-		for (var x = 0; x < pointArr.length; x++) {
-			var temp = Math.floor(pointArr[x].x * .01) + 's' + Math.floor(pointArr[x].y * 0.01) + 's';
-			if (ret.indexOf(temp) == -1) {
-				ret.push(temp);
-			}
-		}
-		return ret;
-	},
-	shareBoxes: function shareBoxes(oneBox, twoBox) {
-		for (var x = 0; x < oneBox.length; x++) {
-			for (var y = 0; y < twoBox.length; y++) {
-				if (oneBox[x] == twoBox[y]) {
-					return true;
-				}
-			}
-		}
-		return false;
+var BoundingBox = function BoundingBox(vectorArr) {
+	var upperLeft = Vector.copy(vectorArr[0]);
+	var lowerRight = Vector.copy(vectorArr[0]);
+	for (var x = 1, len = vectorArr.length; x < len; x++) {
+		upperLeft.x = Math.min(upperLeft.x, vectorArr[x].x);
+		upperLeft.y = Math.min(upperLeft.y, vectorArr[x].y);
+		lowerRight.x = Math.max(lowerRight.x, vectorArr[x].x);
+		lowerRight.y = Math.max(lowerRight.y, vectorArr[x].y);
 	}
-
+	this.left = upperLeft.x;
+	this.right = lowerRight.x;
+	this.top = upperLeft.y;
+	this.bottom = lowerRight.y;
 };
 
-module.exports = BoundingBoxer;
+BoundingBox.prototype.intersects = function (otherBox) {
+	return !(this.right < otherBox.left || this.left > otherBox.right || this.top > otherBox.bottom || this.bottom < otherBox.top);
+};
+
+module.exports = BoundingBox;
 
 },{"../../common/js/vector.js":19}],9:[function(require,module,exports){
 'use strict';
@@ -439,7 +440,6 @@ var Element = function Element(options) {
 	var protFunc = ['draw', 'step', 'matters', 'copy', 'encounters', 'relevantPoints'];
 	protFunc.forEach(function (fn) {
 		//Make sure that it has the function in question in the options.
-		console.log(fn);
 		if (typeof options[fn] != 'function') {
 			throw new Error("'options' object passed to element required an '" + fn + "'' function.");
 		}
@@ -447,34 +447,15 @@ var Element = function Element(options) {
 		if (options[fn].length != reqFunc[fn].checks.length) {
 			throw new Error("'" + fn + "' function in options requires an arity of " + reqFunc[fn].checks.length);
 		}
-		//Add the function, with error checking.
-		ret.prototype[fn] = function () {
-			var args = [];
-			for (var y = 0; y < arguments.length; y++) {
-				if (reqFunc[fn].checks[y](arguments[y])) {
-					args.push(arguments[y]);
-				} else {
-					throw new Error("An incorrect value: " + reqFunc[fn].explanations[y]);
-				}
-			}
-			var rtrn = options[fn].apply(this, args);
-			return rtrn;
-		};
+		//Add the function, without error checking.
+		ret.prototype[fn] = options[fn];
 	});
 
 	//Add the functions that are not required, with stuff.
 	Object.keys(options).filter(function (func) {
 		return protFunc.indexOf(func) == -1 && func != 'construct';
 	}).forEach(function (fn) {
-		console.log(fn);
-		ret.prototype[fn] = function () {
-			var args = [];
-			for (var y = 0; y < arguments.length; y++) {
-				args.push(arguments[y]);
-			}
-			var rtrn = options[fn].apply(this, args);
-			return rtrn;
-		};
+		ret.prototype[fn] = options[fn];
 	});
 
 	return ret;
@@ -616,12 +597,14 @@ var Vector = require('../../common/js/vector.js');
 //state manager.
 var elementFoodManager = function elementFoodManager(elementManager) {
 
-	var foodCount = elementManager.elements.filter(function (ele) {
-		return ele.type == 'food';
-	}).length;
+	var foodCount = 0;
+	var len = elementManager.elements.length;
+	for (var x = 0; x < len; x++) {
+		foodCount = elementManager.elements[x].type == 'food' ? foodCount + 1 : foodCount;
+	}
 
-	var ret = [];
-	for (var x = foodCount, len = Settings.foodStartAmount; x < len; x++) {
+	var total = Settings.foodStartAmount;
+	for (var x = foodCount; x < total; x++) {
 		elementManager.addElement('food', new Vector(Math.random() * Settings.gridSize, Math.random() * Settings.gridSize), { growing: true });
 	}
 };
@@ -743,13 +726,10 @@ var ElementGrid = Element({
 		return ret;
 	},
 	relevantPoints: function relevantPoints() {
-		return Vector.copy(this.location);
+		return [new Vector(0, 0)];
 	},
 	matters: function matters(element) {
 		return false;
-	},
-	relevantPoints: function relevantPoints() {
-		return [];
 	},
 	encounters: function encounters(element) {
 		throw new Error('This should never be called, because .nothingMatters is set to be true.');
@@ -935,7 +915,7 @@ module.exports = {
 	aiCheckFrequency: 10,
 	aiMinimum: 10,
 
-	foodStartAmount: 500,
+	foodStartAmount: 2500,
 	foodPossibleColors: ['red', 'orange', 'blue', 'green', 'gray', 'purple', 'maroon'],
 	foodCycleTime: 2500,
 	foodGrowthRate: 0.5,
@@ -994,11 +974,16 @@ module.exports = {
 
 	timed: function timed(verbose, func) {
 
+		var num = 0;
+		var ellapsed = 0;
+
 		return function () {
 			var start = Date.now();
 			func();
 			var end = Date.now();
-			verbose && console.log("Took " + (end - start) + " miliseconds.");
+			ellapsed = ellapsed + (end - start);
+			num++;
+			verbose && console.log("Average of " + ellapsed / num + " miliseconds.");
 		};
 	}
 
@@ -1088,11 +1073,16 @@ module.exports = Vector;
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
+var BoundingBox = require('../../common/js/boundingbox.js');
 
 var View = function View(cnv, center) {
-	this.off = new Vector(-center.x + cnv.width * 0.5, -center.y + cnv.height * 0.5);
+	var center = new Vector(center.x, center.y);
+	var half = new Vector(cnv.width * 0.5, cnv.height * 0.5);
+	this.off = center.scale(-1).add(half);
+	this.box = new BoundingBox([center.add(half), center.sub(half)]);
+	//console.log(this.box);
 };
 
 module.exports = View;
 
-},{"../../common/js/vector.js":19}]},{},[1]);
+},{"../../common/js/boundingbox.js":8,"../../common/js/vector.js":19}]},{},[1]);

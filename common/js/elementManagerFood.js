@@ -6,11 +6,19 @@ var Vector = require('../../common/js/vector.js');
 //state manager.
 var elementFoodManager = function(elementManager){
 
-	var foodCount = elementManager.elements.filter(function(ele){return ele.type == 'food';}).length;
-
-	var ret = [];
-	for(var x = foodCount, len = Settings.foodStartAmount; x < len; x++){
-		elementManager.addElement('food', new Vector(Math.random()*Settings.gridSize, Math.random()*Settings.gridSize), { growing: true });
+	var foodCount = 0;
+	var len = elementManager.elements.length
+	for(var x = 0; x < len; x++){
+		foodCount = ( (elementManager.elements[x].type == 'food') ? foodCount + 1 : foodCount );
+	}
+	
+	var total = Settings.foodStartAmount;
+	for(var x = foodCount; x < total; x++){
+		elementManager.addElement(
+			'food',
+			new Vector(Math.random()*Settings.gridSize, Math.random()*Settings.gridSize),
+			{ growing: true }
+		);
 	}
 	
 

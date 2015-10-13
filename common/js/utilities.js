@@ -43,11 +43,16 @@ module.exports = {
  
 	timed: function(verbose, func){
 
+		var num = 0;
+		var ellapsed = 0;
+
 		return function(){
 			var start = Date.now();
 			func();
 			var end = Date.now();
-      		verbose && console.log("Took " + (end-start) + " miliseconds.");
+			ellapsed = ellapsed + (end-start);
+			num++;
+      		verbose && console.log("Average of " + (ellapsed / num) + " miliseconds.");
 		}
 
 	}
