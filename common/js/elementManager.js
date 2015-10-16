@@ -1,5 +1,6 @@
 var Settings = require('../../common/js/settings.js');
 var BoundingBox = require('../../common/js/boundingbox.js');
+var Grid = require('../../common/js/grid.js');
 
 var members = {
 	grid: require('../../common/js/elementgrid.js'),
@@ -17,7 +18,6 @@ ElementManager.prototype.draw = function(context, view){
 	for(var x = 0, len = this.elements.length; x < len; x++){
 		var el = this.elements[x];
 		if (view.box.intersects(el.box)){
-			//debugger;
 			this.elements[x].draw(context, view);
 		}
 	}
@@ -34,49 +34,70 @@ ElementManager.prototype.getElement = function(id){
 
 ElementManager.prototype.addElement = function(name, location, options){
 	var temp = new members[name.toLowerCase()](location, options);
-	temp.box = new BoundingBox(temp.relevantPoints())
 	this.elements.push(temp);
 	return temp.id;
 }
 
 ElementManager.prototype.step = function(mods){
 	var self = this;
+	var filteredElements = [];
 
-	var filteredElements = []; 
 	for(var x = 0, len = this.elements.length; x < len; x++){
 		var temp = this.elements[x].step();
 		if (temp != undefined){
-			var a = temp.relevantPoints()
-			var b = new BoundingBox(a);
-			temp.box = b;
-			filteredElements.push(temp);
+			filteredElements = filteredElements.concat(temp);
 		}
 	}
 
+	for(var x = 0, len=filteredElements.length; x < len; x++){
+		if(!filteredElements[x].inactive){
+			for(var y = 0, len=filteredElements.length; y < len; y++){
+				for(var y = 0; y < len; y++){
+					if(filteredElements[x].matters(filteredElements[y])){
+						filteredElements[x].encounters(filteredElements[y])
+					}
+				}
+			}
+		}
+	}
 
-	//Alter them in accord with any, by which they need to be altered.
- //    var alteredElements = [];
-	// for(var x = 0; x < filteredElements.length; x++){
-	// 	var element = filteredElements[x].copy();
-	// 	if(element.nothingMatters == false){
-	// 		for(var y = 0; y < filteredElements.length; y++){
-	// 			var otherElement = filteredElements[y].copy();
-	// 			var m = BoundingBoxer.shareBoxes(element.boxes, otherElement.boxes);
-	// 			if( m && element.matters(otherElement) ){
-	// 				element = element.encounters(otherElement);
-	// 			}
-	// 		}
-	// 	}
-	// 	alteredElements.push(element);
-	// }
 	//Make new thing, and return it.
 	var ret = new ElementManager();
-	ret.elements = filteredElements;//alteredElements;	
+	ret.elements = filteredElements;	
 	mods = mods || [];
 	for(var x = 0; x < mods.length; x++){
 		mods[x](ret);
 	}
 	return ret;
+
+	
+	// for(var x = 0, len=Grid.length; x < len; x++){
+	// 	Grid[x].items = [];
+	// 	for(var y = 0; y < filteredElements.length; y++){
+	// 		if(Grid[x].box.intersects(filteredElements[y].box)){
+	// 			filteredElements[y].visitedBy = [];
+	// 			Grid[x].items.push(filteredElements[y]);
+	// 		}
+	// 	}
+	// }
+
+
+	// //Alter them in accord with any, by which they need to be altered.
+
+	// for(var x = 0; x < Grid.length; x++){
+	// 	var stuffHere = Grid[x].items;
+	// 	for(var y =0; y < stuffHere.length; y++){
+	// 		if (!stuffHere[y].inactive){
+	// 			for(var z = 0; z < stuffHere.length; z++){
+	// 				if(stuffHere[y].matters(stuffHere[z])) {
+	// 					stuffHere[y].encounters(stuffHere[z])
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+
 }
 
 module.exports = ElementManager

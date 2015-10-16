@@ -1,36 +1,46 @@
 var Element = require('../../common/js/element.js');
+var ElementFood = require('../../common/js/elementfood.js');
 var Settings = require('../../common/js/settings.js');
 var Vector = require('../../common/js/vector.js');
 var Utilities = require('../../common/js/utilities.js');
+var BoundingBox = require('../../common/js/BoundingBox.js');
 
 
 var ElementPlayer = Element({
 	//Constructor actually ignores required things, because this is such a background.. thing.
 	construct: function(location, options){
-		//Mandatory
-		this.type = 'player' 
-		this.priority = 1;
-		this.nothingMatters = false;
 		//Optional
 		this.isHuman = (options.isHuman === undefined) ? true : options.isHuman;
 		this.places = Vector.chain(location, {
 			segments: Settings.startSegments,
-			spacing: Settings.startSpacing
+			spacing: Settings.startSpacing,
+			direction: options.direction || 0
 		});
 		this.location = Vector.average(this.places);
 		this.aim = new Vector(0,0);
 		this.amountToGrow = 0;
 		this.speed = 1;
 		this.kink = 0; 
+		this.oneColor = Settings.foodPossibleColors[Math.floor(Math.random() * Settings.foodPossibleColors.length)];
+		this.twoColor = Settings.foodPossibleColors[Math.floor(Math.random() * Settings.foodPossibleColors.length)];
+		this.stripeLength = 10 + Math.random() * 30;
+		this.dying = false;
+		this.dead = undefined;
+		//Mandatory
+		this.type = 'player' 
+		this.priority = 1;
+		this.inactive = false;
+		this.nothingMatters = false;
+		this.box = new BoundingBox(this.places);
 	},
 	draw: function(context, view){
 	  //console.log("!");
 	  var off = view.off
 	  for(var x = 0; x < this.places.length - 1; x++){
-	  	if ( (Math.floor(x / 1)+1) % 2 == 0 ) {
-	  		context.strokeStyle = '#000000'
+	  	if ( (Math.floor(x / this.stripeLength)+1) % 2 == 0 ) {
+	  		context.strokeStyle = this.oneColor;
 	  	}else{
-	  		context.strokeStyle = "#ff0000"
+	  		context.strokeStyle = this.twoColor;
 	  	}
   		var pth = new Path2D();
   		pth.moveTo(this.places[x].x+off.x, this.places[x].y+off.y);
@@ -42,7 +52,12 @@ var ElementPlayer = Element({
 	step: function(){
 
 		if (this.dying == true){
-			return undefined;
+			var ret = [];
+			var inc = Settings.foodSpacing;
+			for(var x = 0; x < this.places.length; x = x + inc){
+				ret.push(new ElementFood(Vector.copy(this.places[x]), {growing: true}));
+			}
+			return ret;
 		}
 
 		var kinkiness = function(v){ 
@@ -69,6 +84,7 @@ var ElementPlayer = Element({
 		var pointing = this.aim.sub(ret.places[0]).toUnit();
 		var directionScaled = goal.add(pointing).toUnit().scale(ret.speed);
 		var addendum = ret.places[0].add(directionScaled)
+		ret.box = new BoundingBox(this.places);
 		ret.places.unshift(addendum);
 		ret.places.pop(); 
 		ret.kink = kinkiness(ret);
@@ -79,6 +95,7 @@ var ElementPlayer = Element({
 		ret.places = this.places.map(function(n){return Vector.copy(n);});
 		ret.aim = Vector.copy(this.aim);
 		ret.location = Vector.average(ret.places);
+		ret.box = BoundingBox.copy(this.box);
 		return ret;
 	},
 	matters: function(element){
@@ -92,21 +109,18 @@ var ElementPlayer = Element({
 	},
 	encounters: function(element){
 		if (element.type == 'food'){
-		        var ret = this.copy();
-			ret.amountToGrow = ret.amountToGrow + Settings.foodValue;
-	    		return ret;
+			this.amountToGrow = this.amountToGrow + Settings.foodValue;
+			element.shrinking = true;
 		}
 		if (element.type == 'player'){
 			var p1 = this.places[0];
-			var p2 = this.places[1];
-			for(var x = 2; x < element.places.length-5; x=x+5){
+			var p2 = this.places[4];
+			for(var x = 0; x < element.places.length-5; x=x+5){
 				if (Utilities.collision(p1,p2, element.places[x], element.places[x+5])){
-					var ret = this.copy();
-					ret.dying = true;
-					return ret;
+					this.dying = true;
+					x = element.places.length;
 				}
 			}
-			return this.copy();
 		}
 	}
 });

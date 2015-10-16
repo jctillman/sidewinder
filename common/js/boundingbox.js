@@ -16,6 +16,23 @@ var BoundingBox = function(vectorArr){
 	this.bottom = lowerRight.y;
 }
 
+BoundingBox.copy = function(cop){
+	var m = new BoundingBox([new Vector(0,0)]);
+	m.left = cop.left;
+	m.right = cop.right;
+	m.top = cop.top;
+	m.bottom = cop.bottom;
+	return m;
+}
+
+BoundingBox.prototype.getWidth = function(){
+	return this.right - this.left;
+}
+
+BoundingBox.prototype.getHeight = function(){
+	return this.bottom - this.top;
+}
+
 BoundingBox.prototype.intersects = function(otherBox){
 	return !(
 		this.right < otherBox.left ||

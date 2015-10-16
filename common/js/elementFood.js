@@ -2,12 +2,14 @@ var Element = require('../../common/js/element.js');
 var Settings = require('../../common/js/settings.js');
 var Vector = require('../../common/js/vector.js');
 var Utilities = require('../../common/js/utilities.js');
+var BoundingBox = require('../../common/js/boundingbox.js');
 
 var ElementFood = Element({
 	construct: function(location, options){
 		//Mandatory
 		this.type = 'food' 
-		this.nothingMatters = false;
+		this.nothingMatters = true;
+		this.inactive = true;
 		this.priority = 1;
 		//Non-mandatory
 		this.location = location;
@@ -15,6 +17,8 @@ var ElementFood = Element({
 		this.shrinking = false;
 		this.size = (options.growing) ? 0 : Settings.foodMaxSize
 		this.color = Settings.foodPossibleColors[Math.floor(Math.random() * Settings.foodPossibleColors.length)];
+		var rad = new Vector(this.size, this.size)
+		this.box = new BoundingBox([this.location.add(rad), this.location.sub(rad)]);
 	},
 	draw: function(context, view){
 		var off = view.off;
@@ -39,26 +43,26 @@ var ElementFood = Element({
 			ret.size = Settings.foodMaxSize;
 			ret.growing = false;
 		}
+		ret.location = ret.location
+			.add(new Vector(Settings.gridSize/2, Settings.gridSize/2).sub(ret.location).scale(0.0002))
+		var rad = new Vector(this.size, this.size)
+		ret.box = new BoundingBox([this.location.add(rad), this.location.sub(rad)]);
 		return (ret.size <= 0) ? undefined : ret;
 	},
 	copy: function(){
-		return this;
-		// var ret = Utilities.shallowCopy(this);
-		// ret.location = Vector.copy(this.location);
-		// return ret;
+		var ret = Utilities.shallowCopy(this);
+		ret.location = Vector.copy(this.location);
+		ret.box = BoundingBox.copy(this.box);
+		return ret;
 	},
 	relevantPoints: function(){
 		return [Vector.copy(this.location)];
 	},
 	matters: function(element){
-		return Utilities.foodPlayerCollision(this, element);
+		return false;
 	},
 	encounters: function(element){
-		if(element.type == 'player'){
-			var ret = this.copy();
-			ret.shrinking = true;
-			return ret;
-		}
+		throw new Error("This shouldn't ever be called.")
 	}
 });
 

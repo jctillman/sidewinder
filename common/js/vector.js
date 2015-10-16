@@ -21,7 +21,6 @@ Vector.chain = function(start, options){ //direction, length){
 	var direction = options.direction || 0;
 	var radians = (options.direction !== 0) ? (2 * direction / 360 * Math.PI) : 0;
 	var components = new Vector( Math.sin(radians), Math.cos(radians));
- 
 	var chain = [];
 	for(var i = 0; i < segments; i++){
 		var factor = spacing * i;
@@ -62,12 +61,6 @@ Vector.prototype.dist = function(other){
 Vector.prototype.limit = function(min, max){
 	return new Vector( Math.max( min, Math.min( this.x, max )), Math.max( min, Math.min( this.y, max )) )
 }
-
-
-
-// Vector.prototype.side = function(a,b){
-// 	return (((b.x - a.x)*(this.y - a.y) - (b.y - a.y)*(this.x - a.x)) > 0) ? 1 : - 1;
-// }
 
 Vector.prototype.length = function(){
 	return Math.sqrt(this.x * this.x + this.y * this.y);

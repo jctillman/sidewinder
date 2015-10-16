@@ -2,6 +2,7 @@ var Element = require('../../common/js/element.js');
 var Settings = require('../../common/js/settings.js');
 var Vector = require('../../common/js/vector.js');
 var Utilities = require('../../common/js/utilities.js');
+var BoundingBox = require('../../common/js/BoundingBox.js');
 
 var ElementGrid = Element({
 	//Constructor actually ignores required things, because this is such a background.. thing.
@@ -9,11 +10,13 @@ var ElementGrid = Element({
 		//mandatory
 		this.type = 'grid' 
 		this.nothingMatters = true;
+		this.inactive = true;
 		this.priority = 0;
 		//optional
 		this.location = new Vector(0,0);
 		this.gridSize = Settings.gridSize;
 		this.gridSpace = Settings.gridSpace;
+		this.box = new BoundingBox([new Vector(0,0), new Vector(this.gridSize, this.gridSize)]);
 	},
 	draw: function(context, view){ 
 		//Setup
@@ -38,10 +41,11 @@ var ElementGrid = Element({
 	copy: function(){
 		var ret = Utilities.shallowCopy(this);
 		ret.location = Vector.copy(this.location);
+		ret.box = BoundingBox.copy(this.box);
 		return ret;
 	},
 	relevantPoints: function(){
-		return [new Vector(0,0)];
+		return [new Vector(0,0), new Vector(this.gridSize, this.gridSize)];
 	},
 	matters: function(element){
 		return false;

@@ -1,7 +1,7 @@
 var Food = require('../../common/js/elementFood.js');
 var Settings = require('../../common/js/settings.js');
 var Vector = require('../../common/js/vector.js');
-var Utilities = require('../../common/js/vector.js');
+var Utilities = require('../../common/js/utilities.js');
 var Move = require('../../common/js/move.js');
 
 //This is passed into the step function.  The step function, for the 
@@ -13,33 +13,40 @@ var time = 0;
 //so easily.
 var elementManagerAi = function(elementManager){
 	time++;
+
 	var AIs = elementManager.elements.filter(function(ele){return ele.type == 'player' && ele.isHuman == false;});
+	var Feed = elementManager.elements.filter(function(ele){return ele.type == 'food' && ele.shrinking == false;});
 
-	var Feed = elementManager.elements.filter(function(ele){return ele.type == 'food'});
+	if ( (time % Settings.aiCheckFrequency) == 0){
 
-	// if ( (time % Settings.aiCheckFrequency) == 0){
-	// 	for(var x = 0, len = AIs.length; x < len; x++){
 
-	// 		var dist = Settings.gridSize;
-	// 		var index = 0;
-	// 		var spot = new Vector(0,0);
-	// 		for(var y = 0; y < Feed.length; y++){
+		for(var x = 0, len = AIs.length; x < len; x++){
 
-	// 			var newDist = Feed[y].location.dist(AIs[x].location)
-	// 			if (newDist < dist){
-	// 				spot = Vector.copy(Feed[y].location);
-	// 				dist = newDist;
-	// 			}
+			var AI = AIs[x]
 
-	// 		}
+			var dist = Settings.gridSize;
+			var spot = AI.places[0].sub(AI.location.sub(AI.places[0]));
+			var centerTipDist = AI.places[0].dist(AI.location);
+			for(var y = 0; y < Feed.length; y++){
 
-	// 		AIs[x].setMove(new Move({aim: spot}));
+				var newDist = Feed[y].location.dist(AI.places[0])
 
-	// 	}
-	// }
-	//console.log(AIs.length, Settings.aiMinimum)
+				if (newDist < dist){
+					spot = Vector.copy(Feed[y].location);
+					dist = newDist;
+				}
+			}
+			AI.setMove(new Move({aim: spot}));
+		}
+
+
+	}
+	
+
+
+
 	if (AIs.length < Settings.aiMinimum){
-		elementManager.addElement('player', new Vector(Math.random()*Settings.gridSize, Math.random()*Settings.gridSize), {isHuman: false});
+		Utilities.addPlayer('computer', elementManager);
 	}
 
 

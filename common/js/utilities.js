@@ -1,6 +1,64 @@
 var Vector = require('../../common/js/vector.js');
+var Settings = require('../../common/js/settings.js');
+var Move = require('../../common/js/move.js');
 
 module.exports = {
+
+	addPlayer: function(playerKind, elementManager){
+
+		var isHuman
+		if(playerKind == 'human'){
+			isHuman = true;
+		}else{
+			isHuman = false;
+		}
+
+		var side = Math.floor( Math.random() * 4 );
+		var randSpot = Math.random()*Settings.gridSize
+		var distBack = -Settings.startDistanceBack;
+		var id;
+
+		if(side == 0){
+			id = elementManager.addElement(
+				'player',
+				new Vector(distBack, randSpot),
+				{isHuman: isHuman, direction: 270}
+			);
+		}else if(side == 1){
+			id = elementManager.addElement(
+				'player',
+				new Vector(-distBack+Settings.gridSize, randSpot),
+				{isHuman: isHuman, direction: 90}
+			);
+		}else if(side == 2){
+			id = elementManager.addElement(
+				'player',
+				new Vector(randSpot, distBack),
+				{isHuman: isHuman, direction: 180}
+			);
+		}else if(side == 3){
+			id = elementManager.addElement(
+				'player',
+				new Vector(randSpot, -distBack+Settings.gridSize),
+				{isHuman: isHuman, direction: 0}
+			);
+		}
+
+		if (!isHuman){
+			elementManager.getElement(id).setMove(
+				new Move(
+					{
+						aim: new Vector(Math.random()*Settings.gridSize, Math.random()*Settings.gridSize)
+					}
+				)
+			);
+		}
+
+
+
+		return id
+
+	},
 
 	collision: function(p0,p1,p2,p3){
 		var s1 = p1.sub(p0);
@@ -12,11 +70,11 @@ module.exports = {
 	},
 
 	playerPlayer: function(one, two){
-		return one.type == 'player' && two.type == 'player';
+		return one.type == 'player' && two.type == 'player' && one.box.intersects(two.box);
 	},
 
 	foodPlayerCollision: function(food, player){
-		return food.type == 'food' && !food.growing && !food.shrinking && player.type == 'player' && food.location.dist(player.places[0]) < food.size;
+		return food.type == 'food' && player.type == 'player' && food.box.intersects(player.box) && !food.growing && !food.shrinking && food.location.dist(player.places[0]) < food.size;
 	},
 
 	shallowCopy: function(obj){

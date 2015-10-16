@@ -3,17 +3,26 @@ module.exports = {
 	resizeRate: 50,
 	physicsRate: 25,
 
-	gridSize: 2500,
-	gridSpace: 20,
-	gridColor: '#111', 
+	gridSize: 1000,
+	gridSpace: 50,
+	gridColor: '#999', 
 
-	startSegments: 150,
-	startSpacing: 1,
+	startSegments: 50,
+	startSpacing: 2,
+	startDistanceBack: 100,
 
-	aiCheckFrequency: 10,
+	aiCheckFrequency: 1,
 	aiMinimum: 10,
 
-	foodStartAmount: 2500,
+	framesToViewAfterDeath: 150,
+
+	quadMaxObjects: 10,
+	quadMaxLevels: 4,
+
+	treeResolution: 2500,
+
+	foodSpacing: 20,
+	foodStartAmount: 100,
 	foodPossibleColors: [ 'red', 'orange', 'blue', 'green', 'gray', 'purple', 'maroon'],
 	foodCycleTime: 2500,
 	foodGrowthRate: 0.5,

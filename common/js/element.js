@@ -26,7 +26,6 @@ var reqFunc = {
 	},
 	step: { checks: [], explanations: [] }, 
 	copy: { checks: [], explanations: [] },
-	relevantPoints: { checks: [], explanations: [] },
 	matters: {
 		checks:[
 			function(a) { return (a.isAnElement == true)}
@@ -73,10 +72,16 @@ var Element = function(options){
 		if( (this.nothingMatters !== true) && (this.nothingMatters !== false) ){
 			throw new Error("Constructor function must set .nothingMatters property to be true or false at some point during invocation.");	
 		}
+		if( this.box === undefined){
+			throw new Error("Constructor function must set .box property to be an instance of BoundingBox.")
+		}
+		if( this.inactive === undefined){
+			throw new Error("Constructor function must set .inactive property to be true or false.")
+		}
 	}
 
 	//Add the rest of the functions.
-	var protFunc = ['draw', 'step', 'matters', 'copy', 'encounters', 'relevantPoints'];
+	var protFunc = ['draw', 'step', 'matters', 'copy', 'encounters'];
 	protFunc.forEach(function(fn){
 		//Make sure that it has the function in question in the options.
 		if(typeof options[fn] != 'function'){
