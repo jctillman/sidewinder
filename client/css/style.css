@@ -1,0 +1,52 @@
+body{
+	font-family: Verdana, Geneva, sans-serif;
+}
+
+#container {
+	width:100%;
+	background: #CCC;
+}
+
+
+#splash {
+	margin: 0 auto;
+	background-color: #CCC;
+	text-align: center;
+	border-radius: 5px;
+}
+
+#splash.h3{
+	margin: 0 auto;
+}
+
+#start{
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #CCC;
+}
+
+#menu {
+	width: 300px;
+	height: 400px;
+    padding: 10px;
+    background: #DDD;
+    position: absolute;
+    border-radius: 5px;
+	top: 50%;
+  	left: 50%;
+  	transform: translate(-50%, -50%);
+}
+
+.btn {
+	margin: 0 auto;
+	padding: 5px;
+	border-radius: 5px;
+	border: #AAA 1px solid;
+	display: block;
+	width: 200px;
+	background-color: white;
+	color: black;
+}
+
+
+

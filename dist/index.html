@@ -1,6 +1,7 @@
 <html>
 <head>
-	<link src="style.css"></link>
+	<link href="normalize.css" rel="stylesheet" type="text/css"></link>
+	<link href="style.css" rel="stylesheet" type="text/css"></link>
 </head>
 <body>
 
@@ -9,13 +10,18 @@
 		<div>Please switch to a modern browser, like Chrome.</div>
 	</canvas>
 
-	<div id="menu">
-		<div start="">
-			<input type="button" id="play" value="Play New Game"></input>
-			<input type="button" id="watch" value="Watch Game"></input>
-			<input type="button" id="login" value="Login"></input>
+	<div id="container">
+		<div id="menu">
+			<div id="splash">
+				<h3>Slither.io</h3>
+			</div>
+			<div id="start">
+				<input class="btn" type="button" id="play" value="Play New Game"></input><br/>
+				<input class="btn" type="button" id="watch" value="Watch Game"></input><br/>
+				<input class="btn" type="button" id="login" value="Login"></input><br/>
+			</div>
+			<div id="options"></div>
 		</div>
-		<div id="options"></div>
 	</div>
 
 

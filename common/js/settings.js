@@ -12,7 +12,7 @@ module.exports = {
 	startDistanceBack: 100,
 
 	aiCheckFrequency: 1,
-	aiMinimum: 10,
+	aiMinimum: 3,
 
 	framesToViewAfterDeath: 150,
 
@@ -22,7 +22,7 @@ module.exports = {
 	treeResolution: 2500,
 
 	foodSpacing: 20,
-	foodStartAmount: 100,
+	foodStartAmount: 25,
 	foodPossibleColors: [ 'red', 'orange', 'blue', 'green', 'gray', 'purple', 'maroon'],
 	foodCycleTime: 2500,
 	foodGrowthRate: 0.5,

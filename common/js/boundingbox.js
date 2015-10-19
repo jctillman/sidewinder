@@ -25,6 +25,15 @@ BoundingBox.copy = function(cop){
 	return m;
 }
 
+BoundingBox.prototype.expanded = function(amount){
+	var ret = BoundingBox.copy(this);
+	ret.left = ret.left - amount;
+	ret.right = ret.right + amount;
+	ret.top = ret.top - amount;
+	ret.bottom = ret.bottom + amount;
+	return ret;
+}
+
 BoundingBox.prototype.getWidth = function(){
 	return this.right - this.left;
 }
