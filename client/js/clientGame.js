@@ -4,6 +4,7 @@ var Utilities = require('../../common/js/utilities.js');
 var Move = require('../../common/js/move.js');
 var View = require('../../common/js/view.js');
 var Vector = require('../../common/js/vector.js');
+var HighScore = require('../../client/js/highscore.js');
 
 var playGame = function(gameState, appState, playerId, finished){
 
@@ -15,6 +16,7 @@ var playGame = function(gameState, appState, playerId, finished){
 		//Grab player and make moves.
 		var scr
 		var plyr = gameState.getElement(playerId)
+
 		if(plyr == undefined){
 			stepsAfterDeath++;
 			if (stepsAfterDeath > Settings.framesToViewAfterDeath){
@@ -33,6 +35,8 @@ var playGame = function(gameState, appState, playerId, finished){
 
 		//View is what is used in rendering.
 		gameState.draw(appState.game.context, tempView);
+		//Draw the high score HTML elements
+		HighScore(gameState);
 
 		//set this shit
 		gameState = gameState.step([

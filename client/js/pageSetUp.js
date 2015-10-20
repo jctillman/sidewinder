@@ -39,8 +39,9 @@ module.exports = function(opt){
 	
 	var options = opt;
 	var cnv = document.getElementById('cnv');
-	cnv.style.display = "none";
+	var game = document.getElementById('game');
 	var ctx = cnv.getContext('2d');
+	game.style.display = "none";
 	throttledResize(Settings.resizeRate, cnv);
 	var mousePos = mousePositionFinder(cnv);
 
@@ -64,13 +65,13 @@ module.exports = function(opt){
 	}; 
 
 	var goBack = function(){
-		cnv.style.display="none";
+		game.style.display="none";
 		menu.style.display="block";
 		console.log("Go Back Callback invoked.");
 	}
 
 	playbutton.onclick = function(){ 
-		cnv.style.display="block";
+		game.style.display="block";
 		menu.style.display="none";
 		console.log(options)
 		options.playGame(state, goBack);

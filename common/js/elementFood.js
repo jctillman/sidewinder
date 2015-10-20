@@ -17,7 +17,7 @@ var ElementFood = Element({
 		this.shrinking = false;
 		this.size = (options.growing) ? 0 : Settings.foodMaxSize
 		this.color = Settings.foodPossibleColors[Math.floor(Math.random() * Settings.foodPossibleColors.length)];
-		var rad = new Vector(this.size, this.size)
+		var rad = new Vector(Settings.foodMaxSize, Settings.foodMaxSize)
 		this.box = new BoundingBox([this.location.add(rad), this.location.sub(rad)]);
 	},
 	draw: function(context, view){
@@ -43,10 +43,6 @@ var ElementFood = Element({
 			ret.size = Settings.foodMaxSize;
 			ret.growing = false;
 		}
-		ret.location = ret.location
-			.add(new Vector(Settings.gridSize/2, Settings.gridSize/2).sub(ret.location).scale(0.0002))
-		var rad = new Vector(this.size, this.size)
-		ret.box = new BoundingBox([this.location.add(rad), this.location.sub(rad)]);
 		return (ret.size <= 0) ? undefined : ret;
 	},
 	copy: function(){

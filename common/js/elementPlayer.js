@@ -21,11 +21,18 @@ var ElementPlayer = Element({
 		this.amountToGrow = 0;
 		this.speed = 1;
 		this.kink = 0; 
-		this.oneColor = Settings.foodPossibleColors[Math.floor(Math.random() * Settings.foodPossibleColors.length)];
-		this.twoColor = Settings.foodPossibleColors[Math.floor(Math.random() * Settings.foodPossibleColors.length)];
-		this.stripeLength = 10 + Math.random() * 30;
+		
 		this.dying = false;
 		this.dead = undefined;
+
+		//Set the particular colors for the snake.		
+		this.colorLength = 1 + Math.floor(Math.random() * Settings.maxColorLength);
+		this.colors = [];
+		for(var x = 0; x < this.colorLength; x++){
+			this.colors.push( Settings.playerPossibleColors[Math.floor(Math.random() * Settings.playerPossibleColors.length)]);
+		}
+		this.stripeLength = Settings.minStripeLength + (Math.random() * (Settings.maxStripeLength-Settings.minStripeLength));
+
 		//Mandatory
 		this.type = 'player' 
 		this.priority = 1;
@@ -34,18 +41,14 @@ var ElementPlayer = Element({
 		this.box = new BoundingBox(this.places);
 	},
 	draw: function(context, view){
-	  //console.log("!");
 	  var off = view.off
+	  context.lineWidth = 1 + Math.sqrt( (this.places.length - Settings.startSegments) / 100);
 	  for(var x = 0; x < this.places.length - 1; x++){
-	  	if ( (Math.floor(x / this.stripeLength)+1) % 2 == 0 ) {
-	  		context.strokeStyle = this.oneColor;
-	  	}else{
-	  		context.strokeStyle = this.twoColor;
-	  	}
+	  	context.strokeStyle = this.colors[Math.floor( x / this.stripeLength) % this.colorLength]
   		var pth = new Path2D();
   		pth.moveTo(this.places[x].x+off.x, this.places[x].y+off.y);
   		pth.lineTo(this.places[x+1].x+off.x,this.places[x+1].y+off.y)
-  		context.lineWidth = 3;
+  		
   		context.stroke(pth);
 	  }
 	},
@@ -55,7 +58,14 @@ var ElementPlayer = Element({
 			var ret = [];
 			var inc = Settings.foodSpacing;
 			for(var x = 0; x < this.places.length; x = x + inc){
-				ret.push(new ElementFood(Vector.copy(this.places[x]), {growing: true}));
+				if(
+					(this.places[x].x > 0) &&
+					(this.places[x].x < Settings.gridSize) &&
+					(this.places[x].y > 0) &&
+					(this.places[x].y < Settings.gridSize) )
+				{
+					ret.push(new ElementFood(Vector.copy(this.places[x]), {growing: true}));
+				}
 			}
 			return ret;
 		}
@@ -109,6 +119,7 @@ var ElementPlayer = Element({
 	},
 	encounters: function(element){
 		if (element.type == 'food'){
+			console.log("!")
 			this.amountToGrow = this.amountToGrow + Settings.foodValue;
 			element.shrinking = true;
 		}
