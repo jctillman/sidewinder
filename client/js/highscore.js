@@ -25,7 +25,7 @@ var HighScore = function(elementManager, ctx){
 			var pth = new Path2D();
 			pth.moveTo(y*width, fromTop)
 			pth.lineTo((y+1)*width - 2, fromTop)
-			ctx.lineWidth = 5
+			ctx.lineWidth = 6
 			ctx.strokeStyle = color;
 			ctx.stroke(pth);
 		}

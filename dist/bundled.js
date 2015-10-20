@@ -38,6 +38,7 @@ var playGame = function playGame(gameState, appState, playerId, finished) {
 		} else {
 			var movr = new Move({
 				mousePosition: appState.game.mousePosition(),
+				canvas: appState.game.canvas,
 				player: plyr
 			});
 			plyr.setMove(movr);
@@ -106,7 +107,7 @@ var HighScore = function HighScore(elementManager, ctx) {
 			var pth = new Path2D();
 			pth.moveTo(y * width, fromTop);
 			pth.lineTo((y + 1) * width - 2, fromTop);
-			ctx.lineWidth = 5;
+			ctx.lineWidth = 6;
 			ctx.strokeStyle = color;
 			ctx.stroke(pth);
 		}
@@ -241,6 +242,24 @@ BoundingBox.prototype.expanded = function (amount) {
 	ret.right = ret.right + amount;
 	ret.top = ret.top - amount;
 	ret.bottom = ret.bottom + amount;
+	return ret;
+};
+
+BoundingBox.prototype.scaleHoriz = function (amount) {
+	var width = this.right - this.left;
+	var additional = (width * amount - width) / 2;
+	var ret = BoundingBox.copy(this);
+	ret.left = ret.left - additional;
+	ret.right = ret.right + additional;
+	return ret;
+};
+
+BoundingBox.prototype.scaleVert = function (amount) {
+	var height = this.bottom - this.top;
+	var additional = (height * amount - height) / 2;
+	var ret = BoundingBox.copy(this);
+	ret.top = ret.top - additional;
+	ret.bottom = ret.bottom + additional;
 	return ret;
 };
 
@@ -395,6 +414,24 @@ BoundingBox.prototype.expanded = function (amount) {
 	ret.right = ret.right + amount;
 	ret.top = ret.top - amount;
 	ret.bottom = ret.bottom + amount;
+	return ret;
+};
+
+BoundingBox.prototype.scaleHoriz = function (amount) {
+	var width = this.right - this.left;
+	var additional = (width * amount - width) / 2;
+	var ret = BoundingBox.copy(this);
+	ret.left = ret.left - additional;
+	ret.right = ret.right + additional;
+	return ret;
+};
+
+BoundingBox.prototype.scaleVert = function (amount) {
+	var height = this.bottom - this.top;
+	var additional = (height * amount - height) / 2;
+	var ret = BoundingBox.copy(this);
+	ret.top = ret.top - additional;
+	ret.bottom = ret.bottom + additional;
 	return ret;
 };
 
@@ -1016,6 +1053,7 @@ module.exports = maker;
 
 var Vector = require('../../common/js/vector.js');
 var Settings = require('../../common/js/settings.js');
+var BoundingBox = require('../../common/js/boundingbox.js');
 
 var Move = function Move(options) {
 
@@ -1027,12 +1065,26 @@ var Move = function Move(options) {
 		throw new Error("If you provide a mouse position, you must provide a player.");
 	}
 
-	if (options.mousePosition) {
+	if (options.mousePosition && !options.canvas) {
+		throw new Error("If you provide a mouse position, you must provide a canvas.");
+	}
 
-		var playSpot = options.player.location;
-		var off = new Vector(-playSpot.x + cnv.width * 0.5, -playSpot.y + cnv.height * 0.5);
-		//console.log(options.mousePosition)
-		this.aim = options.mousePosition.sub(off);
+	if (options.mousePosition) {
+		var temp = new BoundingBox(options.player.places);
+		var screenWidth = options.canvas.width;
+		var screenHeight = options.canvas.height;
+		var screenRatio = screenWidth / screenHeight;
+		temp = temp.expanded(300);
+		var boxRatio = (temp.right - temp.left) / (temp.bottom - temp.top);
+		console.log(boxRatio / screenRatio);
+		temp = temp.scaleVert(boxRatio / screenRatio);
+		var viewBox = temp;
+
+		var w = viewBox.right - viewBox.left;
+		var h = viewBox.bottom - viewBox.top;
+		var actualX = options.mousePosition.x / (cnv.width / w) + viewBox.left;
+		var actualY = options.mousePosition.y / (cnv.height / h) + viewBox.top;
+		this.aim = new Vector(actualX, actualY);
 	} else {
 		if (!(options.aim instanceof Vector)) {
 			throw new Error("Move must have valid location");
@@ -1049,7 +1101,7 @@ var Move = function Move(options) {
 
 module.exports = Move;
 
-},{"../../common/js/settings.js":21,"../../common/js/vector.js":23}],21:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":9,"../../common/js/settings.js":21,"../../common/js/vector.js":23}],21:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -1269,30 +1321,64 @@ var Vector = require('../../common/js/vector.js');
 var BoundingBox = require('../../common/js/boundingbox.js');
 
 var View = function View(cnv, plyr) {
-	var center = plyr.location;
-	var half = new Vector(cnv.width * 0.5, cnv.height * 0.5);
+	//var center = plyr.location
+	//var half = new Vector(cnv.width*0.5, cnv.height*0.5);
+	this.screenWidth = cnv.width;
+	this.screenHeight = cnv.height;
 	this.ctx = cnv.getContext('2d');
-	this.off = center.scale(-1).add(half);
-	this.box = new BoundingBox([center.add(half), center.sub(half)]);
+	var screenRatio = this.screenWidth / this.screenHeight;
+	console.log();
+	//this.off = center.scale(-1).add(half);
+	var temp = new BoundingBox(plyr.places);
+	temp = temp.expanded(300);
+	var boxRatio = (temp.right - temp.left) / (temp.bottom - temp.top);
+	console.log(boxRatio / screenRatio);
+	temp = temp.scaleVert(boxRatio / screenRatio);
+
+	this.box = temp;
 };
 
 View.prototype.drawPath = function (arrVector, width, color) {
+
+	//draw from left of box to right
+	//from top to bottom
+	var w = this.box.right - this.box.left;
+	var h = this.box.bottom - this.box.top;
+
+	var x = (arrVector[0].x - this.box.left) * this.screenWidth / w;
+	var y = (arrVector[0].y - this.box.top) * this.screenHeight / h;
+
 	var pth = new Path2D();
 	this.ctx.strokeStyle = color;
 	this.ctx.lineWidth = width;
-	pth.moveTo(arrVector[0].x + this.off.x, arrVector[0].y + this.off.y);
-	for (var x = 1; x < arrVector.length; x++) {
-		pth.lineTo(arrVector[x].x + this.off.x, arrVector[x].y + this.off.y);
+	pth.moveTo(x, y);
+	for (var a = 1; a < arrVector.length; a++) {
+		var x = (arrVector[a].x - this.box.left) * this.screenWidth / w;
+		var y = (arrVector[a].y - this.box.top) * this.screenHeight / h;
+		pth.lineTo(x, y);
 	}
 	this.ctx.stroke(pth);
 };
 
 View.prototype.drawCircle = function (center, width, thickness, color) {
-	this.ctx.beginPath();
-	this.ctx.arc(center.x + this.off.x, center.y + this.off.y, width, 0, 2 * Math.PI, false);
-	this.ctx.lineWidth = 2;
-	this.ctx.strokeStyle = color;
-	this.ctx.stroke();
+	var path = [];
+	for (var x = 0; x < 2.1; x = x + 0.1) {
+		var pointX = center.x + width * Math.sin(x * Math.PI);
+		var pointY = center.y + width * Math.cos(x * Math.PI);
+		path.push(new Vector(pointX, pointY));
+	}
+	this.drawPath(path, thickness, color);
+
+	// var w = this.box.right - this.box.left;
+	// var h = this.box.bottom - this.box.top;
+	// // var w = Math.max(w,h)
+	// // var h = Math.max(w,h)
+	// var x = (center.x-this.box.left) * this.screenWidth / w;
+	// var y = (center.y-this.box.top) * this.screenHeight / h;
+	// this.ctx.arc(x,y, width, 0, 2 * Math.PI, false);
+	// this.ctx.lineWidth = 2;
+	// this.ctx.strokeStyle = color;
+	// this.ctx.stroke();
 };
 
 module.exports = View;

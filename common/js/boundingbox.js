@@ -34,6 +34,24 @@ BoundingBox.prototype.expanded = function(amount){
 	return ret;
 }
 
+BoundingBox.prototype.scaleHoriz = function(amount){
+	var width = this.right - this.left;
+	var additional = (width * amount - width) / 2;
+	var ret = BoundingBox.copy(this);
+	ret.left = ret.left - additional
+	ret.right = ret.right + additional
+	return ret;
+}
+
+BoundingBox.prototype.scaleVert = function(amount){
+	var height = this.bottom - this.top;
+	var additional = (height * amount - height) / 2;
+	var ret = BoundingBox.copy(this);
+	ret.top = ret.top - additional
+	ret.bottom = ret.bottom + additional
+	return ret;
+}
+
 BoundingBox.prototype.getWidth = function(){
 	return this.right - this.left;
 }

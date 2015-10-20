@@ -27,6 +27,7 @@ var playGame = function(gameState, appState, playerId, finished){
 		}else{
 			var movr = new Move({
 				mousePosition: appState.game.mousePosition(),
+				canvas: appState.game.canvas,
 				player: plyr
 			});
 			plyr.setMove(movr);
