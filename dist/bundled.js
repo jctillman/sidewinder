@@ -48,7 +48,7 @@ var playGame = function playGame(gameState, appState, playerId, finished) {
 		//View is what is used in rendering.
 		gameState.draw(appState.game.context, tempView);
 		//Draw the high score HTML elements
-		HighScore(gameState);
+		HighScore(gameState, appState.game.context);
 
 		//set this shit
 		gameState = gameState.step([require('../../common/js/elementManagerFood.js'), require('../../common/js/elementManagerAi.js')]);
@@ -80,7 +80,7 @@ module.exports = function (state) {
 },{}],5:[function(require,module,exports){
 'use strict';
 
-var HighScore = function HighScore(elementManager) {
+var HighScore = function HighScore(elementManager, ctx) {
 
 	//Get top
 	var top = [];
@@ -97,27 +97,21 @@ var HighScore = function HighScore(elementManager) {
 
 	var done = top.slice(0, 10);
 
-	//Render the top
-	var ul = document.createElement('ul');
-	ul.className = "highScoreUL";
 	for (var x = 0; x < done.length; x++) {
-		var li = document.createElement('li');
-		li.className = "highScoreLI";
 		var plyr = done[x];
 		var length = done[x].places.length;
+		var width = length / plyr.colors.length;
+		var fromTop = 50 + x * 10;
 		for (var y = 0; y < plyr.colors.length; y++) {
 			var color = plyr.colors[y];
-			var div = document.createElement('div');
-			div.className = "displayColor";
-			div.style.width = length / plyr.colors.length;
-			div.style.backgroundColor = color;
-			li.appendChild(div);
+			var pth = new Path2D();
+			pth.moveTo(y * width, fromTop);
+			pth.lineTo((y + 1) * width, fromTop);
+			ctx.lineWidth = 5;
+			ctx.strokeStyle = color;
+			ctx.stroke(pth);
 		}
-		ul.appendChild(li);
 	}
-	var temp = document.getElementById('highscore');
-	temp.innerHTML = "";
-	temp.appendChild(ul);
 };
 
 module.exports = HighScore;

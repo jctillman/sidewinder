@@ -36,7 +36,7 @@ var playGame = function(gameState, appState, playerId, finished){
 		//View is what is used in rendering.
 		gameState.draw(appState.game.context, tempView);
 		//Draw the high score HTML elements
-		HighScore(gameState);
+		HighScore(gameState, appState.game.context);
 
 		//set this shit
 		gameState = gameState.step([
