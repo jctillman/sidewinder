@@ -26,7 +26,6 @@ var playGame = function playGame(gameState, appState, playerId, finished) {
 	var physicsLoops = setInterval(Utilities.timed(true, function () {
 
 		//Grab player and make moves.
-		var scr;
 		var plyr = gameState.getElement(playerId);
 
 		if (plyr == undefined) {
@@ -42,7 +41,7 @@ var playGame = function playGame(gameState, appState, playerId, finished) {
 				player: plyr
 			});
 			plyr.setMove(movr);
-			tempView = new View(appState.game.canvas, plyr.location);
+			tempView = new View(appState.game.canvas, plyr);
 		}
 
 		//View is what is used in rendering.
@@ -101,12 +100,12 @@ var HighScore = function HighScore(elementManager, ctx) {
 		var plyr = done[x];
 		var length = done[x].places.length;
 		var width = length / plyr.colors.length;
-		var fromTop = 50 + x * 10;
+		var fromTop = 50 + x * 7;
 		for (var y = 0; y < plyr.colors.length; y++) {
 			var color = plyr.colors[y];
 			var pth = new Path2D();
 			pth.moveTo(y * width, fromTop);
-			pth.lineTo((y + 1) * width, fromTop);
+			pth.lineTo((y + 1) * width - 2, fromTop);
 			ctx.lineWidth = 5;
 			ctx.strokeStyle = color;
 			ctx.stroke(pth);
@@ -598,21 +597,17 @@ var ElementFood = Element({
 		this.location = location;
 		this.growing = options.growing || false;
 		this.shrinking = false;
-		this.size = options.growing ? 0 : Settings.foodMaxSize;
+		this.size = options.growing ? 1 : Settings.foodMaxSize;
 		this.color = Settings.foodPossibleColors[Math.floor(Math.random() * Settings.foodPossibleColors.length)];
 		var rad = new Vector(Settings.foodMaxSize, Settings.foodMaxSize);
 		this.box = new BoundingBox([this.location.add(rad), this.location.sub(rad)]);
 	},
 	draw: function draw(context, view) {
 		var off = view.off;
-		var fs = this.location.add(off);
+		var fs = this.location;
 		var size = this.size;
 		// console.log(size);
-		context.beginPath();
-		context.arc(fs.x, fs.y, size, 0, 2 * Math.PI, false);
-		context.lineWidth = 1;
-		context.strokeStyle = this.color;
-		context.stroke();
+		view.drawCircle(fs, size, 2, this.color);
 	},
 	step: function step() {
 		var ret = this.copy();
@@ -738,21 +733,17 @@ var ElementFood = Element({
 		this.location = location;
 		this.growing = options.growing || false;
 		this.shrinking = false;
-		this.size = options.growing ? 0 : Settings.foodMaxSize;
+		this.size = options.growing ? 1 : Settings.foodMaxSize;
 		this.color = Settings.foodPossibleColors[Math.floor(Math.random() * Settings.foodPossibleColors.length)];
 		var rad = new Vector(Settings.foodMaxSize, Settings.foodMaxSize);
 		this.box = new BoundingBox([this.location.add(rad), this.location.sub(rad)]);
 	},
 	draw: function draw(context, view) {
 		var off = view.off;
-		var fs = this.location.add(off);
+		var fs = this.location;
 		var size = this.size;
 		// console.log(size);
-		context.beginPath();
-		context.arc(fs.x, fs.y, size, 0, 2 * Math.PI, false);
-		context.lineWidth = 1;
-		context.strokeStyle = this.color;
-		context.stroke();
+		view.drawCircle(fs, size, 2, this.color);
 	},
 	step: function step() {
 		var ret = this.copy();
@@ -812,20 +803,18 @@ var ElementGrid = Element({
 	},
 	draw: function draw(context, view) {
 		//Setup
-		var path = new Path2D();
-		var off = view.off;
 		var gsi = this.gridSize;
 		var gsp = this.gridSpace;
+		var color = Settings.gridColor;
 		//Draw the grid.
 		for (var x = 0; x <= gsi; x = x + gsp) {
-			path.moveTo(off.x, x + off.y);
-			path.lineTo(off.x + gsi, x + off.y);
-			path.moveTo(off.x + x, off.y);
-			path.lineTo(off.x + x, gsi + off.y);
+			var right = new Vector(0, x);
+			var left = new Vector(gsi, x);
+			var top = new Vector(x, 0);
+			var bottom = new Vector(x, gsi);
+			view.drawPath([left, right], 1, color);
+			view.drawPath([top, bottom], 1, color);
 		}
-		context.strokeStyle = Settings.gridColor;
-		context.lineWidth = 1;
-		context.stroke(path);
 	},
 	step: function step() {
 		return this.copy();
@@ -895,14 +884,10 @@ var ElementPlayer = Element({
 	},
 	draw: function draw(context, view) {
 		var off = view.off;
-		context.lineWidth = 1 + Math.sqrt((this.places.length - Settings.startSegments) / 100);
+		var width = 2 + Math.sqrt((this.places.length - Settings.startSegments) / 100);
 		for (var x = 0; x < this.places.length - 1; x++) {
-			context.strokeStyle = this.colors[Math.floor(x / this.stripeLength) % this.colorLength];
-			var pth = new Path2D();
-			pth.moveTo(this.places[x].x + off.x, this.places[x].y + off.y);
-			pth.lineTo(this.places[x + 1].x + off.x, this.places[x + 1].y + off.y);
-
-			context.stroke(pth);
+			var color = this.colors[Math.floor(x / this.stripeLength) % this.colorLength];
+			view.drawPath([this.places[x], this.places[x + 1]], width, color);
 		}
 	},
 	step: function step() {
@@ -1074,7 +1059,7 @@ module.exports = {
 
 	gridSize: 2000,
 	gridSpace: 50,
-	gridColor: '#999',
+	gridColor: '#CCC',
 
 	startSegments: 50,
 	startSpacing: 2,
@@ -1084,23 +1069,20 @@ module.exports = {
 	aiMinimum: 15,
 
 	maxColorLength: 5,
-	maxStripeLength: 20,
+	maxStripeLength: 10,
 	minStripeLength: 10,
-	playerPossibleColors: ['red', 'orange', 'blue', 'green', 'gray', 'purple', 'maroon'],
+	playerPossibleColors: ['black', '#444', '#50C878', '#FFD300', 'purple'],
 
 	framesToViewAfterDeath: 150,
-
-	quadMaxObjects: 10,
-	quadMaxLevels: 4,
 
 	treeResolution: 2500,
 
 	foodSpacing: 20,
 	foodStartAmount: 25,
-	foodPossibleColors: ['red', 'orange', 'blue', 'green', 'gray', 'purple', 'maroon'],
+	foodPossibleColors: ['#29AB87', '#A9BA9D', '#90EE90', '#8A9A5B', '#01796F', '#009E60', '#00FF00', '#009F6B', '#1B4D3E', '#000', '#ACE1AF'],
 	foodCycleTime: 2500,
 	foodGrowthRate: 0.5,
-	foodValue: 15,
+	foodValue: 5,
 	foodMaxSize: 15,
 
 	segmentSpacing: 2
@@ -1286,10 +1268,31 @@ module.exports = Vector;
 var Vector = require('../../common/js/vector.js');
 var BoundingBox = require('../../common/js/boundingbox.js');
 
-var View = function View(cnv, center) {
+var View = function View(cnv, plyr) {
+	var center = plyr.location;
 	var half = new Vector(cnv.width * 0.5, cnv.height * 0.5);
+	this.ctx = cnv.getContext('2d');
 	this.off = center.scale(-1).add(half);
 	this.box = new BoundingBox([center.add(half), center.sub(half)]);
+};
+
+View.prototype.drawPath = function (arrVector, width, color) {
+	var pth = new Path2D();
+	this.ctx.strokeStyle = color;
+	this.ctx.lineWidth = width;
+	pth.moveTo(arrVector[0].x + this.off.x, arrVector[0].y + this.off.y);
+	for (var x = 1; x < arrVector.length; x++) {
+		pth.lineTo(arrVector[x].x + this.off.x, arrVector[x].y + this.off.y);
+	}
+	this.ctx.stroke(pth);
+};
+
+View.prototype.drawCircle = function (center, width, thickness, color) {
+	this.ctx.beginPath();
+	this.ctx.arc(center.x + this.off.x, center.y + this.off.y, width, 0, 2 * Math.PI, false);
+	this.ctx.lineWidth = 2;
+	this.ctx.strokeStyle = color;
+	this.ctx.stroke();
 };
 
 module.exports = View;

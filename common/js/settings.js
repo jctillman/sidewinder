@@ -5,7 +5,7 @@ module.exports = {
 
 	gridSize: 2000,
 	gridSpace: 50,
-	gridColor: '#999', 
+	gridColor: '#CCC', 
 
 	startSegments: 50,
 	startSpacing: 2,
@@ -15,23 +15,21 @@ module.exports = {
 	aiMinimum: 15,
 
 	maxColorLength: 5,
-	maxStripeLength: 20,
+	maxStripeLength: 10,
 	minStripeLength: 10,
-	playerPossibleColors: [ 'red', 'orange', 'blue', 'green', 'gray', 'purple', 'maroon'],
+	playerPossibleColors: [ 'black', '#444', '#50C878', '#FFD300', 'purple'],
 
 	framesToViewAfterDeath: 150,
 
-	quadMaxObjects: 10,
-	quadMaxLevels: 4,
 
 	treeResolution: 2500,
 
 	foodSpacing: 20,
 	foodStartAmount: 25,
-	foodPossibleColors: [ 'red', 'orange', 'blue', 'green', 'gray', 'purple', 'maroon'],
+	foodPossibleColors: [ '#29AB87', '#A9BA9D', '#90EE90', '#8A9A5B', '#01796F', '#009E60', '#00FF00','#009F6B','#1B4D3E','#000','#ACE1AF'],
 	foodCycleTime: 2500,
 	foodGrowthRate: 0.5,
-	foodValue: 15,
+	foodValue: 5,
 	foodMaxSize: 15,
 	 
 	

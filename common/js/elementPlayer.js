@@ -42,14 +42,10 @@ var ElementPlayer = Element({
 	},
 	draw: function(context, view){
 	  var off = view.off
-	  context.lineWidth = 1 + Math.sqrt( (this.places.length - Settings.startSegments) / 100);
+	  var width = 2 + Math.sqrt( (this.places.length - Settings.startSegments) / 100);
 	  for(var x = 0; x < this.places.length - 1; x++){
-	  	context.strokeStyle = this.colors[Math.floor( x / this.stripeLength) % this.colorLength]
-  		var pth = new Path2D();
-  		pth.moveTo(this.places[x].x+off.x, this.places[x].y+off.y);
-  		pth.lineTo(this.places[x+1].x+off.x,this.places[x+1].y+off.y)
-  		
-  		context.stroke(pth);
+	  	var color = this.colors[Math.floor( x / this.stripeLength) % this.colorLength]
+	  	view.drawPath([this.places[x], this.places[x+1]], width, color)
 	  }
 	},
 	step: function(){

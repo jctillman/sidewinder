@@ -6,6 +6,7 @@ var View = require('../../common/js/view.js');
 var Vector = require('../../common/js/vector.js');
 var HighScore = require('../../client/js/highscore.js');
 
+
 var playGame = function(gameState, appState, playerId, finished){
 
 	var tempView;
@@ -14,7 +15,6 @@ var playGame = function(gameState, appState, playerId, finished){
 	var physicsLoops = setInterval(Utilities.timed(true, function(){
 
 		//Grab player and make moves.
-		var scr
 		var plyr = gameState.getElement(playerId)
 
 		if(plyr == undefined){
@@ -30,7 +30,7 @@ var playGame = function(gameState, appState, playerId, finished){
 				player: plyr
 			});
 			plyr.setMove(movr);
-			tempView = new View(appState.game.canvas, plyr.location);
+			tempView = new View(appState.game.canvas, plyr);
 		}
 
 		//View is what is used in rendering.

@@ -20,20 +20,18 @@ var ElementGrid = Element({
 	},
 	draw: function(context, view){ 
 		//Setup
-		var path = new Path2D();
-		var off = view.off
 		var gsi = this.gridSize;
 		var gsp = this.gridSpace;
+		var color = Settings.gridColor
 	    //Draw the grid.
-		for(var x = 0; x <= gsi; x = x + gsp){
-			path.moveTo(off.x, 		x+off.y);
-			path.lineTo(off.x+gsi, 	x+off.y);
-			path.moveTo(off.x+x, 	off.y);
-			path.lineTo(off.x+x, 	gsi+off.y);
-		}
-		context.strokeStyle = Settings.gridColor; 
-		context.lineWidth = 1
-		context.stroke(path); 
+	    for(var x = 0; x <= gsi; x = x + gsp){
+	    	var right = new Vector(0,x);
+	    	var left = new Vector(gsi,x);
+	    	var top = new Vector(x, 0);
+	    	var bottom = new Vector(x, gsi);
+	    	view.drawPath([left, right], 1, color)
+	    	view.drawPath([top, bottom], 1, color)
+	    }
 	},
 	step: function(){ 
 		return this.copy();

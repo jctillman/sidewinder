@@ -15,21 +15,17 @@ var ElementFood = Element({
 		this.location = location;
 		this.growing = options.growing || false;
 		this.shrinking = false;
-		this.size = (options.growing) ? 0 : Settings.foodMaxSize
+		this.size = (options.growing) ? 1 : Settings.foodMaxSize
 		this.color = Settings.foodPossibleColors[Math.floor(Math.random() * Settings.foodPossibleColors.length)];
 		var rad = new Vector(Settings.foodMaxSize, Settings.foodMaxSize)
 		this.box = new BoundingBox([this.location.add(rad), this.location.sub(rad)]);
 	},
 	draw: function(context, view){
 		var off = view.off;
-		var fs = this.location.add(off)
+		var fs = this.location
 		var size = this.size;
 		// console.log(size);
-		context.beginPath();
-		context.arc(fs.x, fs.y, size, 0, 2 * Math.PI, false);
-		context.lineWidth = 1; 
-		context.strokeStyle = this.color;
-		context.stroke();
+		view.drawCircle(fs, size, 2, this.color)
 	},
 	step: function(){
 		var ret = this.copy();
