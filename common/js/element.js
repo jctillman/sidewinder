@@ -6,41 +6,31 @@ var reqFunc = {
 	construct: {
 		checks: [
 			function(a){ return (a instanceof Vector) },
-			function(a){ return (typeof a == 'object')}
-		],
+			function(a){ return (typeof a == 'object')}],
 		explanations: [
 			"Expected a vector, but no vector received.",
-			"Expected an object, but something else received."
-		]
+			"Expected an object, but something else received."]
 	},
 	draw: 
 	{
 		checks: [
-			function(a){ return (a.beginPath != undefined);},
-			function(a){ return a instanceof View; } 
-		],
+			function(a){ return a instanceof View; } ],
 		explanations: [
-			"Expected a context object as the first argument, but did not recieve one.",
-			"Expected a View object as the second argument, but didn't get one."
-		]
+			"Expected a View object as the second argument, but didn't get one."]
 	},
 	step: { checks: [], explanations: [] }, 
 	copy: { checks: [], explanations: [] },
 	matters: {
 		checks:[
-			function(a) { return (a.isAnElement == true)}
-		],
+			function(a) { return (a.isAnElement == true)}],
 		explanations:[
-			"Expected an object which was created by the element factory, but didn't get one."
-		]
+			"Expected an object which was created by the element factory, but didn't get one."]
 	},
 	encounters: {
 		checks: [
-			function(a) {return a.isAnElement === true}
-			],
+			function(a) {return a.isAnElement === true}],
 		explanations: [
-			"Expected an object created by the element factory, but did not get one."
-			]	
+			"Expected an object created by the element factory, but did not get one."]	
 	 }
 }
 
@@ -91,8 +81,20 @@ var Element = function(options){
 		if(options[fn].length != reqFunc[fn].checks.length){
 			throw new Error("'" + fn + "' function in options requires an arity of " + reqFunc[fn].checks.length)
 		}
-		//Add the function, without error checking.
-		ret.prototype[fn] = options[fn];
+		
+		//Add the function, with error checking.
+		ret.prototype[fn] = function(){
+			var args = [];
+			for(var y = 0; y < arguments.length; y++){
+				if (reqFunc[fn].checks[y](arguments[y])){
+					args.push(arguments[y])
+				}else{
+					throw new Error("An incorrect value: " + reqFunc[fn].explanations[y])
+				}
+			}
+			var rtrn = options[fn].apply(this, args);
+			return rtrn;
+		}
 	});
 
 	//Add the functions that are not required, with stuff.

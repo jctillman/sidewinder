@@ -9,7 +9,7 @@ var BoundingBox = require('../../common/js/BoundingBox.js');
 var ElementPlayer = Element({
 	//Constructor actually ignores required things, because this is such a background.. thing.
 	construct: function(location, options){
-		//Optional
+		//Optional--game elements
 		this.isHuman = (options.isHuman === undefined) ? true : options.isHuman;
 		this.places = Vector.chain(location, {
 			segments: Settings.startSegments,
@@ -21,11 +21,10 @@ var ElementPlayer = Element({
 		this.amountToGrow = 0;
 		this.speed = 1;
 		this.kink = 0; 
-		
 		this.dying = false;
 		this.dead = undefined;
 
-		//Set the particular colors for the snake.		
+		//Optional--display elements.	
 		this.colorLength = 1 + Math.floor(Math.random() * Settings.maxColorLength);
 		this.colors = [];
 		for(var x = 0; x < this.colorLength; x++){
@@ -40,12 +39,11 @@ var ElementPlayer = Element({
 		this.nothingMatters = false;
 		this.box = new BoundingBox(this.places);
 	},
-	draw: function(context, view){
-	  var off = view.off
+	draw: function(view){
 	  var width = 2 + Math.sqrt( (this.places.length - Settings.startSegments) / 100);
-	  for(var x = 0; x < this.places.length - 1; x++){
+	  for(var x = 0, len = this.places.length; x < len - 1; x++){
 	  	var color = this.colors[Math.floor( x / this.stripeLength) % this.colorLength]
-	  	view.drawPath([this.places[x], this.places[x+1]], width, color)
+	  	view.drawPath(this.places.slice(x,x+2), width, color)
 	  }
 	},
 	step: function(){
@@ -107,12 +105,8 @@ var ElementPlayer = Element({
 	matters: function(element){
 		return Utilities.foodPlayerCollision(element, this) || Utilities.playerPlayer(element, this);
 	},
-	setMove: function(move){
-		this.aim = move.aim;
-	},
 	encounters: function(element){
 		if (element.type == 'food'){
-			console.log("!")
 			this.amountToGrow = this.amountToGrow + Settings.foodValue;
 			element.shrinking = true;
 		}
@@ -126,6 +120,9 @@ var ElementPlayer = Element({
 				}
 			}
 		}
+	},
+	setMove: function(move){
+		this.aim = move.aim;
 	}
 });
 

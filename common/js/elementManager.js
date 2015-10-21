@@ -8,18 +8,15 @@ var members = {
 	food: require('../../common/js/elementfood.js')
 }
 
-
 var ElementManager = function(){ 
 	this.elements = [];
 }
 
-ElementManager.prototype.draw = function(context, view){
-	context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+ElementManager.prototype.draw = function(view){
+	view.clear();
 	for(var x = 0, len = this.elements.length; x < len; x++){
 		var el = this.elements[x];
-		if (view.box.intersects(el.box)){
-			this.elements[x].draw(context, view);
-		}
+		view.box.intersects(el.box) && this.elements[x].draw(view);
 	}
 };
 
@@ -39,7 +36,6 @@ ElementManager.prototype.addElement = function(name, location, options){
 }
 
 ElementManager.prototype.step = function(mods){
-	var self = this;
 	var filteredElements = [];
 
 	for(var x = 0, len = this.elements.length; x < len; x++){
@@ -51,11 +47,9 @@ ElementManager.prototype.step = function(mods){
 
 	for(var x = 0, len=filteredElements.length; x < len; x++){
 		if(!filteredElements[x].inactive){
-			for(var y = 0, len=filteredElements.length; y < len; y++){
-				for(var y = 0; y < len; y++){
-					if(filteredElements[x].matters(filteredElements[y])){
-						filteredElements[x].encounters(filteredElements[y])
-					}
+			for(var y = 0; y < len; y++){
+				if(filteredElements[x].matters(filteredElements[y])){
+					filteredElements[x].encounters(filteredElements[y])
 				}
 			}
 		}
@@ -69,35 +63,6 @@ ElementManager.prototype.step = function(mods){
 		mods[x](ret);
 	}
 	return ret;
-
-	
-	// for(var x = 0, len=Grid.length; x < len; x++){
-	// 	Grid[x].items = [];
-	// 	for(var y = 0; y < filteredElements.length; y++){
-	// 		if(Grid[x].box.intersects(filteredElements[y].box)){
-	// 			filteredElements[y].visitedBy = [];
-	// 			Grid[x].items.push(filteredElements[y]);
-	// 		}
-	// 	}
-	// }
-
-
-	// //Alter them in accord with any, by which they need to be altered.
-
-	// for(var x = 0; x < Grid.length; x++){
-	// 	var stuffHere = Grid[x].items;
-	// 	for(var y =0; y < stuffHere.length; y++){
-	// 		if (!stuffHere[y].inactive){
-	// 			for(var z = 0; z < stuffHere.length; z++){
-	// 				if(stuffHere[y].matters(stuffHere[z])) {
-	// 					stuffHere[y].encounters(stuffHere[z])
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-
 }
 
 module.exports = ElementManager

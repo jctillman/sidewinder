@@ -18,19 +18,17 @@ var ElementGrid = Element({
 		this.gridSpace = Settings.gridSpace;
 		this.box = new BoundingBox([new Vector(0,0), new Vector(this.gridSize, this.gridSize)]);
 	},
-	draw: function(context, view){ 
-		//Setup
+	draw: function(view){ 
 		var gsi = this.gridSize;
 		var gsp = this.gridSpace;
 		var color = Settings.gridColor
-	    //Draw the grid.
 	    for(var x = 0; x <= gsi; x = x + gsp){
 	    	var right = new Vector(0,x);
 	    	var left = new Vector(gsi,x);
 	    	var top = new Vector(x, 0);
 	    	var bottom = new Vector(x, gsi);
-	    	view.drawPath([left, right], 1, color)
-	    	view.drawPath([top, bottom], 1, color)
+	    	view.drawPath([left, right], 0.5, color)
+	    	view.drawPath([top, bottom], 0.5, color)
 	    }
 	},
 	step: function(){ 

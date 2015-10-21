@@ -20,7 +20,7 @@ var ElementFood = Element({
 		var rad = new Vector(Settings.foodMaxSize, Settings.foodMaxSize)
 		this.box = new BoundingBox([this.location.add(rad), this.location.sub(rad)]);
 	},
-	draw: function(context, view){
+	draw: function(view){
 		view.drawCircle(this.location, this.size, 2, this.color)
 	},
 	step: function(){

@@ -1,11 +1,15 @@
 var Vector = require('../../common/js/vector.js');
 var BoundingBox = require('../../common/js/boundingbox.js');
 
-var View = function(bv, cnv, plyr){
+var View = function(bv, cnv){
 	this.screenWidth = cnv.width;
 	this.screenHeight = cnv.height;
 	this.ctx = cnv.getContext('2d');
 	this.box = bv;
+}
+
+View.prototype.clear = function(){
+	this.ctx.clearRect(0, 0, this.screenWidth, this.screenHeight);
 }
 
 View.prototype.drawPath = function(arrVector, width, color){

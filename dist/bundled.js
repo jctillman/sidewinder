@@ -51,30 +51,30 @@ var playGame = function playGame(gameState, appState, playerId, finished) {
 	var physicsLoops = setInterval(Utilities.timed(true, function () {
 		//Grab player, if player is there.
 		var plyr = gameState.getElement(playerId);
-		//If the player has died
 		if (plyr == undefined) {
+			//If the player has died
 			stepsAfterDeath++;
 			if (stepsAfterDeath > Settings.framesToViewAfterDeath) {
 				window.clearInterval(physicsLoops);
 				finished();
 			}
-			//Player lives!
 		} else {
-				var bv = BoundingView(plyr, appState.game.canvas);
-				var movr = new Move({
-					mousePosition: appState.game.mousePosition(),
-					boundingView: bv,
-					canvas: appState.game.canvas
-				});
-				plyr.setMove(movr);
-				tempView = new View(bv, appState.game.canvas, plyr);
-			}
+			//Player lives!
+			var bv = BoundingView(plyr, appState.game.canvas);
+			var movr = new Move({
+				mousePosition: appState.game.mousePosition(),
+				boundingView: bv,
+				canvas: appState.game.canvas
+			});
+			plyr.setMove(movr);
+			tempView = new View(bv, appState.game.canvas);
+		}
 
 		//First draws board; second draws high score.
-		gameState.draw(appState.game.context, tempView);
+		gameState.draw(tempView);
 		HighScore(gameState, appState.game.context, plyr && plyr.id);
 
-		//move this shit around
+		//step
 		gameState = gameState.step([elementFoodManager, elementAIManager]);
 	}), Settings.physicsRate);
 };
@@ -247,11 +247,15 @@ module.exports = function (options) {
 var Vector = require('../../common/js/vector.js');
 var BoundingBox = require('../../common/js/boundingbox.js');
 
-var View = function View(bv, cnv, plyr) {
+var View = function View(bv, cnv) {
 	this.screenWidth = cnv.width;
 	this.screenHeight = cnv.height;
 	this.ctx = cnv.getContext('2d');
 	this.box = bv;
+};
+
+View.prototype.clear = function () {
+	this.ctx.clearRect(0, 0, this.screenWidth, this.screenHeight);
 };
 
 View.prototype.drawPath = function (arrVector, width, color) {
@@ -370,13 +374,11 @@ var ElementManager = function ElementManager() {
 	this.elements = [];
 };
 
-ElementManager.prototype.draw = function (context, view) {
-	context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+ElementManager.prototype.draw = function (view) {
+	view.clear();
 	for (var x = 0, len = this.elements.length; x < len; x++) {
 		var el = this.elements[x];
-		if (view.box.intersects(el.box)) {
-			this.elements[x].draw(context, view);
-		}
+		view.box.intersects(el.box) && this.elements[x].draw(view);
 	}
 };
 
@@ -396,7 +398,6 @@ ElementManager.prototype.addElement = function (name, location, options) {
 };
 
 ElementManager.prototype.step = function (mods) {
-	var self = this;
 	var filteredElements = [];
 
 	for (var x = 0, len = this.elements.length; x < len; x++) {
@@ -408,11 +409,9 @@ ElementManager.prototype.step = function (mods) {
 
 	for (var x = 0, len = filteredElements.length; x < len; x++) {
 		if (!filteredElements[x].inactive) {
-			for (var y = 0, len = filteredElements.length; y < len; y++) {
-				for (var y = 0; y < len; y++) {
-					if (filteredElements[x].matters(filteredElements[y])) {
-						filteredElements[x].encounters(filteredElements[y]);
-					}
+			for (var y = 0; y < len; y++) {
+				if (filteredElements[x].matters(filteredElements[y])) {
+					filteredElements[x].encounters(filteredElements[y]);
 				}
 			}
 		}
@@ -426,31 +425,6 @@ ElementManager.prototype.step = function (mods) {
 		mods[x](ret);
 	}
 	return ret;
-
-	// for(var x = 0, len=Grid.length; x < len; x++){
-	// 	Grid[x].items = [];
-	// 	for(var y = 0; y < filteredElements.length; y++){
-	// 		if(Grid[x].box.intersects(filteredElements[y].box)){
-	// 			filteredElements[y].visitedBy = [];
-	// 			Grid[x].items.push(filteredElements[y]);
-	// 		}
-	// 	}
-	// }
-
-	// //Alter them in accord with any, by which they need to be altered.
-
-	// for(var x = 0; x < Grid.length; x++){
-	// 	var stuffHere = Grid[x].items;
-	// 	for(var y =0; y < stuffHere.length; y++){
-	// 		if (!stuffHere[y].inactive){
-	// 			for(var z = 0; z < stuffHere.length; z++){
-	// 				if(stuffHere[y].matters(stuffHere[z])) {
-	// 					stuffHere[y].encounters(stuffHere[z])
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
 };
 
 module.exports = ElementManager;
@@ -605,11 +579,9 @@ var reqFunc = {
 	},
 	draw: {
 		checks: [function (a) {
-			return a.beginPath != undefined;
-		}, function (a) {
 			return a instanceof View;
 		}],
-		explanations: ["Expected a context object as the first argument, but did not recieve one.", "Expected a View object as the second argument, but didn't get one."]
+		explanations: ["Expected a View object as the second argument, but didn't get one."]
 	},
 	step: { checks: [], explanations: [] },
 	copy: { checks: [], explanations: [] },
@@ -674,8 +646,20 @@ var Element = function Element(options) {
 		if (options[fn].length != reqFunc[fn].checks.length) {
 			throw new Error("'" + fn + "' function in options requires an arity of " + reqFunc[fn].checks.length);
 		}
-		//Add the function, without error checking.
-		ret.prototype[fn] = options[fn];
+
+		//Add the function, with error checking.
+		ret.prototype[fn] = function () {
+			var args = [];
+			for (var y = 0; y < arguments.length; y++) {
+				if (reqFunc[fn].checks[y](arguments[y])) {
+					args.push(arguments[y]);
+				} else {
+					throw new Error("An incorrect value: " + reqFunc[fn].explanations[y]);
+				}
+			}
+			var rtrn = options[fn].apply(this, args);
+			return rtrn;
+		};
 	});
 
 	//Add the functions that are not required, with stuff.
@@ -715,7 +699,7 @@ var ElementFood = Element({
 		var rad = new Vector(Settings.foodMaxSize, Settings.foodMaxSize);
 		this.box = new BoundingBox([this.location.add(rad), this.location.sub(rad)]);
 	},
-	draw: function draw(context, view) {
+	draw: function draw(view) {
 		view.drawCircle(this.location, this.size, 2, this.color);
 	},
 	step: function step() {
@@ -844,7 +828,7 @@ var ElementFood = Element({
 		var rad = new Vector(Settings.foodMaxSize, Settings.foodMaxSize);
 		this.box = new BoundingBox([this.location.add(rad), this.location.sub(rad)]);
 	},
-	draw: function draw(context, view) {
+	draw: function draw(view) {
 		view.drawCircle(this.location, this.size, 2, this.color);
 	},
 	step: function step() {
@@ -900,19 +884,17 @@ var ElementGrid = Element({
 		this.gridSpace = Settings.gridSpace;
 		this.box = new BoundingBox([new Vector(0, 0), new Vector(this.gridSize, this.gridSize)]);
 	},
-	draw: function draw(context, view) {
-		//Setup
+	draw: function draw(view) {
 		var gsi = this.gridSize;
 		var gsp = this.gridSpace;
 		var color = Settings.gridColor;
-		//Draw the grid.
 		for (var x = 0; x <= gsi; x = x + gsp) {
 			var right = new Vector(0, x);
 			var left = new Vector(gsi, x);
 			var top = new Vector(x, 0);
 			var bottom = new Vector(x, gsi);
-			view.drawPath([left, right], 1, color);
-			view.drawPath([top, bottom], 1, color);
+			view.drawPath([left, right], 0.5, color);
+			view.drawPath([top, bottom], 0.5, color);
 		}
 	},
 	step: function step() {
@@ -947,7 +929,7 @@ var BoundingBox = require('../../common/js/BoundingBox.js');
 var ElementPlayer = Element({
 	//Constructor actually ignores required things, because this is such a background.. thing.
 	construct: function construct(location, options) {
-		//Optional
+		//Optional--game elements
 		this.isHuman = options.isHuman === undefined ? true : options.isHuman;
 		this.places = Vector.chain(location, {
 			segments: Settings.startSegments,
@@ -959,11 +941,10 @@ var ElementPlayer = Element({
 		this.amountToGrow = 0;
 		this.speed = 1;
 		this.kink = 0;
-
 		this.dying = false;
 		this.dead = undefined;
 
-		//Set the particular colors for the snake.		
+		//Optional--display elements.	
 		this.colorLength = 1 + Math.floor(Math.random() * Settings.maxColorLength);
 		this.colors = [];
 		for (var x = 0; x < this.colorLength; x++) {
@@ -978,12 +959,11 @@ var ElementPlayer = Element({
 		this.nothingMatters = false;
 		this.box = new BoundingBox(this.places);
 	},
-	draw: function draw(context, view) {
-		var off = view.off;
+	draw: function draw(view) {
 		var width = 2 + Math.sqrt((this.places.length - Settings.startSegments) / 100);
-		for (var x = 0; x < this.places.length - 1; x++) {
+		for (var x = 0, len = this.places.length; x < len - 1; x++) {
 			var color = this.colors[Math.floor(x / this.stripeLength) % this.colorLength];
-			view.drawPath([this.places[x], this.places[x + 1]], width, color);
+			view.drawPath(this.places.slice(x, x + 2), width, color);
 		}
 	},
 	step: function step() {
@@ -1042,12 +1022,8 @@ var ElementPlayer = Element({
 	matters: function matters(element) {
 		return Utilities.foodPlayerCollision(element, this) || Utilities.playerPlayer(element, this);
 	},
-	setMove: function setMove(move) {
-		this.aim = move.aim;
-	},
 	encounters: function encounters(element) {
 		if (element.type == 'food') {
-			console.log("!");
 			this.amountToGrow = this.amountToGrow + Settings.foodValue;
 			element.shrinking = true;
 		}
@@ -1061,6 +1037,9 @@ var ElementPlayer = Element({
 				}
 			}
 		}
+	},
+	setMove: function setMove(move) {
+		this.aim = move.aim;
 	}
 });
 
