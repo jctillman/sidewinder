@@ -52,11 +52,11 @@ BoundingBox.prototype.scaleVert = function(amount){
 	return ret;
 }
 
-BoundingBox.prototype.getWidth = function(){
+BoundingBox.prototype.width = function(){
 	return this.right - this.left;
 }
 
-BoundingBox.prototype.getHeight = function(){
+BoundingBox.prototype.height = function(){
 	return this.bottom - this.top;
 }
 

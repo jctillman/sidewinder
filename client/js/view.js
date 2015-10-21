@@ -1,7 +1,7 @@
 var Vector = require('../../common/js/vector.js');
 var BoundingBox = require('../../common/js/boundingbox.js');
 
-var View = function(bv, cnv, ctx, plyr){
+var View = function(bv, cnv, plyr){
 	this.screenWidth = cnv.width;
 	this.screenHeight = cnv.height;
 	this.ctx = cnv.getContext('2d');
@@ -9,16 +9,10 @@ var View = function(bv, cnv, ctx, plyr){
 }
 
 View.prototype.drawPath = function(arrVector, width, color){
-
-	//draw from left of box to right
-	//from top to bottom
 	var w = this.box.right - this.box.left;
 	var h = this.box.bottom - this.box.top;
-	
-
 	var x = (arrVector[0].x-this.box.left) * this.screenWidth / w;
 	var y = (arrVector[0].y-this.box.top) * this.screenHeight / h;
-
 	var pth = new Path2D();
 	this.ctx.strokeStyle = color;
 	this.ctx.lineWidth = width;
@@ -33,23 +27,12 @@ View.prototype.drawPath = function(arrVector, width, color){
 
 View.prototype.drawCircle = function(center, width, thickness, color){
 	var path = []
-	for(var x = 0; x < 2.1; x = x + 0.1){
+	for(var x = 0; x <= 2; x = x + 0.25){
 		var pointX = center.x + width * Math.sin(x*Math.PI)
 		var pointY = center.y + width * Math.cos(x*Math.PI)
 		path.push(new Vector(pointX, pointY))
 	}
 	this.drawPath(path, thickness, color);
-
-	// var w = this.box.right - this.box.left;
-	// var h = this.box.bottom - this.box.top;
-	// // var w = Math.max(w,h)
-	// // var h = Math.max(w,h)
-	// var x = (center.x-this.box.left) * this.screenWidth / w;
-	// var y = (center.y-this.box.top) * this.screenHeight / h;
-	// this.ctx.arc(x,y, width, 0, 2 * Math.PI, false);
-	// this.ctx.lineWidth = 2; 
-	// this.ctx.strokeStyle = color;
-	// this.ctx.stroke();
 }
 
 

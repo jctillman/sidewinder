@@ -8,8 +8,8 @@ var Move = function(options){
 		throw new Error("Must either provide mouse position xor an exact location.")
 	}
 
-	if(options.mousePosition && !options.player){
-		throw new Error("If you provide a mouse position, you must provide a player.")
+	if(options.mousePosition && !options.canvas){
+		throw new Error("If you provide a mouse position, you must provide a canvas.")
 	}
 
 	if(options.mousePosition && !options.boundingView){
@@ -19,9 +19,9 @@ var Move = function(options){
 	if(options.mousePosition){
 		var viewBox = options.boundingView;
 		var w = viewBox.right - viewBox.left;
-		var h = viewBox.bottom - viewBox.top;	
-		var actualX = options.mousePosition.x / (cnv.width / w) + viewBox.left;
-		var actualY = options.mousePosition.y / (cnv.height / h) + viewBox.top;
+		var h = viewBox.bottom - viewBox.top;
+		var actualX = options.mousePosition.x / (options.canvas.width / w) + viewBox.left;
+		var actualY = options.mousePosition.y / (options.canvas.height / h) + viewBox.top;
 		this.aim = new Vector(actualX, actualY);
 	}else{
 		if(!(options.aim instanceof Vector)){
@@ -33,7 +33,6 @@ var Move = function(options){
 
 	this.aim.x = Math.max(Math.min(Settings.gridSize, this.aim.x), 0) 
 	this.aim.y = Math.max(Math.min(Settings.gridSize, this.aim.y), 0)
-
 	this.split = options.split || false;
 }
 

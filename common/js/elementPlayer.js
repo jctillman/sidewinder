@@ -107,9 +107,6 @@ var ElementPlayer = Element({
 	matters: function(element){
 		return Utilities.foodPlayerCollision(element, this) || Utilities.playerPlayer(element, this);
 	},
-	relevantPoints: function(){
-		return this.places.map(function(n){return Vector.copy(n)});
-	},
 	setMove: function(move){
 		this.aim = move.aim;
 	},

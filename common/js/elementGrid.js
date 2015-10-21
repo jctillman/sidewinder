@@ -42,9 +42,6 @@ var ElementGrid = Element({
 		ret.box = BoundingBox.copy(this.box);
 		return ret;
 	},
-	relevantPoints: function(){
-		return [new Vector(0,0), new Vector(this.gridSize, this.gridSize)];
-	},
 	matters: function(element){
 		return false;
 	},

@@ -29,15 +29,15 @@ var playGame = function(gameState, appState, playerId, finished){
 			var movr = new Move({
 				mousePosition: appState.game.mousePosition(),
 				boundingView: bv,
-				player: plyr
+				canvas: appState.game.canvas
 			});
 			plyr.setMove(movr);
-			tempView = new View(bv, appState.game.canvas, appState.game.context, plyr);
+			tempView = new View(bv, appState.game.canvas, plyr);
 		}
 
 		//First draws board; second draws high score.
 		gameState.draw(appState.game.context, tempView);
-		HighScore(gameState, appState.game.context);
+		HighScore(gameState, appState.game.context, plyr && plyr.id);
 
 		//move this shit around
 		gameState = gameState.step([elementFoodManager, elementAIManager]);
