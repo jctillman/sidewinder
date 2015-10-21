@@ -1,5 +1,5 @@
 var Vector = require('../../common/js/vector.js');
-var View = require('../../common/js/view.js');
+var View = require('../../client/js/view.js');
 var Utilities = require('../../common/js/utilities.js');
 
 var reqFunc = {

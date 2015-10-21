@@ -12,21 +12,12 @@ var Move = function(options){
 		throw new Error("If you provide a mouse position, you must provide a player.")
 	}
 
-	if(options.mousePosition && !options.canvas){
-		throw new Error("If you provide a mouse position, you must provide a canvas.")
+	if(options.mousePosition && !options.boundingView){
+		throw new Error("If you provide a mouse position, you must provide a bounding view.")
 	}
 
 	if(options.mousePosition){
-		var temp = new BoundingBox(options.player.places);
-		var screenWidth = options.canvas.width;
-		var screenHeight = options.canvas.height;
-		var screenRatio = screenWidth / screenHeight;
-		temp = temp.expanded(300);
-		var boxRatio = (temp.right - temp.left) / (temp.bottom - temp.top) ;
-		console.log(boxRatio / screenRatio)
-		temp = temp.scaleVert( boxRatio / screenRatio )
-		var viewBox = temp;
-
+		var viewBox = options.boundingView;
 		var w = viewBox.right - viewBox.left;
 		var h = viewBox.bottom - viewBox.top;	
 		var actualX = options.mousePosition.x / (cnv.width / w) + viewBox.left;

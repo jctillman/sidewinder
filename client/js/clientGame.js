@@ -2,59 +2,52 @@ var ElementManager = require('../../common/js/ElementManager.js');
 var Settings = require('../../common/js/settings.js');
 var Utilities = require('../../common/js/utilities.js');
 var Move = require('../../common/js/move.js');
-var View = require('../../common/js/view.js');
+var View = require('../../client/js/view.js');
 var Vector = require('../../common/js/vector.js');
 var HighScore = require('../../client/js/highscore.js');
-
+var elementFoodManager = require('../../common/js/elementManagerFood.js');
+var elementAIManager = require('../../common/js/elementManagerAi.js');
+var BoundingView = require('../../client/js/boundingview.js');
 
 var playGame = function(gameState, appState, playerId, finished){
-
-	var tempView;
-	var stepsAfterDeath = 0;
+	var tempView = null,
+	    stepsAfterDeath = 0;
 
 	var physicsLoops = setInterval(Utilities.timed(true, function(){
-
-		//Grab player and make moves.
+		//Grab player, if player is there.
 		var plyr = gameState.getElement(playerId)
-
+		//If the player has died
 		if(plyr == undefined){
 			stepsAfterDeath++;
 			if (stepsAfterDeath > Settings.framesToViewAfterDeath){
 				window.clearInterval(physicsLoops)
-				console.log(physicsLoops)
 				finished();
 			}
+		//Player lives!
 		}else{
+			var bv = BoundingView(plyr, appState.game.canvas);
 			var movr = new Move({
 				mousePosition: appState.game.mousePosition(),
-				canvas: appState.game.canvas,
+				boundingView: bv,
 				player: plyr
 			});
 			plyr.setMove(movr);
-			tempView = new View(appState.game.canvas, plyr);
+			tempView = new View(bv, appState.game.canvas, appState.game.context, plyr);
 		}
 
-		//View is what is used in rendering.
+		//First draws board; second draws high score.
 		gameState.draw(appState.game.context, tempView);
-		//Draw the high score HTML elements
 		HighScore(gameState, appState.game.context);
 
-		//set this shit
-		gameState = gameState.step([
-			require('../../common/js/elementManagerFood.js'),
-			require('../../common/js/elementManagerAi.js')
-		]);
-
-
+		//move this shit around
+		gameState = gameState.step([elementFoodManager, elementAIManager]);
 
 	}), Settings.physicsRate)
 
 } 
 
-
- 
-module.exports = function(appState, finished){
+module.exports = function(appState, finishedCallback){
 	var gameState = require('../../common/js/initialgamecreator.js')();
 	var playerId = Utilities.addPlayer('human', gameState);
-	playGame(gameState, appState, playerId, finished)
+	playGame(gameState, appState, playerId, finishedCallback)
 }

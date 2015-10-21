@@ -7,69 +7,84 @@ require('../../client/js/pageSetUp.js')({
 	login: require('../../client/js/clientLogin.js')
 });
 
-},{"../../client/js/clientGame.js":2,"../../client/js/clientLogin.js":3,"../../client/js/clientWatch.js":4,"../../client/js/pageSetUp.js":6}],2:[function(require,module,exports){
+},{"../../client/js/clientGame.js":3,"../../client/js/clientLogin.js":4,"../../client/js/clientWatch.js":5,"../../client/js/pageSetUp.js":7}],2:[function(require,module,exports){
+'use strict';
+
+var BoundingBox = require('../../common/js/boundingbox.js');
+
+module.exports = function (player, canvas) {
+
+	//Get the ratio for the screen
+	var screenWidth = canvas.width;
+	var screenHeight = canvas.height;
+	var screenRatio = screenWidth / screenHeight;
+
+	//Get initial ratio for bounding box
+	var temp = new BoundingBox(player.places);
+	temp = temp.expanded(300);
+	var boxRatio = (temp.right - temp.left) / (temp.bottom - temp.top);
+	temp = temp.scaleVert(boxRatio / screenRatio);
+	var viewBox = temp;
+
+	return viewBox;
+};
+
+},{"../../common/js/boundingbox.js":11}],3:[function(require,module,exports){
 'use strict';
 
 var ElementManager = require('../../common/js/ElementManager.js');
 var Settings = require('../../common/js/settings.js');
 var Utilities = require('../../common/js/utilities.js');
 var Move = require('../../common/js/move.js');
-var View = require('../../common/js/view.js');
+var View = require('../../client/js/view.js');
 var Vector = require('../../common/js/vector.js');
 var HighScore = require('../../client/js/highscore.js');
+var elementFoodManager = require('../../common/js/elementManagerFood.js');
+var elementAIManager = require('../../common/js/elementManagerAi.js');
+var BoundingView = require('../../client/js/boundingview.js');
 
 var playGame = function playGame(gameState, appState, playerId, finished) {
-
-	var tempView;
-	var stepsAfterDeath = 0;
+	var tempView = null,
+	    stepsAfterDeath = 0;
 
 	var physicsLoops = setInterval(Utilities.timed(true, function () {
-
-		//Grab player and make moves.
+		//Grab player, if player is there.
 		var plyr = gameState.getElement(playerId);
-
+		//If the player has died
 		if (plyr == undefined) {
 			stepsAfterDeath++;
 			if (stepsAfterDeath > Settings.framesToViewAfterDeath) {
 				window.clearInterval(physicsLoops);
-				console.log(physicsLoops);
 				finished();
 			}
+			//Player lives!
 		} else {
-			var movr = new Move({
-				mousePosition: appState.game.mousePosition(),
-				canvas: appState.game.canvas,
-				player: plyr
-			});
-			plyr.setMove(movr);
-			tempView = new View(appState.game.canvas, plyr);
-		}
+				var bv = BoundingView(plyr, appState.game.canvas);
+				var movr = new Move({
+					mousePosition: appState.game.mousePosition(),
+					boundingView: bv,
+					player: plyr
+				});
+				plyr.setMove(movr);
+				tempView = new View(bv, appState.game.canvas, appState.game.context, plyr);
+			}
 
-		//View is what is used in rendering.
+		//First draws board; second draws high score.
 		gameState.draw(appState.game.context, tempView);
-		//Draw the high score HTML elements
 		HighScore(gameState, appState.game.context);
 
-		//set this shit
-		gameState = gameState.step([require('../../common/js/elementManagerFood.js'), require('../../common/js/elementManagerAi.js')]);
+		//move this shit around
+		gameState = gameState.step([elementFoodManager, elementAIManager]);
 	}), Settings.physicsRate);
 };
 
-module.exports = function (appState, finished) {
+module.exports = function (appState, finishedCallback) {
 	var gameState = require('../../common/js/initialgamecreator.js')();
 	var playerId = Utilities.addPlayer('human', gameState);
-	playGame(gameState, appState, playerId, finished);
+	playGame(gameState, appState, playerId, finishedCallback);
 };
 
-},{"../../client/js/highscore.js":5,"../../common/js/ElementManager.js":8,"../../common/js/elementManagerAi.js":13,"../../common/js/elementManagerFood.js":14,"../../common/js/initialgamecreator.js":19,"../../common/js/move.js":20,"../../common/js/settings.js":21,"../../common/js/utilities.js":22,"../../common/js/vector.js":23,"../../common/js/view.js":24}],3:[function(require,module,exports){
-"use strict";
-
-module.exports = function (state) {
-	console.log(state);
-	console.log("Not implemented!");
-};
-
-},{}],4:[function(require,module,exports){
+},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":6,"../../client/js/view.js":8,"../../common/js/ElementManager.js":10,"../../common/js/elementManagerAi.js":15,"../../common/js/elementManagerFood.js":16,"../../common/js/initialgamecreator.js":21,"../../common/js/move.js":22,"../../common/js/settings.js":23,"../../common/js/utilities.js":24,"../../common/js/vector.js":25}],4:[function(require,module,exports){
 "use strict";
 
 module.exports = function (state) {
@@ -78,6 +93,14 @@ module.exports = function (state) {
 };
 
 },{}],5:[function(require,module,exports){
+"use strict";
+
+module.exports = function (state) {
+	console.log(state);
+	console.log("Not implemented!");
+};
+
+},{}],6:[function(require,module,exports){
 'use strict';
 
 var HighScore = function HighScore(elementManager, ctx) {
@@ -116,7 +139,7 @@ var HighScore = function HighScore(elementManager, ctx) {
 
 module.exports = HighScore;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
@@ -207,7 +230,65 @@ module.exports = function (opt) {
 	};
 };
 
-},{"../../common/js/settings.js":21,"../../common/js/vector.js":23}],7:[function(require,module,exports){
+},{"../../common/js/settings.js":23,"../../common/js/vector.js":25}],8:[function(require,module,exports){
+'use strict';
+
+var Vector = require('../../common/js/vector.js');
+var BoundingBox = require('../../common/js/boundingbox.js');
+
+var View = function View(bv, cnv, ctx, plyr) {
+	this.screenWidth = cnv.width;
+	this.screenHeight = cnv.height;
+	this.ctx = cnv.getContext('2d');
+	this.box = bv;
+};
+
+View.prototype.drawPath = function (arrVector, width, color) {
+
+	//draw from left of box to right
+	//from top to bottom
+	var w = this.box.right - this.box.left;
+	var h = this.box.bottom - this.box.top;
+
+	var x = (arrVector[0].x - this.box.left) * this.screenWidth / w;
+	var y = (arrVector[0].y - this.box.top) * this.screenHeight / h;
+
+	var pth = new Path2D();
+	this.ctx.strokeStyle = color;
+	this.ctx.lineWidth = width;
+	pth.moveTo(x, y);
+	for (var a = 1; a < arrVector.length; a++) {
+		var x = (arrVector[a].x - this.box.left) * this.screenWidth / w;
+		var y = (arrVector[a].y - this.box.top) * this.screenHeight / h;
+		pth.lineTo(x, y);
+	}
+	this.ctx.stroke(pth);
+};
+
+View.prototype.drawCircle = function (center, width, thickness, color) {
+	var path = [];
+	for (var x = 0; x < 2.1; x = x + 0.1) {
+		var pointX = center.x + width * Math.sin(x * Math.PI);
+		var pointY = center.y + width * Math.cos(x * Math.PI);
+		path.push(new Vector(pointX, pointY));
+	}
+	this.drawPath(path, thickness, color);
+
+	// var w = this.box.right - this.box.left;
+	// var h = this.box.bottom - this.box.top;
+	// // var w = Math.max(w,h)
+	// // var h = Math.max(w,h)
+	// var x = (center.x-this.box.left) * this.screenWidth / w;
+	// var y = (center.y-this.box.top) * this.screenHeight / h;
+	// this.ctx.arc(x,y, width, 0, 2 * Math.PI, false);
+	// this.ctx.lineWidth = 2;
+	// this.ctx.strokeStyle = color;
+	// this.ctx.stroke();
+};
+
+module.exports = View;
+
+},{"../../common/js/boundingbox.js":11,"../../common/js/vector.js":25}],9:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -277,7 +358,7 @@ BoundingBox.prototype.intersects = function (otherBox) {
 
 module.exports = BoundingBox;
 
-},{"../../common/js/vector.js":23}],8:[function(require,module,exports){
+},{"../../common/js/vector.js":25}],10:[function(require,module,exports){
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
@@ -379,7 +460,7 @@ ElementManager.prototype.step = function (mods) {
 
 module.exports = ElementManager;
 
-},{"../../common/js/boundingbox.js":9,"../../common/js/elementfood.js":15,"../../common/js/elementgrid.js":16,"../../common/js/elementplayer.js":17,"../../common/js/grid.js":18,"../../common/js/settings.js":21}],9:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":11,"../../common/js/elementfood.js":17,"../../common/js/elementgrid.js":18,"../../common/js/elementplayer.js":19,"../../common/js/grid.js":20,"../../common/js/settings.js":23}],11:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -449,7 +530,7 @@ BoundingBox.prototype.intersects = function (otherBox) {
 
 module.exports = BoundingBox;
 
-},{"../../common/js/vector.js":23}],10:[function(require,module,exports){
+},{"../../common/js/vector.js":25}],12:[function(require,module,exports){
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
@@ -511,11 +592,11 @@ module.exports = {
 	}
 };
 
-},{"../../common/js/move.js":20,"../../common/js/settings.js":21,"../../common/js/utilities.js":22,"../../common/js/vector.js":23}],11:[function(require,module,exports){
+},{"../../common/js/move.js":22,"../../common/js/settings.js":23,"../../common/js/utilities.js":24,"../../common/js/vector.js":25}],13:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
-var View = require('../../common/js/view.js');
+var View = require('../../client/js/view.js');
 var Utilities = require('../../common/js/utilities.js');
 
 var reqFunc = {
@@ -614,7 +695,7 @@ var Element = function Element(options) {
 
 module.exports = Element;
 
-},{"../../common/js/utilities.js":22,"../../common/js/vector.js":23,"../../common/js/view.js":24}],12:[function(require,module,exports){
+},{"../../client/js/view.js":8,"../../common/js/utilities.js":24,"../../common/js/vector.js":25}],14:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -679,7 +760,7 @@ var ElementFood = Element({
 
 module.exports = ElementFood;
 
-},{"../../common/js/boundingbox.js":9,"../../common/js/element.js":11,"../../common/js/settings.js":21,"../../common/js/utilities.js":22,"../../common/js/vector.js":23}],13:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":11,"../../common/js/element.js":13,"../../common/js/settings.js":23,"../../common/js/utilities.js":24,"../../common/js/vector.js":25}],15:[function(require,module,exports){
 'use strict';
 
 var Food = require('../../common/js/elementFood.js');
@@ -723,7 +804,7 @@ var elementManagerAi = function elementManagerAi(elementManager) {
 
 module.exports = elementManagerAi;
 
-},{"../../common/js/brain.js":10,"../../common/js/elementFood.js":12,"../../common/js/move.js":20,"../../common/js/settings.js":21,"../../common/js/utilities.js":22,"../../common/js/vector.js":23}],14:[function(require,module,exports){
+},{"../../common/js/brain.js":12,"../../common/js/elementFood.js":14,"../../common/js/move.js":22,"../../common/js/settings.js":23,"../../common/js/utilities.js":24,"../../common/js/vector.js":25}],16:[function(require,module,exports){
 'use strict';
 
 var Food = require('../../common/js/elementFood.js');
@@ -750,7 +831,7 @@ var elementFoodManager = function elementFoodManager(elementManager) {
 
 module.exports = elementFoodManager;
 
-},{"../../common/js/elementFood.js":12,"../../common/js/settings.js":21,"../../common/js/vector.js":23}],15:[function(require,module,exports){
+},{"../../common/js/elementFood.js":14,"../../common/js/settings.js":23,"../../common/js/vector.js":25}],17:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -815,7 +896,7 @@ var ElementFood = Element({
 
 module.exports = ElementFood;
 
-},{"../../common/js/boundingbox.js":9,"../../common/js/element.js":11,"../../common/js/settings.js":21,"../../common/js/utilities.js":22,"../../common/js/vector.js":23}],16:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":11,"../../common/js/element.js":13,"../../common/js/settings.js":23,"../../common/js/utilities.js":24,"../../common/js/vector.js":25}],18:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -875,7 +956,7 @@ var ElementGrid = Element({
 
 module.exports = ElementGrid;
 
-},{"../../common/js/BoundingBox.js":7,"../../common/js/element.js":11,"../../common/js/settings.js":21,"../../common/js/utilities.js":22,"../../common/js/vector.js":23}],17:[function(require,module,exports){
+},{"../../common/js/BoundingBox.js":9,"../../common/js/element.js":13,"../../common/js/settings.js":23,"../../common/js/utilities.js":24,"../../common/js/vector.js":25}],19:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -1012,7 +1093,7 @@ var ElementPlayer = Element({
 
 module.exports = ElementPlayer;
 
-},{"../../common/js/BoundingBox.js":7,"../../common/js/element.js":11,"../../common/js/elementfood.js":15,"../../common/js/settings.js":21,"../../common/js/utilities.js":22,"../../common/js/vector.js":23}],18:[function(require,module,exports){
+},{"../../common/js/BoundingBox.js":9,"../../common/js/element.js":13,"../../common/js/elementfood.js":17,"../../common/js/settings.js":23,"../../common/js/utilities.js":24,"../../common/js/vector.js":25}],20:[function(require,module,exports){
 'use strict';
 
 var BoundingBox = require('../../common/js/boundingbox.js');
@@ -1030,7 +1111,7 @@ for (var x = 0; x < gridSize; x = x + inc) {
 
 module.exports = grids;
 
-},{"../../common/js/boundingbox.js":9,"../../common/js/settings.js":21,"../../common/js/vector.js":23}],19:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":11,"../../common/js/settings.js":23,"../../common/js/vector.js":25}],21:[function(require,module,exports){
 'use strict';
 
 var ElementManager = require('../../common/js/ElementManager.js');
@@ -1048,7 +1129,7 @@ var maker = function maker() {
 
 module.exports = maker;
 
-},{"../../common/js/ElementManager.js":8,"../../common/js/settings.js":21,"../../common/js/vector.js":23}],20:[function(require,module,exports){
+},{"../../common/js/ElementManager.js":10,"../../common/js/settings.js":23,"../../common/js/vector.js":25}],22:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -1065,21 +1146,12 @@ var Move = function Move(options) {
 		throw new Error("If you provide a mouse position, you must provide a player.");
 	}
 
-	if (options.mousePosition && !options.canvas) {
-		throw new Error("If you provide a mouse position, you must provide a canvas.");
+	if (options.mousePosition && !options.boundingView) {
+		throw new Error("If you provide a mouse position, you must provide a bounding view.");
 	}
 
 	if (options.mousePosition) {
-		var temp = new BoundingBox(options.player.places);
-		var screenWidth = options.canvas.width;
-		var screenHeight = options.canvas.height;
-		var screenRatio = screenWidth / screenHeight;
-		temp = temp.expanded(300);
-		var boxRatio = (temp.right - temp.left) / (temp.bottom - temp.top);
-		console.log(boxRatio / screenRatio);
-		temp = temp.scaleVert(boxRatio / screenRatio);
-		var viewBox = temp;
-
+		var viewBox = options.boundingView;
 		var w = viewBox.right - viewBox.left;
 		var h = viewBox.bottom - viewBox.top;
 		var actualX = options.mousePosition.x / (cnv.width / w) + viewBox.left;
@@ -1101,7 +1173,7 @@ var Move = function Move(options) {
 
 module.exports = Move;
 
-},{"../../common/js/boundingbox.js":9,"../../common/js/settings.js":21,"../../common/js/vector.js":23}],21:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":11,"../../common/js/settings.js":23,"../../common/js/vector.js":25}],23:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -1141,7 +1213,7 @@ module.exports = {
 
 };
 
-},{}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -1239,7 +1311,7 @@ module.exports = {
 
 };
 
-},{"../../common/js/move.js":20,"../../common/js/settings.js":21,"../../common/js/vector.js":23}],23:[function(require,module,exports){
+},{"../../common/js/move.js":22,"../../common/js/settings.js":23,"../../common/js/vector.js":25}],25:[function(require,module,exports){
 'use strict';
 
 function Vector(x, y) {
@@ -1314,73 +1386,4 @@ Vector.prototype.toUnit = function () {
 
 module.exports = Vector;
 
-},{}],24:[function(require,module,exports){
-'use strict';
-
-var Vector = require('../../common/js/vector.js');
-var BoundingBox = require('../../common/js/boundingbox.js');
-
-var View = function View(cnv, plyr) {
-	//var center = plyr.location
-	//var half = new Vector(cnv.width*0.5, cnv.height*0.5);
-	this.screenWidth = cnv.width;
-	this.screenHeight = cnv.height;
-	this.ctx = cnv.getContext('2d');
-	var screenRatio = this.screenWidth / this.screenHeight;
-	console.log();
-	//this.off = center.scale(-1).add(half);
-	var temp = new BoundingBox(plyr.places);
-	temp = temp.expanded(300);
-	var boxRatio = (temp.right - temp.left) / (temp.bottom - temp.top);
-	console.log(boxRatio / screenRatio);
-	temp = temp.scaleVert(boxRatio / screenRatio);
-
-	this.box = temp;
-};
-
-View.prototype.drawPath = function (arrVector, width, color) {
-
-	//draw from left of box to right
-	//from top to bottom
-	var w = this.box.right - this.box.left;
-	var h = this.box.bottom - this.box.top;
-
-	var x = (arrVector[0].x - this.box.left) * this.screenWidth / w;
-	var y = (arrVector[0].y - this.box.top) * this.screenHeight / h;
-
-	var pth = new Path2D();
-	this.ctx.strokeStyle = color;
-	this.ctx.lineWidth = width;
-	pth.moveTo(x, y);
-	for (var a = 1; a < arrVector.length; a++) {
-		var x = (arrVector[a].x - this.box.left) * this.screenWidth / w;
-		var y = (arrVector[a].y - this.box.top) * this.screenHeight / h;
-		pth.lineTo(x, y);
-	}
-	this.ctx.stroke(pth);
-};
-
-View.prototype.drawCircle = function (center, width, thickness, color) {
-	var path = [];
-	for (var x = 0; x < 2.1; x = x + 0.1) {
-		var pointX = center.x + width * Math.sin(x * Math.PI);
-		var pointY = center.y + width * Math.cos(x * Math.PI);
-		path.push(new Vector(pointX, pointY));
-	}
-	this.drawPath(path, thickness, color);
-
-	// var w = this.box.right - this.box.left;
-	// var h = this.box.bottom - this.box.top;
-	// // var w = Math.max(w,h)
-	// // var h = Math.max(w,h)
-	// var x = (center.x-this.box.left) * this.screenWidth / w;
-	// var y = (center.y-this.box.top) * this.screenHeight / h;
-	// this.ctx.arc(x,y, width, 0, 2 * Math.PI, false);
-	// this.ctx.lineWidth = 2;
-	// this.ctx.strokeStyle = color;
-	// this.ctx.stroke();
-};
-
-module.exports = View;
-
-},{"../../common/js/boundingbox.js":9,"../../common/js/vector.js":23}]},{},[1]);
+},{}]},{},[1]);

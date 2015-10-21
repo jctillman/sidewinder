@@ -1,23 +1,11 @@
 var Vector = require('../../common/js/vector.js');
 var BoundingBox = require('../../common/js/boundingbox.js');
 
-var View = function(cnv, plyr){
-	//var center = plyr.location
-	//var half = new Vector(cnv.width*0.5, cnv.height*0.5);
+var View = function(bv, cnv, ctx, plyr){
 	this.screenWidth = cnv.width;
 	this.screenHeight = cnv.height;
 	this.ctx = cnv.getContext('2d');
-	var screenRatio = this.screenWidth / this.screenHeight;
-	console.log()
-	//this.off = center.scale(-1).add(half);
-	var temp = new BoundingBox(plyr.places);
-	temp = temp.expanded(300)
-	var boxRatio = (temp.right - temp.left) / (temp.bottom - temp.top) ;
-	console.log(boxRatio / screenRatio)
-	temp = temp.scaleVert( boxRatio / screenRatio )
-	
-	this.box = temp;
-
+	this.box = bv;
 }
 
 View.prototype.drawPath = function(arrVector, width, color){
