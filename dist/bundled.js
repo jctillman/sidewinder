@@ -24,9 +24,15 @@ module.exports = function (player, canvas) {
 	var screenRatio = screenWidth / screenHeight;
 
 	//Get initial ratio for bounding box
-	var temp = new BoundingBox(player.places).expanded(300);
+	var temp = new BoundingBox(player.places).expanded(200);
 	var boxRatio = (temp.right - temp.left) / (temp.bottom - temp.top);
-	var viewBoundingBox = temp.scaleVert(boxRatio / screenRatio);
+	var vertScale = boxRatio / screenRatio;
+	var horizScale = screenRatio / boxRatio;
+	if (vertScale >= 1) {
+		var viewBoundingBox = temp.scaleVert(vertScale);
+	} else {
+		var viewBoundingBox = temp.scaleHoriz(horizScale);
+	}
 	return viewBoundingBox;
 };
 
@@ -48,7 +54,7 @@ var playGame = function playGame(gameState, appState, playerId, finished) {
 	var tempView = null,
 	    stepsAfterDeath = 0;
 
-	var physicsLoops = setInterval(Utilities.timed(true, function () {
+	var physicsLoops = setInterval(Utilities.timed(false, function () {
 		//Grab player, if player is there.
 		var plyr = gameState.getElement(playerId);
 		if (plyr == undefined) {
@@ -507,25 +513,30 @@ var Vector = require('../../common/js/vector.js');
 var Utilities = require('../../common/js/utilities.js');
 var Move = require('../../common/js/move.js');
 
+var pathColidesClosely = function pathColidesClosely(AI, players, destination) {
+
+	for (var z = 0; z < players.length; z++) {
+		var one = players[z].box.expanded(50);
+		var two = AI.box.expanded(50);
+		if (one.intersects(two)) {
+			for (var a = 0; a < players[z].places.length - 5; a = a + 5) {
+				var colis = Utilities.collision(AI.places[0], destination, players[z].places[a], players[z].places[a + 5]);
+				if (colis) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+};
+
 module.exports = {
 	setMove: function setMove(AI, Players, Feed) {
 		var dist = Settings.gridSize * 10;
 		var spot = undefined; //AI.places[0].sub(AI.location.sub(AI.places[0]));
 		for (var y = 0; y < Feed.length; y++) {
 			var newDist = Feed[y].location.dist(AI.places[0]);
-			var collides = false;
-			for (var z = 0; z < Players.length; z++) {
-				var one = Players[z].box.expanded(50);
-				var two = AI.box.expanded(50);
-				if (one.intersects(two)) {
-					for (var a = 0; a < Players[z].places.length - 5; a = a + 5) {
-						var colis = Utilities.collision(AI.places[0], Feed[y].location, Players[z].places[a], Players[z].places[a + 5]);
-						if (colis) {
-							collides = true;
-						}
-					}
-				}
-			}
+			var collides = pathColidesClosely(AI, Players, Feed[y].location);
 			if (newDist < dist && !collides) {
 				spot = Vector.copy(Feed[y].location);
 				dist = newDist;
@@ -534,27 +545,30 @@ module.exports = {
 		if (spot) {
 			AI.setMove(new Move({ aim: spot }));
 		} else {
-			var Other = [];
-			for (var x = 0; x < 30; x++) {
-				var rand = AI.places[0].add(new Vector((Math.random() - 0.5) * 50, (Math.random() - 0.5) * 50));
-				var collides = false;
-				for (var z = 0; z < Players.length; z++) {
-					var one = Players[z].box.expanded(50);
-					var two = AI.box.expanded(50);
-					if (one.intersects(two)) {
-						for (var a = 0; a < Players[z].places.length - 5; a = a + 5) {
-							var colis = Utilities.collision(AI.places[0], rand, Players[z].places[a], Players[z].places[a + 5]);
-							if (colis) {
-								collides = true;
+			var currentlyBad = pathColidesClosely(AI, Players, AI.aim);
+			if (currentlyBad) {
+				var Other = [];
+				for (var x = 0; x < 30; x++) {
+					var rand = AI.places[0].add(new Vector((Math.random() - 0.5) * 50, (Math.random() - 0.5) * 50));
+					var collides = false;
+					for (var z = 0; z < Players.length; z++) {
+						var one = Players[z].box.expanded(50);
+						var two = AI.box.expanded(50);
+						if (one.intersects(two)) {
+							for (var a = 0; a < Players[z].places.length - 5; a = a + 5) {
+								var colis = Utilities.collision(AI.places[0], rand, Players[z].places[a], Players[z].places[a + 5]);
+								if (colis) {
+									collides = true;
+								}
 							}
 						}
 					}
-				}
-				if (!collides) {
-					var n = Vector.copy(rand);
-					console.log(n);
-					AI.setMove(new Move({ aim: n }));
-					break;
+					if (!collides) {
+						var n = Vector.copy(rand);
+						console.log(n);
+						AI.setMove(new Move({ aim: n }));
+						break;
+					}
 				}
 			}
 		}
@@ -747,12 +761,8 @@ var Brain = require('../../common/js/brain.js');
 //state manager.
 var time = 0;
 
-//This needs to be made waaay cleaner than it is, and
-//also needs to be made so that the AI doesn't suicide
-//so easily.
 var elementManagerAi = function elementManagerAi(elementManager) {
 	time++;
-
 	var Players = elementManager.elements.filter(function (ele) {
 		return ele.type == 'player';
 	});
@@ -762,13 +772,11 @@ var elementManagerAi = function elementManagerAi(elementManager) {
 	var Feed = elementManager.elements.filter(function (ele) {
 		return ele.type == 'food' && ele.shrinking == false;
 	});
-
 	if (time % Settings.aiCheckFrequency == 0) {
 		for (var x = 0, len = AIs.length; x < len; x++) {
 			Brain.setMove(AIs[x], Players, Feed);
 		}
 	}
-
 	if (AIs.length < Settings.aiMinimum) {
 		Utilities.addPlayer('computer', elementManager);
 	}
@@ -1132,7 +1140,7 @@ module.exports = {
 	resizeRate: 50,
 	physicsRate: 25,
 
-	gridSize: 2000,
+	gridSize: 500,
 	gridSpace: 50,
 	gridColor: '#CCC',
 

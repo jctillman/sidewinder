@@ -12,8 +12,14 @@ module.exports = function(player, canvas){
 	var screenRatio = screenWidth / screenHeight;
 
 	//Get initial ratio for bounding box
-	var temp = new BoundingBox(player.places).expanded(300);
+	var temp = new BoundingBox(player.places).expanded(200);
 	var boxRatio = (temp.right - temp.left) / (temp.bottom - temp.top) ;
-	var viewBoundingBox = temp.scaleVert( boxRatio / screenRatio )
+	var vertScale = boxRatio / screenRatio;
+	var horizScale = screenRatio / boxRatio;
+	if (vertScale >= 1){
+		var viewBoundingBox = temp.scaleVert( vertScale )
+	}else{
+		var viewBoundingBox = temp.scaleHoriz( horizScale )
+	}
 	return viewBoundingBox;
 }

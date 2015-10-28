@@ -3,7 +3,7 @@ module.exports = {
 	resizeRate: 50,
 	physicsRate: 25,
 
-	gridSize: 2000,
+	gridSize: 500,
 	gridSpace: 50,
 	gridColor: '#CCC', 
 

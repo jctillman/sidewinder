@@ -13,7 +13,7 @@ var playGame = function(gameState, appState, playerId, finished){
 	var tempView = null,
 	    stepsAfterDeath = 0;
 
-	var physicsLoops = setInterval(Utilities.timed(true, function(){
+	var physicsLoops = setInterval(Utilities.timed(false, function(){
 		//Grab player, if player is there.
 		var plyr = gameState.getElement(playerId)
 		if(plyr == undefined){  	//If the player has died
