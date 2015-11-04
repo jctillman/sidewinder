@@ -1,5 +1,6 @@
 require('../../client/js/pageSetUp.js')({
-	playGame: require('../../client/js/clientGame.js'),
+	singularGame: require('../../client/js/clientPlaySingular.js'),
+	multiplayerGame: require('../../client/js/clientPlayMultiplayer.js'),
 	watchGame: require('../../client/js/clientWatch.js'),
 	login: require('../../client/js/clientLogin.js')
 }); 

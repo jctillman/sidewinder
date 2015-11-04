@@ -3,6 +3,7 @@ var Settings = require('../../common/js/settings.js');
 var Vector = require('../../common/js/vector.js');
 var Utilities = require('../../common/js/utilities.js');
 var BoundingBox = require('../../common/js/boundingbox.js');
+var _ = require('lodash');
 
 var ElementFood = Element({
 	construct: function(location, options){
@@ -24,7 +25,7 @@ var ElementFood = Element({
 		view.drawCircle(this.location, this.size, 2, this.color)
 	},
 	step: function(){
-		var ret = this.copy();
+		var ret = this.constructor.copy(this);
 		if(ret.shrinking){
 			ret.size = ret.size - Settings.foodGrowthRate;
 		}
@@ -37,11 +38,11 @@ var ElementFood = Element({
 		}
 		return (ret.size <= 0) ? undefined : ret;
 	},
-	copy: function(){
-		var ret = Utilities.shallowCopy(this);
-		ret.location = Vector.copy(this.location);
-		ret.box = BoundingBox.copy(this.box);
-		return ret;
+	copy: function(stuff){
+		var ret = Utilities.shallowCopy(stuff);
+		ret.location = Vector.copy(stuff.location);
+		ret.box = BoundingBox.copy(stuff.box);
+		return _.merge(new this(ret.location, {}), ret);
 	},
 	matters: function(element){
 		return false;

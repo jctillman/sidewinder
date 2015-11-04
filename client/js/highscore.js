@@ -4,7 +4,7 @@ var HighScore = function(elementManager, ctx, playerId){
 	var top = [];
 
 	var top = elementManager.elements.map(function(n){
-		return n.copy();
+		return n;//.copy();
 	}).filter(function(m){
 		return m.type == 'player'
 	});

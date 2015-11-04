@@ -18,8 +18,13 @@ var reqFunc = {
 		explanations: [
 			"Expected a View object as the second argument, but didn't get one."]
 	},
-	step: { checks: [], explanations: [] }, 
-	copy: { checks: [], explanations: [] },
+	copy: {
+		checks: [
+			function(a){ return a.isAnElement == true;}],
+		explanations: [
+			"Expected a object created by the element factory to be passed in to copy, but didn't get one."]
+	}, 
+	step: { checks: [], explanations: [] },
 	matters: {
 		checks:[
 			function(a) { return (a.isAnElement == true)}],
@@ -70,8 +75,8 @@ var Element = function(options){
 		}
 	}
 
-	//Add the rest of the functions.
-	var protFunc = ['draw', 'step', 'matters', 'copy', 'encounters'];
+	//Add the rest of the functions on the prototype.
+	var protFunc = ['draw', 'step', 'matters', 'encounters'];
 	protFunc.forEach(function(fn){
 		//Make sure that it has the function in question in the options.
 		if(typeof options[fn] != 'function'){
@@ -97,9 +102,37 @@ var Element = function(options){
 		}
 	});
 
+	//Add the functions which belong on the object constructor themselves.
+	var staticFunc = ['copy'];
+	staticFunc.forEach(function(fn){
+
+		//Make sure that it has the function in question in the options.
+		if(typeof options[fn] != 'function'){
+			throw new Error("'options' object passed to element required an '" + fn + "'' function.");
+		}
+		//Make sure the arity of the function passed is what it should be.
+		if(options[fn].length != reqFunc[fn].checks.length){
+			throw new Error("'" + fn + "' function in options requires an arity of " + reqFunc[fn].checks.length)
+		}
+
+		ret[fn] = function(){
+			var args = [];
+			for(var y = 0; y < arguments.length; y++){
+				if (reqFunc[fn].checks[y](arguments[y])){
+					args.push(arguments[y])
+				}else{
+					throw new Error("An incorrect value: " + reqFunc[fn].explanations[y])
+				}
+			}
+			var rtrn = options[fn].apply(this, args);
+			return rtrn;
+		}
+
+	});
+
 	//Add the functions that are not required, with stuff.
 	Object.keys(options).filter(function(func){
-		return protFunc.indexOf(func) == -1 && func != 'construct';
+		return protFunc.indexOf(func) == -1 && func != 'construct' && func != 'copy';
 	}).forEach(function(fn){
 		ret.prototype[fn] = options[fn]
 	});

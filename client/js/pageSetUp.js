@@ -12,9 +12,10 @@ module.exports = function(options){
 	ClientUtilities.throttledResize(Settings.resizeRate, cnv);
 
 	var menu = document.getElementById('menu');
-	var playbutton = document.getElementById('play');
-	var watchbutton = document.getElementById('watch');
-	var loginbutton = document.getElementById('login');
+	var singularButton = document.getElementById('singular');
+	var multiplayerButton = document.getElementById('multiplayer');
+	var watchButton = document.getElementById('watch');
+	var loginButton = document.getElementById('login');
 
 	var state = {
 		game: {
@@ -24,9 +25,10 @@ module.exports = function(options){
 		}, 
 		menu: {
 			all: menu, 
-			playbutton: playbutton,
-			watchbutton: watchbutton,
-			loginbutton: loginbutton
+			singularButton: singularButton,
+			multiplayerButton: multiplayerButton,
+			watchButton: watchButton,
+			loginButton: loginButton
 		}
 	}; 
 
@@ -35,17 +37,23 @@ module.exports = function(options){
 		menu.style.display="block";
 	}
 
-	playbutton.onclick = function(){ 
+	singularButton.onclick = function(){ 
 		game.style.display="block";
 		menu.style.display="none";
-		options.playGame(state, goBack);
+		options.singularGame(state, goBack);
 	}
 
-	watchbutton.onclick = function(){
+	multiplayerButton.onclick = function(){ 
+		game.style.display="block";
+		menu.style.display="none";
+		options.multiplayerGame(state, goBack);
+	}
+
+	watchButton.onclick = function(){
 		options.watchGame(state, goBack);
 	}
 
-	loginbutton.onclick = function(){
+	loginButton.onclick = function(){
 		options.login(state, goBack);
 	}
 }

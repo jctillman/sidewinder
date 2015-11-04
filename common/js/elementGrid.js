@@ -3,6 +3,7 @@ var Settings = require('../../common/js/settings.js');
 var Vector = require('../../common/js/vector.js');
 var Utilities = require('../../common/js/utilities.js');
 var BoundingBox = require('../../common/js/BoundingBox.js');
+var _ = require('lodash');
 
 var ElementGrid = Element({
 	//Constructor actually ignores required things, because this is such a background.. thing.
@@ -32,13 +33,13 @@ var ElementGrid = Element({
 	    }
 	},
 	step: function(){ 
-		return this.copy();
+		return this.constructor.copy(this);
 	},
-	copy: function(){
-		var ret = Utilities.shallowCopy(this);
-		ret.location = Vector.copy(this.location);
-		ret.box = BoundingBox.copy(this.box);
-		return ret;
+	copy: function(stuff){
+		var ret = Utilities.shallowCopy(stuff);
+		ret.location = Vector.copy(stuff.location);
+		ret.box = BoundingBox.copy(stuff.box);
+		return _.merge(new this(ret.location, {}), ret);
 	},
 	matters: function(element){
 		return false;

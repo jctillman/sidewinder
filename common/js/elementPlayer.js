@@ -4,6 +4,7 @@ var Settings = require('../../common/js/settings.js');
 var Vector = require('../../common/js/vector.js');
 var Utilities = require('../../common/js/utilities.js');
 var BoundingBox = require('../../common/js/BoundingBox.js');
+var _ = require('lodash');
 
 
 var ElementPlayer = Element({
@@ -75,7 +76,7 @@ var ElementPlayer = Element({
 			return kinkiness;
 		}
 
-		var ret = this.copy();
+		var ret = this.constructor.copy(this);
 		ret.speed = ret.kink / Math.sqrt(ret.places.length) + 1;
 		ret.location = Vector.average(ret.places);
 		if (ret.amountToGrow > 0){
@@ -94,13 +95,13 @@ var ElementPlayer = Element({
 		ret.kink = kinkiness(ret);
 		return ret;
 	},
-	copy: function(){
-		var ret = Utilities.shallowCopy(this);
-		ret.places = this.places.map(function(n){return Vector.copy(n);});
-		ret.aim = Vector.copy(this.aim);
-		ret.location = Vector.average(ret.places);
-		ret.box = BoundingBox.copy(this.box);
-		return ret;
+	copy: function(stuff){
+		var ret = Utilities.shallowCopy(stuff);
+		ret.places = stuff.places.map(function(n){return Vector.copy(n);});
+		ret.aim = Vector.copy(stuff.aim);
+		ret.location = Vector.average(stuff.places);
+		ret.box = BoundingBox.copy(stuff.box);
+		return _.merge(new this(ret.location, {}), ret);
 	},
 	matters: function(element){
 		return Utilities.foodPlayerCollision(element, this) || Utilities.playerPlayer(element, this);

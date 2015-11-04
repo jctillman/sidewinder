@@ -12,6 +12,17 @@ var ElementManager = function(){
 	this.elements = [];
 }
 
+ElementManager.copy = function(stuff){
+	var ret = new ElementManager();
+	for(var x = 0, len=stuff.elements.length; x < len; x++){
+		var val = stuff.elements[x];
+		var toAdd = members[val.type].copy(val);
+		ret.elements.push(toAdd);
+	}
+	return ret;
+
+}
+
 ElementManager.prototype.draw = function(view){
 	view.clear();
 	for(var x = 0, len = this.elements.length; x < len; x++){

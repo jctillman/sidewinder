@@ -6,7 +6,6 @@
 <body>
 
 	<div id="game" style="display: none;">
-		
 		<canvas id="cnv">
 			<div>HTML 5 canvas must be enabled to play this game.</div>
 			<div>Please switch to a modern browser, like Chrome.</div>
@@ -17,10 +16,11 @@
 		
 		<div id="menu">
 			<div id="splash">
-				<h2>slither.io</h2>
+				<h2>sidewinder</h2>
 			</div>
 			<div id="start">
-				<input class="btn" type="button" id="play" value="Play New Game"></input><br/>
+				<input class="btn" type="button" id="singular" value="Single Player Game"></input><br/>
+				<input class="btn" type="button" id="multiplayer" value="Multiplayer Game"></input><br/>
 				<input class="btn" type="button" id="watch" value="Watch Game"></input><br/>
 				<input class="btn" type="button" id="login" value="Login"></input><br/>
 			</div>
@@ -28,7 +28,7 @@
 		</div>
 	</div>
 
-
+	<script src="/socket.io/socket.io.js"></script>
 	<script src="bundled.js"> </script>
 	
 </body>
