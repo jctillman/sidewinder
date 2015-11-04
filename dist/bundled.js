@@ -1140,7 +1140,7 @@ module.exports = {
 	resizeRate: 50,
 	physicsRate: 25,
 
-	gridSize: 500,
+	gridSize: 1000,
 	gridSpace: 50,
 	gridColor: '#CCC',
 
@@ -1149,7 +1149,7 @@ module.exports = {
 	startDistanceBack: 100,
 
 	aiCheckFrequency: 1,
-	aiMinimum: 15,
+	aiMinimum: 10,
 
 	maxColorLength: 5,
 	maxStripeLength: 10,
