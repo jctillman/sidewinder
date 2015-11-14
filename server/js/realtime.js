@@ -11,10 +11,8 @@ module.exports = function(io){
 	
 	var runningInstance = new GameRunner( games[games.length-1], []);
 	var num = 0;
-
 	io.on('connection', function(socket){
 		console.log("A connection!");
-
 		//For now, let's just always use the old game
 		var selectedGame = games.length-1;
 		var playerId = Utilities.addPlayer('human', games[selectedGame]);

@@ -1,13 +1,15 @@
 var Utilities = require('../../common/js/utilities.js');
 var Settings = require('../../common/js/settings.js');
+var BoundingView = require('../../client/js/boundingview.js');
+var Move = require('../../common/js/move.js');
+var View = require('../../client/js/view.js');
+var HighScore = require('../../client/js/highscore.js');
 
 function gameRunner(gameState, extras){
 	var self = this;
 	var frameNumber = 0;
-
 	this.listeners = [];
 	this.gameState = gameState;
-
 	this.physicsLoops = setInterval(Utilities.timed(false, function(){
 		frameNumber++;
 		self.gameState = self.gameState.step(extras);
@@ -18,15 +20,6 @@ function gameRunner(gameState, extras){
 	}), Settings.physicsRate);
 }
 
-gameRunner.prototype.setPlayerMove = function(playerId, playerMove){
-	if(playerId){
-		var plyr = this.gameState.getElement(playerId)
-		plyr && playerMove && plyr.setMove(playerMove);
-	}
-}
-
-gameRunner.prototy
-
 gameRunner.prototype.addListener = function(name, callback){
 	this.listeners.push({name: name, func: callback});
 }
@@ -34,5 +27,10 @@ gameRunner.prototype.addListener = function(name, callback){
 gameRunner.prototype.killListener = function(name){
 	this.listeners = this.listeners.filter(function(el){ return el.name !== name });
 }
+
+gameRunner.prototype.end = function(){
+	clearInterval(this.physicsLoops);
+}
+
 
 module.exports = gameRunner;
