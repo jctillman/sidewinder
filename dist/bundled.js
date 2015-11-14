@@ -49,7 +49,6 @@ module.exports = function (state) {
 
 var ElementManager = require('../../common/js/ElementManager.js');
 var Settings = require('../../common/js/settings.js');
-var Utilities = require('../../common/js/utilities.js');
 var Move = require('../../common/js/move.js');
 var View = require('../../client/js/view.js');
 var Vector = require('../../common/js/vector.js');
@@ -57,21 +56,19 @@ var HighScore = require('../../client/js/highscore.js');
 var elementFoodManager = require('../../common/js/elementManagerFood.js');
 var elementAIManager = require('../../common/js/elementManagerAi.js');
 var BoundingView = require('../../client/js/boundingview.js');
+var GameRunner = require('../../common/js/gameRunner.js');
 
 var playGame = function playGame(gameState, appState, playerId, finished, socket) {
-	var tempView = null,
-	    stepsAfterDeath = 0;
-
-	var physicsLoops = setInterval(Utilities.timed(false, function () {
-		//Grab player, if player is there.
+	var runningInstance = new GameRunner(gameState, [elementFoodManager, elementAIManager]);
+	var stepsAfterDeath = 0;
+	var tempView;
+	runningInstance.addListener('moveHandler', function (gameState, frameNumber) {
 		var plyr = gameState.getElement(playerId);
 		if (plyr == undefined) {
-			//If the player has died
 			stepsAfterDeath++;
 			if (stepsAfterDeath > Settings.framesToViewAfterDeath) {
-				window.clearInterval(physicsLoops);
-				socket.disconnect();
 				finished();
+				runningInstance = null;
 			}
 		} else {
 			//Player lives!
@@ -84,20 +81,16 @@ var playGame = function playGame(gameState, appState, playerId, finished, socket
 			plyr.setMove(movr);
 			tempView = new View(bv, appState.game.canvas);
 		}
-
-		//First draws board; second draws high score.
 		gameState.draw(tempView);
 		HighScore(gameState, appState.game.context, plyr && plyr.id);
-
-		//step
-		gameState = gameState.step([elementFoodManager, elementAIManager]);
-	}), Settings.physicsRate);
+		if (frameNumber % Settings.sendMoveInterval == 0) {
+			if (movr) socket.emit('playerMove', { move: movr, playerId: playerId });
+		}
+	});
 };
 
 module.exports = function (appState, finishedCallback) {
-
 	var socket = io.connect('http://localhost:3000', { multiplex: false });
-
 	socket.on('initialGameState', function (data) {
 		var gameState = ElementManager.copy(data.elementManager);
 		var playerId = data.playerId;
@@ -105,12 +98,11 @@ module.exports = function (appState, finishedCallback) {
 	});
 };
 
-},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/ElementManager.js":12,"../../common/js/elementManagerAi.js":17,"../../common/js/elementManagerFood.js":18,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27}],5:[function(require,module,exports){
+},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/ElementManager.js":12,"../../common/js/elementManagerAi.js":17,"../../common/js/elementManagerFood.js":18,"../../common/js/gameRunner.js":22,"../../common/js/move.js":25,"../../common/js/settings.js":26,"../../common/js/vector.js":28}],5:[function(require,module,exports){
 'use strict';
 
 var ElementManager = require('../../common/js/ElementManager.js');
 var Settings = require('../../common/js/settings.js');
-var Utilities = require('../../common/js/utilities.js');
 var Move = require('../../common/js/move.js');
 var View = require('../../client/js/view.js');
 var Vector = require('../../common/js/vector.js');
@@ -118,20 +110,19 @@ var HighScore = require('../../client/js/highscore.js');
 var elementFoodManager = require('../../common/js/elementManagerFood.js');
 var elementAIManager = require('../../common/js/elementManagerAi.js');
 var BoundingView = require('../../client/js/boundingview.js');
+var GameRunner = require('../../common/js/gameRunner.js');
 
 var playGame = function playGame(gameState, appState, playerId, finished) {
-	var tempView = null,
-	    stepsAfterDeath = 0;
-
-	var physicsLoops = setInterval(Utilities.timed(false, function () {
-		//Grab player, if player is there.
+	var runningInstance = new GameRunner(gameState, [elementFoodManager, elementAIManager]);
+	var stepsAfterDeath = 0;
+	var tempView;
+	runningInstance.addListener('moveHandler', function (gameState) {
 		var plyr = gameState.getElement(playerId);
 		if (plyr == undefined) {
-			//If the player has died
 			stepsAfterDeath++;
 			if (stepsAfterDeath > Settings.framesToViewAfterDeath) {
-				window.clearInterval(physicsLoops);
 				finished();
+				runningInstance = null;
 			}
 		} else {
 			//Player lives!
@@ -144,14 +135,9 @@ var playGame = function playGame(gameState, appState, playerId, finished) {
 			plyr.setMove(movr);
 			tempView = new View(bv, appState.game.canvas);
 		}
-
-		//First draws board; second draws high score.
 		gameState.draw(tempView);
 		HighScore(gameState, appState.game.context, plyr && plyr.id);
-
-		//step
-		gameState = gameState.step([elementFoodManager, elementAIManager]);
-	}), Settings.physicsRate);
+	});
 };
 
 module.exports = function (appState, finishedCallback) {
@@ -160,7 +146,7 @@ module.exports = function (appState, finishedCallback) {
 	playGame(gameState, appState, playerId, finishedCallback);
 };
 
-},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/ElementManager.js":12,"../../common/js/elementManagerAi.js":17,"../../common/js/elementManagerFood.js":18,"../../common/js/initialgamecreator.js":23,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27}],6:[function(require,module,exports){
+},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/ElementManager.js":12,"../../common/js/elementManagerAi.js":17,"../../common/js/elementManagerFood.js":18,"../../common/js/gameRunner.js":22,"../../common/js/initialgamecreator.js":24,"../../common/js/move.js":25,"../../common/js/settings.js":26,"../../common/js/vector.js":28}],6:[function(require,module,exports){
 "use strict";
 
 module.exports = function (state) {
@@ -206,7 +192,7 @@ module.exports = {
   }
 };
 
-},{"../../common/js/vector.js":27}],8:[function(require,module,exports){
+},{"../../common/js/vector.js":28}],8:[function(require,module,exports){
 'use strict';
 
 var HighScore = function HighScore(elementManager, ctx, playerId) {
@@ -215,7 +201,7 @@ var HighScore = function HighScore(elementManager, ctx, playerId) {
 	var top = [];
 
 	var top = elementManager.elements.map(function (n) {
-		return n; //.copy();
+		return n;
 	}).filter(function (m) {
 		return m.type == 'player';
 	});
@@ -317,7 +303,7 @@ module.exports = function (options) {
 	};
 };
 
-},{"../../client/js/clientutilities.js":7,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],10:[function(require,module,exports){
+},{"../../client/js/clientutilities.js":7,"../../common/js/settings.js":26,"../../common/js/vector.js":28}],10:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -363,7 +349,7 @@ View.prototype.drawCircle = function (center, width, thickness, color) {
 
 module.exports = View;
 
-},{"../../common/js/boundingbox.js":13,"../../common/js/vector.js":27}],11:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":13,"../../common/js/vector.js":28}],11:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -433,7 +419,7 @@ BoundingBox.prototype.intersects = function (otherBox) {
 
 module.exports = BoundingBox;
 
-},{"../../common/js/vector.js":27}],12:[function(require,module,exports){
+},{"../../common/js/vector.js":28}],12:[function(require,module,exports){
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
@@ -515,7 +501,7 @@ ElementManager.prototype.step = function (mods) {
 
 module.exports = ElementManager;
 
-},{"../../common/js/boundingbox.js":13,"../../common/js/elementfood.js":19,"../../common/js/elementgrid.js":20,"../../common/js/elementplayer.js":21,"../../common/js/grid.js":22,"../../common/js/settings.js":25}],13:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":13,"../../common/js/elementfood.js":19,"../../common/js/elementgrid.js":20,"../../common/js/elementplayer.js":21,"../../common/js/grid.js":23,"../../common/js/settings.js":26}],13:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -585,7 +571,7 @@ BoundingBox.prototype.intersects = function (otherBox) {
 
 module.exports = BoundingBox;
 
-},{"../../common/js/vector.js":27}],14:[function(require,module,exports){
+},{"../../common/js/vector.js":28}],14:[function(require,module,exports){
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
@@ -655,7 +641,7 @@ module.exports = {
 	}
 };
 
-},{"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27}],15:[function(require,module,exports){
+},{"../../common/js/move.js":25,"../../common/js/settings.js":26,"../../common/js/utilities.js":27,"../../common/js/vector.js":28}],15:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -800,7 +786,7 @@ var Element = function Element(options) {
 
 module.exports = Element;
 
-},{"../../client/js/view.js":10,"../../common/js/utilities.js":26,"../../common/js/vector.js":27}],16:[function(require,module,exports){
+},{"../../client/js/view.js":10,"../../common/js/utilities.js":27,"../../common/js/vector.js":28}],16:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -859,7 +845,7 @@ var ElementFood = Element({
 
 module.exports = ElementFood;
 
-},{"../../common/js/boundingbox.js":13,"../../common/js/element.js":15,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27,"lodash":28}],17:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":13,"../../common/js/element.js":15,"../../common/js/settings.js":26,"../../common/js/utilities.js":27,"../../common/js/vector.js":28,"lodash":29}],17:[function(require,module,exports){
 'use strict';
 
 var Food = require('../../common/js/elementFood.js');
@@ -897,7 +883,7 @@ var elementManagerAi = function elementManagerAi(elementManager) {
 
 module.exports = elementManagerAi;
 
-},{"../../common/js/brain.js":14,"../../common/js/elementFood.js":16,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27}],18:[function(require,module,exports){
+},{"../../common/js/brain.js":14,"../../common/js/elementFood.js":16,"../../common/js/move.js":25,"../../common/js/settings.js":26,"../../common/js/utilities.js":27,"../../common/js/vector.js":28}],18:[function(require,module,exports){
 'use strict';
 
 var Food = require('../../common/js/elementFood.js');
@@ -924,7 +910,7 @@ var elementFoodManager = function elementFoodManager(elementManager) {
 
 module.exports = elementFoodManager;
 
-},{"../../common/js/elementFood.js":16,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],19:[function(require,module,exports){
+},{"../../common/js/elementFood.js":16,"../../common/js/settings.js":26,"../../common/js/vector.js":28}],19:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -983,7 +969,7 @@ var ElementFood = Element({
 
 module.exports = ElementFood;
 
-},{"../../common/js/boundingbox.js":13,"../../common/js/element.js":15,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27,"lodash":28}],20:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":13,"../../common/js/element.js":15,"../../common/js/settings.js":26,"../../common/js/utilities.js":27,"../../common/js/vector.js":28,"lodash":29}],20:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -1039,7 +1025,7 @@ var ElementGrid = Element({
 
 module.exports = ElementGrid;
 
-},{"../../common/js/BoundingBox.js":11,"../../common/js/element.js":15,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27,"lodash":28}],21:[function(require,module,exports){
+},{"../../common/js/BoundingBox.js":11,"../../common/js/element.js":15,"../../common/js/settings.js":26,"../../common/js/utilities.js":27,"../../common/js/vector.js":28,"lodash":29}],21:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -1069,12 +1055,12 @@ var ElementPlayer = Element({
 		this.dead = undefined;
 
 		//Optional--display elements.	
-		this.colorLength = 1 + Math.floor(Math.random() * Settings.maxColorLength);
+		var colorLength = 1 + Math.random() * Settings.maxColorLength;
 		this.colors = [];
-		for (var x = 0; x < this.colorLength; x++) {
+		for (var x = 0; x < colorLength; x++) {
 			this.colors.push(Settings.playerPossibleColors[Math.floor(Math.random() * Settings.playerPossibleColors.length)]);
 		}
-		this.stripeLength = Settings.minStripeLength + Math.random() * (Settings.maxStripeLength - Settings.minStripeLength);
+		this.stripeLength = Settings.minStripeLength; // + (Math.random() * (Settings.maxStripeLength-Settings.minStripeLength));
 
 		//Mandatory
 		this.type = 'player';
@@ -1086,7 +1072,7 @@ var ElementPlayer = Element({
 	draw: function draw(view) {
 		var width = 2 + Math.sqrt((this.places.length - Settings.startSegments) / 100);
 		for (var x = 0, len = this.places.length; x < len - 1; x++) {
-			var color = this.colors[Math.floor(x / this.stripeLength) % this.colorLength];
+			var color = this.colors[Math.floor(x / this.stripeLength) % this.colors.length];
 			view.drawPath(this.places.slice(x, x + 2), width, color);
 		}
 	},
@@ -1141,7 +1127,9 @@ var ElementPlayer = Element({
 		ret.aim = Vector.copy(stuff.aim);
 		ret.location = Vector.average(stuff.places);
 		ret.box = BoundingBox.copy(stuff.box);
-		return _.merge(new this(ret.location, {}), ret);
+		var temp = new this(ret.location, {});
+		temp.colors = [];
+		return _.merge(temp, ret);
 	},
 	matters: function matters(element) {
 		return Utilities.foodPlayerCollision(element, this) || Utilities.playerPlayer(element, this);
@@ -1169,7 +1157,50 @@ var ElementPlayer = Element({
 
 module.exports = ElementPlayer;
 
-},{"../../common/js/BoundingBox.js":11,"../../common/js/element.js":15,"../../common/js/elementfood.js":19,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27,"lodash":28}],22:[function(require,module,exports){
+},{"../../common/js/BoundingBox.js":11,"../../common/js/element.js":15,"../../common/js/elementfood.js":19,"../../common/js/settings.js":26,"../../common/js/utilities.js":27,"../../common/js/vector.js":28,"lodash":29}],22:[function(require,module,exports){
+'use strict';
+
+var Utilities = require('../../common/js/utilities.js');
+var Settings = require('../../common/js/settings.js');
+
+function gameRunner(gameState, extras) {
+	var self = this;
+	var frameNumber = 0;
+
+	this.listeners = [];
+	this.gameState = gameState;
+
+	this.physicsLoops = setInterval(Utilities.timed(false, function () {
+		frameNumber++;
+		self.gameState = self.gameState.step(extras);
+		for (var x = 0; x < self.listeners.length; x++) {
+			self.listeners[x].func(self.gameState, frameNumber);
+		}
+	}), Settings.physicsRate);
+}
+
+gameRunner.prototype.setPlayerMove = function (playerId, playerMove) {
+	if (playerId) {
+		var plyr = this.gameState.getElement(playerId);
+		plyr && playerMove && plyr.setMove(playerMove);
+	}
+};
+
+gameRunner.prototy;
+
+gameRunner.prototype.addListener = function (name, callback) {
+	this.listeners.push({ name: name, func: callback });
+};
+
+gameRunner.prototype.killListener = function (name) {
+	this.listeners = this.listeners.filter(function (el) {
+		return el.name !== name;
+	});
+};
+
+module.exports = gameRunner;
+
+},{"../../common/js/settings.js":26,"../../common/js/utilities.js":27}],23:[function(require,module,exports){
 'use strict';
 
 var BoundingBox = require('../../common/js/boundingbox.js');
@@ -1187,7 +1218,7 @@ for (var x = 0; x < gridSize; x = x + inc) {
 
 module.exports = grids;
 
-},{"../../common/js/boundingbox.js":13,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],23:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":13,"../../common/js/settings.js":26,"../../common/js/vector.js":28}],24:[function(require,module,exports){
 'use strict';
 
 var ElementManager = require('../../common/js/ElementManager.js');
@@ -1205,7 +1236,7 @@ var maker = function maker() {
 
 module.exports = maker;
 
-},{"../../common/js/ElementManager.js":12,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],24:[function(require,module,exports){
+},{"../../common/js/ElementManager.js":12,"../../common/js/settings.js":26,"../../common/js/vector.js":28}],25:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -1248,13 +1279,14 @@ var Move = function Move(options) {
 
 module.exports = Move;
 
-},{"../../common/js/boundingbox.js":13,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],25:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":13,"../../common/js/settings.js":26,"../../common/js/vector.js":28}],26:[function(require,module,exports){
 'use strict';
 
 module.exports = {
 
 	resizeRate: 50,
 	physicsRate: 25,
+	sendMoveInterval: 5,
 
 	gridSize: 1000,
 	gridSpace: 50,
@@ -1288,7 +1320,7 @@ module.exports = {
 
 };
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -1386,7 +1418,7 @@ module.exports = {
 
 };
 
-},{"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],27:[function(require,module,exports){
+},{"../../common/js/move.js":25,"../../common/js/settings.js":26,"../../common/js/vector.js":28}],28:[function(require,module,exports){
 'use strict';
 
 function Vector(x, y) {
@@ -1461,7 +1493,7 @@ Vector.prototype.toUnit = function () {
 
 module.exports = Vector;
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 (function (global){
 /**
  * @license

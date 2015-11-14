@@ -2,6 +2,7 @@ module.exports = {
 
 	resizeRate: 50,
 	physicsRate: 25,
+	sendMoveInterval: 5,
 
 	gridSize: 1000,
 	gridSpace: 50,

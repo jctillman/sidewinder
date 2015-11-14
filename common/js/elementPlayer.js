@@ -26,12 +26,12 @@ var ElementPlayer = Element({
 		this.dead = undefined;
 
 		//Optional--display elements.	
-		this.colorLength = 1 + Math.floor(Math.random() * Settings.maxColorLength);
+		var colorLength = 1 + ( Math.random() * Settings.maxColorLength );
 		this.colors = [];
-		for(var x = 0; x < this.colorLength; x++){
+		for(var x = 0; x < colorLength; x++){
 			this.colors.push( Settings.playerPossibleColors[Math.floor(Math.random() * Settings.playerPossibleColors.length)]);
 		}
-		this.stripeLength = Settings.minStripeLength + (Math.random() * (Settings.maxStripeLength-Settings.minStripeLength));
+		this.stripeLength = Settings.minStripeLength;// + (Math.random() * (Settings.maxStripeLength-Settings.minStripeLength));
 
 		//Mandatory
 		this.type = 'player' 
@@ -43,7 +43,7 @@ var ElementPlayer = Element({
 	draw: function(view){
 	  var width = 2 + Math.sqrt( (this.places.length - Settings.startSegments) / 100);
 	  for(var x = 0, len = this.places.length; x < len - 1; x++){
-	  	var color = this.colors[Math.floor( x / this.stripeLength) % this.colorLength]
+	  	var color = this.colors[Math.floor( x / this.stripeLength) % this.colors.length]
 	  	view.drawPath(this.places.slice(x,x+2), width, color)
 	  }
 	},
@@ -101,7 +101,9 @@ var ElementPlayer = Element({
 		ret.aim = Vector.copy(stuff.aim);
 		ret.location = Vector.average(stuff.places);
 		ret.box = BoundingBox.copy(stuff.box);
-		return _.merge(new this(ret.location, {}), ret);
+		var temp = new this(ret.location, {})
+		temp.colors = []
+		return _.merge(temp, ret);
 	},
 	matters: function(element){
 		return Utilities.foodPlayerCollision(element, this) || Utilities.playerPlayer(element, this);
