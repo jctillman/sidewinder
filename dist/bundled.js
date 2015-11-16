@@ -57,8 +57,8 @@ var Utilities = require('../../common/js/utilities.js');
 var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function playGame(gameState, appState, playerId, finished, socket) {
-	var runningInstance = new GameRunner(gameState, [elementFoodManager, elementAIManager]);
-	clientUtilities.clientHandling(runningInstance, appState, playerId, finished);
+	var runningInstance = new GameRunner(gameState, []);
+	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished));
 	runningInstance.addListener('moveEmitter', function (gameState, frameNumber) {
 		var player = gameState.getElement(playerId);
 		if (player) {
@@ -68,10 +68,14 @@ var playGame = function playGame(gameState, appState, playerId, finished, socket
 			}
 		}
 	});
+
+	socket.on('sendBoard', function (data) {
+		runningInstance.update(data);
+	});
 };
 
 module.exports = function (appState, finishedCallback) {
-	var socket = io.connect('http://localhost:3000', { multiplex: false });
+	var socket = io.connect('192.168.1.153:3000', { multiplex: false });
 	socket.on('initialGameState', function (data) {
 		var gameState = ElementManager.copy(data.elementManager);
 		var playerId = data.playerId;
@@ -93,7 +97,7 @@ var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function playGame(gameState, appState, playerId, finished) {
 	var runningInstance = new GameRunner(gameState, [elementFoodManager, elementAIManager]);
-	clientUtilities.clientHandling(runningInstance, appState, playerId, finished);
+	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished));
 };
 
 module.exports = function (appState, finishedCallback) {
@@ -147,15 +151,15 @@ module.exports = {
     };
   },
 
-  clientHandling: function clientHandling(runningInstance, appState, playerId, finished) {
+  clientHandling: function clientHandling(appState, playerId, finished) {
     var stepsAfterDeath = 0;
     var tempView;
-    runningInstance.addListener('clientSide', function (gameState, frameNumber) {
+    return function (gameState, frameNumber, self) {
       var plyr = gameState.getElement(playerId);
       if (plyr == undefined) {
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath) {
-          runningInstance.end();
+          self.end();
           finished();
         }
       } else {
@@ -171,9 +175,8 @@ module.exports = {
       }
       gameState.draw(tempView);
       HighScore(gameState, appState.game.context, plyr && plyr.id);
-    });
+    };
   }
-
 };
 
 },{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":9,"../../client/js/view.js":11,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/vector.js":29}],7:[function(require,module,exports){
@@ -228,15 +231,15 @@ module.exports = {
     };
   },
 
-  clientHandling: function clientHandling(runningInstance, appState, playerId, finished) {
+  clientHandling: function clientHandling(appState, playerId, finished) {
     var stepsAfterDeath = 0;
     var tempView;
-    runningInstance.addListener('clientSide', function (gameState, frameNumber) {
+    return function (gameState, frameNumber, self) {
       var plyr = gameState.getElement(playerId);
       if (plyr == undefined) {
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath) {
-          runningInstance.end();
+          self.end();
           finished();
         }
       } else {
@@ -252,9 +255,8 @@ module.exports = {
       }
       gameState.draw(tempView);
       HighScore(gameState, appState.game.context, plyr && plyr.id);
-    });
+    };
   }
-
 };
 
 },{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":9,"../../client/js/view.js":11,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/vector.js":29}],9:[function(require,module,exports){
@@ -521,7 +523,7 @@ ElementManager.prototype.draw = function (view) {
 
 ElementManager.prototype.getElement = function (id) {
 	for (var x = 0, len = this.elements.length; x < len; x++) {
-		if (this.elements[x].id === id) {
+		if (this.elements[x].id.toString() == id.toString()) {
 			return this.elements[x];
 		}
 	}
@@ -1112,7 +1114,7 @@ var ElementPlayer = Element({
 			direction: options.direction || 0
 		});
 		this.location = Vector.average(this.places);
-		this.aim = new Vector(0, 0);
+		this.aim = new Vector(Settings.gridSize / 2, Settings.gridSize / 2);
 		this.amountToGrow = 0;
 		this.speed = 1;
 		this.kink = 0;
@@ -1186,6 +1188,7 @@ var ElementPlayer = Element({
 	},
 	copy: function copy(stuff) {
 		var ret = Utilities.shallowCopy(stuff);
+		ret.id = stuff.id;
 		ret.places = stuff.places.map(function (n) {
 			return Vector.copy(n);
 		});
@@ -1193,7 +1196,6 @@ var ElementPlayer = Element({
 		ret.location = Vector.average(stuff.places);
 		ret.box = BoundingBox.copy(stuff.box);
 		var temp = new this(ret.location, {});
-		temp.colors = [];
 		return _.merge(temp, ret);
 	},
 	matters: function matters(element) {
@@ -1216,7 +1218,7 @@ var ElementPlayer = Element({
 		}
 	},
 	setMove: function setMove(move) {
-		this.aim = move.aim;
+		this.aim = Vector.copy(move.aim);
 	}
 });
 
@@ -1231,6 +1233,7 @@ var BoundingView = require('../../client/js/boundingview.js');
 var Move = require('../../common/js/move.js');
 var View = require('../../client/js/view.js');
 var HighScore = require('../../client/js/highscore.js');
+var ElementManager = require('../../common/js/ElementManager.js');
 
 function gameRunner(gameState, extras) {
 	var self = this;
@@ -1241,10 +1244,14 @@ function gameRunner(gameState, extras) {
 		frameNumber++;
 		self.gameState = self.gameState.step(extras);
 		for (var x = 0; x < self.listeners.length; x++) {
-			self.listeners[x].func(self.gameState, frameNumber);
+			self.listeners[x].func(self.gameState, frameNumber, self);
 		}
 	}), Settings.physicsRate);
 }
+
+gameRunner.prototype.update = function (gameState) {
+	this.gameState = ElementManager.copy(gameState);
+};
 
 gameRunner.prototype.addListener = function (name, callback) {
 	this.listeners.push({ name: name, func: callback });
@@ -1256,13 +1263,20 @@ gameRunner.prototype.killListener = function (name) {
 	});
 };
 
+gameRunner.prototype.setPlayerMove = function (playerId, playerMove) {
+	if (playerId && playerMove) {
+		var plyr = this.gameState.getElement(playerId);
+		plyr && plyr.setMove(playerMove);
+	}
+};
+
 gameRunner.prototype.end = function () {
 	clearInterval(this.physicsLoops);
 };
 
 module.exports = gameRunner;
 
-},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":9,"../../client/js/view.js":11,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/utilities.js":28}],24:[function(require,module,exports){
+},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":9,"../../client/js/view.js":11,"../../common/js/ElementManager.js":13,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/utilities.js":28}],24:[function(require,module,exports){
 'use strict';
 
 var BoundingBox = require('../../common/js/boundingbox.js');
@@ -1349,8 +1363,9 @@ module.exports = {
 	resizeRate: 50,
 	physicsRate: 25,
 	sendMoveInterval: 5,
+	sendBoardInterval: 5,
 
-	gridSize: 1000,
+	gridSize: 400,
 	gridSpace: 50,
 	gridColor: '#CCC',
 
@@ -1359,19 +1374,19 @@ module.exports = {
 	startDistanceBack: 100,
 
 	aiCheckFrequency: 1,
-	aiMinimum: 10,
+	aiMinimum: 0,
 
 	maxColorLength: 5,
 	maxStripeLength: 10,
 	minStripeLength: 10,
 	playerPossibleColors: ['black', '#444', '#50C878', '#FFD300', 'purple'],
 
-	framesToViewAfterDeath: 150,
+	framesToViewAfterDeath: 50,
 
 	treeResolution: 2500,
 
 	foodSpacing: 20,
-	foodStartAmount: 25,
+	foodStartAmount: 20,
 	foodPossibleColors: ['#29AB87', '#A9BA9D', '#90EE90', '#8A9A5B', '#01796F', '#009E60', '#00FF00', '#009F6B', '#1B4D3E', '#000', '#ACE1AF'],
 	foodCycleTime: 2500,
 	foodGrowthRate: 0.5,

@@ -18,7 +18,7 @@ var ElementPlayer = Element({
 			direction: options.direction || 0
 		});
 		this.location = Vector.average(this.places);
-		this.aim = new Vector(0,0);
+		this.aim = new Vector(Settings.gridSize/2,Settings.gridSize/2);
 		this.amountToGrow = 0;
 		this.speed = 1;
 		this.kink = 0; 
@@ -97,12 +97,12 @@ var ElementPlayer = Element({
 	},
 	copy: function(stuff){
 		var ret = Utilities.shallowCopy(stuff);
+		ret.id = stuff.id;
 		ret.places = stuff.places.map(function(n){return Vector.copy(n);});
 		ret.aim = Vector.copy(stuff.aim);
 		ret.location = Vector.average(stuff.places);
 		ret.box = BoundingBox.copy(stuff.box);
 		var temp = new this(ret.location, {})
-		temp.colors = []
 		return _.merge(temp, ret);
 	},
 	matters: function(element){
@@ -125,7 +125,7 @@ var ElementPlayer = Element({
 		}
 	},
 	setMove: function(move){
-		this.aim = move.aim;
+		this.aim = Vector.copy(move.aim);
 	}
 });
 

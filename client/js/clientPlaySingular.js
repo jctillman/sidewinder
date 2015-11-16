@@ -9,7 +9,7 @@ var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function(gameState, appState, playerId, finished){
 	var runningInstance = new GameRunner(gameState, [elementFoodManager, elementAIManager]);
-	clientUtilities.clientHandling(runningInstance, appState, playerId, finished);
+	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished));
 } 
 
 module.exports = function(appState, finishedCallback){

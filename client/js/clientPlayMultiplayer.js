@@ -8,8 +8,8 @@ var Utilities = require('../../common/js/utilities.js');
 var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function(gameState, appState, playerId, finished, socket){
-	var runningInstance = new GameRunner(gameState, [elementFoodManager, elementAIManager]);
-	clientUtilities.clientHandling(runningInstance, appState, playerId, finished);
+	var runningInstance = new GameRunner(gameState, []);
+	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished));
 	runningInstance.addListener('moveEmitter', function(gameState, frameNumber){
 		var player = gameState.getElement(playerId);
 		if (player){
@@ -19,10 +19,15 @@ var playGame = function(gameState, appState, playerId, finished, socket){
 			}
 		}
 	});
+
+	socket.on('sendBoard', function(data){
+		runningInstance.update(data);
+	})
+
 }
 
 module.exports = function(appState, finishedCallback){
-	var socket = io.connect('http://localhost:3000', {multiplex: false});
+	var socket = io.connect('192.168.1.153:3000', {multiplex: false});
 	socket.on('initialGameState', function(data){
 		var gameState = ElementManager.copy(data.elementManager);
 		var playerId = data.playerId;

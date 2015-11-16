@@ -41,15 +41,15 @@ module.exports = {
     }
   },
 
-  clientHandling: function(runningInstance, appState, playerId, finished){
+  clientHandling: function(appState, playerId, finished){
     var stepsAfterDeath = 0 
     var tempView;
-    runningInstance.addListener('clientSide', function(gameState, frameNumber){
-    var plyr = gameState.getElement(playerId);
+    return function(gameState, frameNumber, self){
+      var plyr = gameState.getElement(playerId);
       if(plyr == undefined){ 
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath){
-          runningInstance.end();
+          self.end();
           finished();
         }
       }else{            //Player lives!
@@ -64,7 +64,6 @@ module.exports = {
       }
       gameState.draw(tempView);
       HighScore(gameState, appState.game.context, plyr && plyr.id);
-    });
+    };
   }
-
 }

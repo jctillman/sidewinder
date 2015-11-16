@@ -33,7 +33,7 @@ ElementManager.prototype.draw = function(view){
 
 ElementManager.prototype.getElement = function(id){
 	for(var x = 0, len=this.elements.length; x < len; x++){
-		if(this.elements[x].id === id){
+		if(this.elements[x].id.toString() == id.toString()){
 			return this.elements[x];
 		}
 	}
