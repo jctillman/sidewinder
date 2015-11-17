@@ -71,8 +71,15 @@ module.exports = {
   watchHandling: function(appState, finished, socket){
       var stepsAfterDeath = 0 
       var tempView;
+      var done = false;
+
+      document.onkeydown = function(){
+        done = true;
+      }
+
       return function(gameState, frameNumber, self){
-        if (false){
+        if(done){
+          document.onkeydown = null;
           self.end();
           socket && socket.disconnect(); //Disconnect, if there's a socket whence we can disconnect.
           finished();
