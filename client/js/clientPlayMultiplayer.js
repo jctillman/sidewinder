@@ -33,4 +33,5 @@ module.exports = function(appState, finishedCallback){
 		var playerId = data.playerId;
 		playGame(gameState, appState, playerId, finishedCallback, socket)
 	});
+	socket.emit('multiplayerGame')
 }

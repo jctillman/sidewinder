@@ -9,7 +9,7 @@ var RoomHandler = function(maxOccupancy){
 	this.rooms = [];
 }
 
-RoomHandler.prototype.getRoom = function(){
+RoomHandler.prototype.getRoomWithSpace = function(){
 	//If we have no rooms.
 	if (this.rooms.length <= 0){
 		this.rooms.push(new GameRunner( gameInitializer() , [elementFoodManager, elementAIManager]))
@@ -24,12 +24,31 @@ RoomHandler.prototype.getRoom = function(){
 			var numPlayers = roomState.elements.filter(function(n){
 				return n.type == 'player' && n.isHuman == true;
 			}).length;
-			console.log(numPlayers)
 			if (numPlayers < Settings.roomCapacity){
 				return this.rooms[x];
 			}
-		
 		}
+	}
+
+	this.rooms.push(new GameRunner( gameInitializer() , [elementFoodManager, elementAIManager]))
+	return this.rooms[this.rooms.length-1];
+}
+
+RoomHandler.prototype.getRoomWithPlayers = function(){
+
+	var most = undefined;
+	var mostNumber = 0;
+	for(var x = 0; x < this.rooms.length; x++){
+		var roomState = this.rooms[x].gameState;
+		var numPlayers = roomState.elements.filter(function(n){
+				return n.type == 'player' && n.isHuman == true;
+		}).length;
+		if (numPlayers > mostNumber){
+			most = this.rooms[x];
+		}
+	}
+	if (most){
+		return most;
 	}
 
 	this.rooms.push(new GameRunner( gameInitializer() , [elementFoodManager, elementAIManager]))

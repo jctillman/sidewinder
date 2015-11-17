@@ -50,6 +50,8 @@ module.exports = function(options){
 	}
 
 	watchButton.onclick = function(){
+		game.style.display="block";
+		menu.style.display="none";
 		options.watchGame(state, goBack);
 	}
 

@@ -66,5 +66,26 @@ module.exports = {
       gameState.draw(tempView);
       HighScore(gameState, appState.game.context, plyr && plyr.id);
     };
-  }
+  },
+
+  watchHandling: function(appState, finished, socket){
+      var stepsAfterDeath = 0 
+      var tempView;
+      return function(gameState, frameNumber, self){
+        if (false){
+          self.end();
+          socket && socket.disconnect(); //Disconnect, if there's a socket whence we can disconnect.
+          finished();
+        }
+        tempView = new View(
+          new BoundingView({places: [new Vector(0,0), new Vector(Settings.gridSize, Settings.gridSize)]},
+            appState.game.canvas),
+        appState.game.canvas);
+
+        gameState.draw(tempView);
+        HighScore(gameState, appState.game.context);
+      };
+    }
+
+
 }

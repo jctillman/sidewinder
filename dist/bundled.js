@@ -81,6 +81,7 @@ module.exports = function (appState, finishedCallback) {
 		var playerId = data.playerId;
 		playGame(gameState, appState, playerId, finishedCallback, socket);
 	});
+	socket.emit('multiplayerGame');
 };
 
 },{"../../client/js/clientUtilities.js":6,"../../common/js/ElementManager.js":13,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":23,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/utilities.js":28}],5:[function(require,module,exports){
@@ -177,17 +178,56 @@ module.exports = {
       gameState.draw(tempView);
       HighScore(gameState, appState.game.context, plyr && plyr.id);
     };
+  },
+
+  watchHandling: function watchHandling(appState, finished, socket) {
+    var stepsAfterDeath = 0;
+    var tempView;
+    return function (gameState, frameNumber, self) {
+      if (false) {
+        self.end();
+        socket && socket.disconnect(); //Disconnect, if there's a socket whence we can disconnect.
+        finished();
+      }
+      tempView = new View(new BoundingView({ places: [new Vector(0, 0), new Vector(Settings.gridSize, Settings.gridSize)] }, appState.game.canvas), appState.game.canvas);
+
+      gameState.draw(tempView);
+      HighScore(gameState, appState.game.context);
+    };
   }
+
 };
 
 },{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":9,"../../client/js/view.js":11,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/vector.js":29}],7:[function(require,module,exports){
-"use strict";
+'use strict';
 
-module.exports = function (state) {
-	console.log("Not implemented!");
+var ElementManager = require('../../common/js/ElementManager.js');
+var Settings = require('../../common/js/settings.js');
+var Move = require('../../common/js/move.js');
+var elementFoodManager = require('../../common/js/elementManagerFood.js');
+var elementAIManager = require('../../common/js/elementManagerAi.js');
+var GameRunner = require('../../common/js/gameRunner.js');
+var Utilities = require('../../common/js/utilities.js');
+var clientUtilities = require('../../client/js/clientUtilities.js');
+
+var playGame = function playGame(gameState, appState, finished, socket) {
+	var runningInstance = new GameRunner(gameState, [elementAIManager]);
+	runningInstance.addListener('clientHandler', clientUtilities.watchHandling(appState, finished, socket));
+	socket.on('sendBoard', function (data) {
+		runningInstance.update(data, Settings.latencyAdjustment);
+	});
 };
 
-},{}],8:[function(require,module,exports){
+module.exports = function (appState, finishedCallback) {
+	var socket = io.connect('192.168.1.153:3000', { multiplex: false });
+	socket.on('initialWatchState', function (data) {
+		var gameState = ElementManager.copy(data.elementManager);
+		playGame(gameState, appState, finishedCallback, socket);
+	});
+	socket.emit('watchGame');
+};
+
+},{"../../client/js/clientUtilities.js":6,"../../common/js/ElementManager.js":13,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":23,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/utilities.js":28}],8:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -258,7 +298,24 @@ module.exports = {
       gameState.draw(tempView);
       HighScore(gameState, appState.game.context, plyr && plyr.id);
     };
+  },
+
+  watchHandling: function watchHandling(appState, finished, socket) {
+    var stepsAfterDeath = 0;
+    var tempView;
+    return function (gameState, frameNumber, self) {
+      if (false) {
+        self.end();
+        socket && socket.disconnect(); //Disconnect, if there's a socket whence we can disconnect.
+        finished();
+      }
+      tempView = new View(new BoundingView({ places: [new Vector(0, 0), new Vector(Settings.gridSize, Settings.gridSize)] }, appState.game.canvas), appState.game.canvas);
+
+      gameState.draw(tempView);
+      HighScore(gameState, appState.game.context);
+    };
   }
+
 };
 
 },{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":9,"../../client/js/view.js":11,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/vector.js":29}],9:[function(require,module,exports){
@@ -364,6 +421,8 @@ module.exports = function (options) {
 	};
 
 	watchButton.onclick = function () {
+		game.style.display = "block";
+		menu.style.display = "none";
 		options.watchGame(state, goBack);
 	};
 
