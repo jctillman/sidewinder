@@ -56,7 +56,6 @@ module.exports = {
 					}
 					if (!collides){
 						var n = Vector.copy(rand)
-						console.log(n)
 						AI.setMove(new Move({aim: n}));
 						break;
 					}

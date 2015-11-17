@@ -2,10 +2,11 @@ module.exports = {
 
 	resizeRate: 50,
 	physicsRate: 25,
-	sendMoveInterval: 5,
-	sendBoardInterval: 5,
+	sendMoveInterval: 2,
+	sendBoardInterval: 4,
+	latencyAdjustment: 0,
 
-	gridSize: 400,
+	gridSize: 100,
 	gridSpace: 50,
 	gridColor: '#CCC', 
 

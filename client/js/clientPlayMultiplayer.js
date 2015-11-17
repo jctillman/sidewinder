@@ -8,8 +8,8 @@ var Utilities = require('../../common/js/utilities.js');
 var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function(gameState, appState, playerId, finished, socket){
-	var runningInstance = new GameRunner(gameState, []);
-	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished));
+	var runningInstance = new GameRunner(gameState, [elementAIManager]);
+	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished, socket));
 	runningInstance.addListener('moveEmitter', function(gameState, frameNumber){
 		var player = gameState.getElement(playerId);
 		if (player){
@@ -21,7 +21,7 @@ var playGame = function(gameState, appState, playerId, finished, socket){
 	});
 
 	socket.on('sendBoard', function(data){
-		runningInstance.update(data);
+		runningInstance.update(data, Settings.latencyAdjustment);
 	})
 
 }

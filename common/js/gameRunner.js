@@ -20,8 +20,11 @@ function gameRunner(gameState, extras){
 	}), Settings.physicsRate);
 }
 
-gameRunner.prototype.update = function(gameState){
+gameRunner.prototype.update = function(gameState, latencyAdjustment){
 	this.gameState = ElementManager.copy(gameState)
+	for(var m = 0; m < latencyAdjustment; m++){
+		this.gameState = this.gameState.step();
+	}
 }
 
 gameRunner.prototype.addListener = function(name, callback){

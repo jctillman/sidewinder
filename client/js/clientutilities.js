@@ -41,7 +41,7 @@ module.exports = {
     }
   },
 
-  clientHandling: function(appState, playerId, finished){
+  clientHandling: function(appState, playerId, finished, socket){
     var stepsAfterDeath = 0 
     var tempView;
     return function(gameState, frameNumber, self){
@@ -50,6 +50,7 @@ module.exports = {
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath){
           self.end();
+          socket.disconnect();
           finished();
         }
       }else{            //Player lives!

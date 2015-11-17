@@ -57,8 +57,8 @@ var Utilities = require('../../common/js/utilities.js');
 var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function playGame(gameState, appState, playerId, finished, socket) {
-	var runningInstance = new GameRunner(gameState, []);
-	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished));
+	var runningInstance = new GameRunner(gameState, [elementAIManager]);
+	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished, socket));
 	runningInstance.addListener('moveEmitter', function (gameState, frameNumber) {
 		var player = gameState.getElement(playerId);
 		if (player) {
@@ -70,7 +70,7 @@ var playGame = function playGame(gameState, appState, playerId, finished, socket
 	});
 
 	socket.on('sendBoard', function (data) {
-		runningInstance.update(data);
+		runningInstance.update(data, Settings.latencyAdjustment);
 	});
 };
 
@@ -151,7 +151,7 @@ module.exports = {
     };
   },
 
-  clientHandling: function clientHandling(appState, playerId, finished) {
+  clientHandling: function clientHandling(appState, playerId, finished, socket) {
     var stepsAfterDeath = 0;
     var tempView;
     return function (gameState, frameNumber, self) {
@@ -160,6 +160,7 @@ module.exports = {
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath) {
           self.end();
+          socket.disconnect();
           finished();
         }
       } else {
@@ -231,7 +232,7 @@ module.exports = {
     };
   },
 
-  clientHandling: function clientHandling(appState, playerId, finished) {
+  clientHandling: function clientHandling(appState, playerId, finished, socket) {
     var stepsAfterDeath = 0;
     var tempView;
     return function (gameState, frameNumber, self) {
@@ -240,6 +241,7 @@ module.exports = {
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath) {
           self.end();
+          socket.disconnect();
           finished();
         }
       } else {
@@ -698,7 +700,6 @@ module.exports = {
 					}
 					if (!collides) {
 						var n = Vector.copy(rand);
-						console.log(n);
 						AI.setMove(new Move({ aim: n }));
 						break;
 					}
@@ -1249,8 +1250,11 @@ function gameRunner(gameState, extras) {
 	}), Settings.physicsRate);
 }
 
-gameRunner.prototype.update = function (gameState) {
+gameRunner.prototype.update = function (gameState, latencyAdjustment) {
 	this.gameState = ElementManager.copy(gameState);
+	for (var m = 0; m < latencyAdjustment; m++) {
+		this.gameState = this.gameState.step();
+	}
 };
 
 gameRunner.prototype.addListener = function (name, callback) {
@@ -1362,10 +1366,11 @@ module.exports = {
 
 	resizeRate: 50,
 	physicsRate: 25,
-	sendMoveInterval: 5,
-	sendBoardInterval: 5,
+	sendMoveInterval: 2,
+	sendBoardInterval: 4,
+	latencyAdjustment: 0,
 
-	gridSize: 400,
+	gridSize: 100,
 	gridSpace: 50,
 	gridColor: '#CCC',
 
