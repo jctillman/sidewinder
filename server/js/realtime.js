@@ -5,14 +5,19 @@ var Settings = require('../../common/js/settings.js');
 var GameRunner = require('../../common/js/gameRunner.js');
 var elementFoodManager = require('../../common/js/elementManagerFood.js');
 var elementAIManager = require('../../common/js/elementManagerAi.js');
-var roomHandler = require('../../server/js/roomHandler.js');
+var RoomHandler = require('../../server/js/roomHandler.js');
 //var games = [];
 module.exports = function(io){
 
-	var runningInstance = new GameRunner( gameInitializer() , [elementFoodManager, elementAIManager]);
-	var num = 0;
+	var rh = new RoomHandler();
+
 	io.on('connection', function(socket){
 		console.log("A connection!");
+
+		var runningInstance = rh.getRoom(); //supposed to return a runningInstance, the one we want.
+
+		//Lets see if we can abstract this to a single function, as well as the
+		//corresponding thing on the player's side.
 		var playerId = Utilities.addPlayer('human', runningInstance.gameState);
 		var newGameInformation = {
 			elementManager: runningInstance.gameState,
@@ -33,5 +38,6 @@ module.exports = function(io){
 			runningInstance.killListener(playerId);
 			console.log("A disconnection!");
 		});
+
 	});
 }

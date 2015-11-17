@@ -24,6 +24,7 @@ module.exports = {
 
 	framesToViewAfterDeath: 50,
 
+	roomCapacity: 2,
 
 	treeResolution: 2500,
 

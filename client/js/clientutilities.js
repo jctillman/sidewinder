@@ -50,10 +50,10 @@ module.exports = {
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath){
           self.end();
-          socket.disconnect();
+          socket && socket.disconnect(); //Disconnect, if there's a socket whence we can disconnect.
           finished();
         }
-      }else{            //Player lives!
+      }else{  //Player lives!
         var bv = BoundingView(plyr, appState.game.canvas);
         var movr = new Move({
           mousePosition: appState.game.mousePosition(),

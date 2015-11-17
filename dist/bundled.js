@@ -160,7 +160,7 @@ module.exports = {
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath) {
           self.end();
-          socket.disconnect();
+          socket && socket.disconnect(); //Disconnect, if there's a socket whence we can disconnect.
           finished();
         }
       } else {
@@ -241,7 +241,7 @@ module.exports = {
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath) {
           self.end();
-          socket.disconnect();
+          socket && socket.disconnect(); //Disconnect, if there's a socket whence we can disconnect.
           finished();
         }
       } else {
@@ -1387,6 +1387,8 @@ module.exports = {
 	playerPossibleColors: ['black', '#444', '#50C878', '#FFD300', 'purple'],
 
 	framesToViewAfterDeath: 50,
+
+	roomCapacity: 2,
 
 	treeResolution: 2500,
 
