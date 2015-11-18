@@ -1,4 +1,4 @@
-var ElementManager = require('../../common/js/ElementManager.js');
+var ElementManager = require('../../common/js/elementManager.js');
 var Vector = require('../../common/js/vector.js');
 var Settings = require('../../common/js/settings.js');
 

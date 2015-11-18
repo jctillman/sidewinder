@@ -86,7 +86,7 @@ module.exports = function (appState, finishedCallback) {
 	socket.emit('multiplayerGame');
 };
 
-},{"../../client/js/clientUtilities.js":6,"../../common/js/ElementManager.js":13,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":23,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/utilities.js":28}],5:[function(require,module,exports){
+},{"../../client/js/clientUtilities.js":6,"../../common/js/ElementManager.js":13,"../../common/js/elementManagerAi.js":19,"../../common/js/elementManagerFood.js":20,"../../common/js/gameRunner.js":24,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/utilities.js":29}],5:[function(require,module,exports){
 'use strict';
 
 var ElementManager = require('../../common/js/ElementManager.js');
@@ -109,7 +109,7 @@ module.exports = function (appState, finishedCallback) {
 	playGame(gameState, appState, playerId, finishedCallback);
 };
 
-},{"../../client/js/clientUtilities.js":6,"../../common/js/ElementManager.js":13,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":23,"../../common/js/initialgamecreator.js":25,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/utilities.js":28}],6:[function(require,module,exports){
+},{"../../client/js/clientUtilities.js":6,"../../common/js/ElementManager.js":13,"../../common/js/elementManagerAi.js":19,"../../common/js/elementManagerFood.js":20,"../../common/js/gameRunner.js":24,"../../common/js/initialgamecreator.js":26,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/utilities.js":29}],6:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -207,7 +207,7 @@ module.exports = {
 
 };
 
-},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":9,"../../client/js/view.js":11,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/vector.js":29}],7:[function(require,module,exports){
+},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":9,"../../client/js/view.js":11,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/vector.js":30}],7:[function(require,module,exports){
 'use strict';
 
 var ElementManager = require('../../common/js/ElementManager.js');
@@ -236,7 +236,7 @@ module.exports = function (appState, finishedCallback) {
 	socket.emit('watchGame');
 };
 
-},{"../../client/js/clientUtilities.js":6,"../../common/js/ElementManager.js":13,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":23,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/utilities.js":28}],8:[function(require,module,exports){
+},{"../../client/js/clientUtilities.js":6,"../../common/js/ElementManager.js":13,"../../common/js/elementManagerAi.js":19,"../../common/js/elementManagerFood.js":20,"../../common/js/gameRunner.js":24,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/utilities.js":29}],8:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -334,7 +334,7 @@ module.exports = {
 
 };
 
-},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":9,"../../client/js/view.js":11,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/vector.js":29}],9:[function(require,module,exports){
+},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":9,"../../client/js/view.js":11,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/vector.js":30}],9:[function(require,module,exports){
 'use strict';
 
 var HighScore = function HighScore(elementManager, ctx, playerId) {
@@ -441,7 +441,7 @@ module.exports = function (options) {
 	};
 };
 
-},{"../../client/js/clientutilities.js":8,"../../common/js/settings.js":27,"../../common/js/vector.js":29}],11:[function(require,module,exports){
+},{"../../client/js/clientutilities.js":8,"../../common/js/settings.js":28,"../../common/js/vector.js":30}],11:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -487,7 +487,7 @@ View.prototype.drawCircle = function (center, width, thickness, color) {
 
 module.exports = View;
 
-},{"../../common/js/boundingbox.js":14,"../../common/js/vector.js":29}],12:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":14,"../../common/js/vector.js":30}],12:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -557,7 +557,7 @@ BoundingBox.prototype.intersects = function (otherBox) {
 
 module.exports = BoundingBox;
 
-},{"../../common/js/vector.js":29}],13:[function(require,module,exports){
+},{"../../common/js/vector.js":30}],13:[function(require,module,exports){
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
@@ -639,7 +639,7 @@ ElementManager.prototype.step = function (mods) {
 
 module.exports = ElementManager;
 
-},{"../../common/js/boundingbox.js":14,"../../common/js/elementfood.js":20,"../../common/js/elementgrid.js":21,"../../common/js/elementplayer.js":22,"../../common/js/grid.js":24,"../../common/js/settings.js":27}],14:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":14,"../../common/js/elementfood.js":21,"../../common/js/elementgrid.js":22,"../../common/js/elementplayer.js":23,"../../common/js/grid.js":25,"../../common/js/settings.js":28}],14:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -709,7 +709,7 @@ BoundingBox.prototype.intersects = function (otherBox) {
 
 module.exports = BoundingBox;
 
-},{"../../common/js/vector.js":29}],15:[function(require,module,exports){
+},{"../../common/js/vector.js":30}],15:[function(require,module,exports){
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
@@ -778,7 +778,7 @@ module.exports = {
 	}
 };
 
-},{"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/utilities.js":28,"../../common/js/vector.js":29}],16:[function(require,module,exports){
+},{"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30}],16:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -923,7 +923,7 @@ var Element = function Element(options) {
 
 module.exports = Element;
 
-},{"../../client/js/view.js":11,"../../common/js/utilities.js":28,"../../common/js/vector.js":29}],17:[function(require,module,exports){
+},{"../../client/js/view.js":11,"../../common/js/utilities.js":29,"../../common/js/vector.js":30}],17:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -982,7 +982,89 @@ var ElementFood = Element({
 
 module.exports = ElementFood;
 
-},{"../../common/js/boundingbox.js":14,"../../common/js/element.js":16,"../../common/js/settings.js":27,"../../common/js/utilities.js":28,"../../common/js/vector.js":29,"lodash":30}],18:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":14,"../../common/js/element.js":16,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30,"lodash":31}],18:[function(require,module,exports){
+'use strict';
+
+var Settings = require('../../common/js/settings.js');
+var BoundingBox = require('../../common/js/boundingbox.js');
+var Grid = require('../../common/js/grid.js');
+
+var members = {
+	grid: require('../../common/js/elementgrid.js'),
+	player: require('../../common/js/elementplayer.js'),
+	food: require('../../common/js/elementfood.js')
+};
+
+var ElementManager = function ElementManager() {
+	this.elements = [];
+};
+
+ElementManager.copy = function (stuff) {
+	var ret = new ElementManager();
+	for (var x = 0, len = stuff.elements.length; x < len; x++) {
+		var val = stuff.elements[x];
+		var toAdd = members[val.type].copy(val);
+		ret.elements.push(toAdd);
+	}
+	return ret;
+};
+
+ElementManager.prototype.draw = function (view) {
+	view.clear();
+	for (var x = 0, len = this.elements.length; x < len; x++) {
+		var el = this.elements[x];
+		view.box.intersects(el.box) && this.elements[x].draw(view);
+	}
+};
+
+ElementManager.prototype.getElement = function (id) {
+	for (var x = 0, len = this.elements.length; x < len; x++) {
+		if (this.elements[x].id.toString() == id.toString()) {
+			return this.elements[x];
+		}
+	}
+	return undefined;
+};
+
+ElementManager.prototype.addElement = function (name, location, options) {
+	var temp = new (members[name.toLowerCase()])(location, options);
+	this.elements.push(temp);
+	return temp.id;
+};
+
+ElementManager.prototype.step = function (mods) {
+	var filteredElements = [];
+
+	for (var x = 0, len = this.elements.length; x < len; x++) {
+		var temp = this.elements[x].step();
+		if (temp != undefined) {
+			filteredElements = filteredElements.concat(temp);
+		}
+	}
+
+	for (var x = 0, len = filteredElements.length; x < len; x++) {
+		if (!filteredElements[x].inactive) {
+			for (var y = 0; y < len; y++) {
+				if (filteredElements[x].matters(filteredElements[y])) {
+					filteredElements[x].encounters(filteredElements[y]);
+				}
+			}
+		}
+	}
+
+	//Make new thing, and return it.
+	var ret = new ElementManager();
+	ret.elements = filteredElements;
+	mods = mods || [];
+	for (var x = 0; x < mods.length; x++) {
+		mods[x](ret);
+	}
+	return ret;
+};
+
+module.exports = ElementManager;
+
+},{"../../common/js/boundingbox.js":14,"../../common/js/elementfood.js":21,"../../common/js/elementgrid.js":22,"../../common/js/elementplayer.js":23,"../../common/js/grid.js":25,"../../common/js/settings.js":28}],19:[function(require,module,exports){
 'use strict';
 
 var Food = require('../../common/js/elementFood.js');
@@ -1020,7 +1102,7 @@ var elementManagerAi = function elementManagerAi(elementManager) {
 
 module.exports = elementManagerAi;
 
-},{"../../common/js/brain.js":15,"../../common/js/elementFood.js":17,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/utilities.js":28,"../../common/js/vector.js":29}],19:[function(require,module,exports){
+},{"../../common/js/brain.js":15,"../../common/js/elementFood.js":17,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30}],20:[function(require,module,exports){
 'use strict';
 
 var Food = require('../../common/js/elementFood.js');
@@ -1047,7 +1129,7 @@ var elementFoodManager = function elementFoodManager(elementManager) {
 
 module.exports = elementFoodManager;
 
-},{"../../common/js/elementFood.js":17,"../../common/js/settings.js":27,"../../common/js/vector.js":29}],20:[function(require,module,exports){
+},{"../../common/js/elementFood.js":17,"../../common/js/settings.js":28,"../../common/js/vector.js":30}],21:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -1106,7 +1188,7 @@ var ElementFood = Element({
 
 module.exports = ElementFood;
 
-},{"../../common/js/boundingbox.js":14,"../../common/js/element.js":16,"../../common/js/settings.js":27,"../../common/js/utilities.js":28,"../../common/js/vector.js":29,"lodash":30}],21:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":14,"../../common/js/element.js":16,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30,"lodash":31}],22:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -1162,7 +1244,7 @@ var ElementGrid = Element({
 
 module.exports = ElementGrid;
 
-},{"../../common/js/BoundingBox.js":12,"../../common/js/element.js":16,"../../common/js/settings.js":27,"../../common/js/utilities.js":28,"../../common/js/vector.js":29,"lodash":30}],22:[function(require,module,exports){
+},{"../../common/js/BoundingBox.js":12,"../../common/js/element.js":16,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30,"lodash":31}],23:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -1294,7 +1376,7 @@ var ElementPlayer = Element({
 
 module.exports = ElementPlayer;
 
-},{"../../common/js/BoundingBox.js":12,"../../common/js/element.js":16,"../../common/js/elementfood.js":20,"../../common/js/settings.js":27,"../../common/js/utilities.js":28,"../../common/js/vector.js":29,"lodash":30}],23:[function(require,module,exports){
+},{"../../common/js/BoundingBox.js":12,"../../common/js/element.js":16,"../../common/js/elementfood.js":21,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30,"lodash":31}],24:[function(require,module,exports){
 'use strict';
 
 var Utilities = require('../../common/js/utilities.js');
@@ -1349,7 +1431,7 @@ gameRunner.prototype.end = function () {
 
 module.exports = gameRunner;
 
-},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":9,"../../client/js/view.js":11,"../../common/js/ElementManager.js":13,"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/utilities.js":28}],24:[function(require,module,exports){
+},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":9,"../../client/js/view.js":11,"../../common/js/ElementManager.js":13,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/utilities.js":29}],25:[function(require,module,exports){
 'use strict';
 
 var BoundingBox = require('../../common/js/boundingbox.js');
@@ -1367,10 +1449,10 @@ for (var x = 0; x < gridSize; x = x + inc) {
 
 module.exports = grids;
 
-},{"../../common/js/boundingbox.js":14,"../../common/js/settings.js":27,"../../common/js/vector.js":29}],25:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":14,"../../common/js/settings.js":28,"../../common/js/vector.js":30}],26:[function(require,module,exports){
 'use strict';
 
-var ElementManager = require('../../common/js/ElementManager.js');
+var ElementManager = require('../../common/js/elementManager.js');
 var Vector = require('../../common/js/vector.js');
 var Settings = require('../../common/js/settings.js');
 
@@ -1385,7 +1467,7 @@ var maker = function maker() {
 
 module.exports = maker;
 
-},{"../../common/js/ElementManager.js":13,"../../common/js/settings.js":27,"../../common/js/vector.js":29}],26:[function(require,module,exports){
+},{"../../common/js/elementManager.js":18,"../../common/js/settings.js":28,"../../common/js/vector.js":30}],27:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -1428,7 +1510,7 @@ var Move = function Move(options) {
 
 module.exports = Move;
 
-},{"../../common/js/boundingbox.js":14,"../../common/js/settings.js":27,"../../common/js/vector.js":29}],27:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":14,"../../common/js/settings.js":28,"../../common/js/vector.js":30}],28:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -1475,7 +1557,7 @@ module.exports = {
 
 };
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -1573,7 +1655,7 @@ module.exports = {
 
 };
 
-},{"../../common/js/move.js":26,"../../common/js/settings.js":27,"../../common/js/vector.js":29}],29:[function(require,module,exports){
+},{"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/vector.js":30}],30:[function(require,module,exports){
 'use strict';
 
 function Vector(x, y) {
@@ -1648,7 +1730,7 @@ Vector.prototype.toUnit = function () {
 
 module.exports = Vector;
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 (function (global){
 /**
  * @license
