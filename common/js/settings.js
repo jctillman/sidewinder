@@ -7,7 +7,7 @@ module.exports = {
 	latencyAdjustment: 0,
 
 	port: process.env.PORT || 3000,
-	socketaddress: 'http://damp-eyrie-6067.herokuapp.com:' + (process.env.PORT || 3000),
+	socketaddress: '//damp-eyrie-6067.herokuapp.com:80',
 
 	gridSize: 100,
 	gridSpace: 50,
