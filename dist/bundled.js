@@ -904,7 +904,7 @@ var ElementFood = Element({
 
 module.exports = ElementFood;
 
-},{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27,"lodash":28}],16:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27,"lodash":29}],16:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -960,7 +960,7 @@ var ElementGrid = Element({
 
 module.exports = ElementGrid;
 
-},{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27,"lodash":28}],17:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27,"lodash":29}],17:[function(require,module,exports){
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
@@ -1239,7 +1239,7 @@ var ElementPlayer = Element({
 
 module.exports = ElementPlayer;
 
-},{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/elementFood.js":15,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27,"lodash":28}],21:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/elementFood.js":15,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27,"lodash":29}],21:[function(require,module,exports){
 'use strict';
 
 var Utilities = require('../../common/js/utilities.js');
@@ -1374,6 +1374,7 @@ var Move = function Move(options) {
 module.exports = Move;
 
 },{"../../common/js/boundingbox.js":12,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],25:[function(require,module,exports){
+(function (process){
 'use strict';
 
 module.exports = {
@@ -1384,7 +1385,8 @@ module.exports = {
 	sendBoardInterval: 4,
 	latencyAdjustment: 0,
 
-	socketaddress: 'localhost:3000',
+	port: process.env.PORT || 3000,
+	socketaddress: 'damp-eyrie-6067.herokuapp.com:' + (process.env.PORT || 3000),
 
 	gridSize: 100,
 	gridSpace: 50,
@@ -1420,7 +1422,8 @@ module.exports = {
 
 };
 
-},{}],26:[function(require,module,exports){
+}).call(this,require('_process'))
+},{"_process":28}],26:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -1594,6 +1597,99 @@ Vector.prototype.toUnit = function () {
 module.exports = Vector;
 
 },{}],28:[function(require,module,exports){
+// shim for using process in browser
+
+var process = module.exports = {};
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = setTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    clearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        setTimeout(drainQueue, 0);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+},{}],29:[function(require,module,exports){
 (function (global){
 /**
  * @license

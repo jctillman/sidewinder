@@ -6,7 +6,8 @@ module.exports = {
 	sendBoardInterval: 4,
 	latencyAdjustment: 0,
 
-	socketaddress: 'localhost:3000',
+	port: process.env.PORT || 3000,
+	socketaddress: 'damp-eyrie-6067.herokuapp.com:' + (process.env.PORT || 3000),
 
 	gridSize: 100,
 	gridSpace: 50,
