@@ -3,9 +3,9 @@ var BoundingBox = require('../../common/js/boundingbox.js');
 var Grid = require('../../common/js/grid.js');
 
 var members = {
-	grid: require('../../common/js/elementgrid.js'),
-	player: require('../../common/js/elementplayer.js'),
-	food: require('../../common/js/elementfood.js')
+	grid: require('../../common/js/elementGrid.js'),
+	player: require('../../common/js/elementPlayer.js'),
+	food: require('../../common/js/elementFood.js')
 }
 
 var ElementManager = function(){ 

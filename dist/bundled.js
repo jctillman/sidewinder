@@ -86,7 +86,7 @@ module.exports = function (appState, finishedCallback) {
 	socket.emit('multiplayerGame');
 };
 
-},{"../../client/js/clientUtilities.js":6,"../../common/js/ElementManager.js":13,"../../common/js/elementManagerAi.js":19,"../../common/js/elementManagerFood.js":20,"../../common/js/gameRunner.js":24,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/utilities.js":29}],5:[function(require,module,exports){
+},{"../../client/js/clientUtilities.js":6,"../../common/js/ElementManager.js":13,"../../common/js/elementManagerAi.js":20,"../../common/js/elementManagerFood.js":21,"../../common/js/gameRunner.js":24,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/utilities.js":29}],5:[function(require,module,exports){
 'use strict';
 
 var ElementManager = require('../../common/js/ElementManager.js');
@@ -109,7 +109,7 @@ module.exports = function (appState, finishedCallback) {
 	playGame(gameState, appState, playerId, finishedCallback);
 };
 
-},{"../../client/js/clientUtilities.js":6,"../../common/js/ElementManager.js":13,"../../common/js/elementManagerAi.js":19,"../../common/js/elementManagerFood.js":20,"../../common/js/gameRunner.js":24,"../../common/js/initialgamecreator.js":26,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/utilities.js":29}],6:[function(require,module,exports){
+},{"../../client/js/clientUtilities.js":6,"../../common/js/ElementManager.js":13,"../../common/js/elementManagerAi.js":20,"../../common/js/elementManagerFood.js":21,"../../common/js/gameRunner.js":24,"../../common/js/initialgamecreator.js":26,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/utilities.js":29}],6:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -236,7 +236,7 @@ module.exports = function (appState, finishedCallback) {
 	socket.emit('watchGame');
 };
 
-},{"../../client/js/clientUtilities.js":6,"../../common/js/ElementManager.js":13,"../../common/js/elementManagerAi.js":19,"../../common/js/elementManagerFood.js":20,"../../common/js/gameRunner.js":24,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/utilities.js":29}],8:[function(require,module,exports){
+},{"../../client/js/clientUtilities.js":6,"../../common/js/ElementManager.js":13,"../../common/js/elementManagerAi.js":20,"../../common/js/elementManagerFood.js":21,"../../common/js/gameRunner.js":24,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/utilities.js":29}],8:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -565,9 +565,9 @@ var BoundingBox = require('../../common/js/boundingbox.js');
 var Grid = require('../../common/js/grid.js');
 
 var members = {
-	grid: require('../../common/js/elementgrid.js'),
-	player: require('../../common/js/elementplayer.js'),
-	food: require('../../common/js/elementfood.js')
+	grid: require('../../common/js/elementGrid.js'),
+	player: require('../../common/js/elementPlayer.js'),
+	food: require('../../common/js/elementFood.js')
 };
 
 var ElementManager = function ElementManager() {
@@ -639,7 +639,7 @@ ElementManager.prototype.step = function (mods) {
 
 module.exports = ElementManager;
 
-},{"../../common/js/boundingbox.js":14,"../../common/js/elementfood.js":21,"../../common/js/elementgrid.js":22,"../../common/js/elementplayer.js":23,"../../common/js/grid.js":25,"../../common/js/settings.js":28}],14:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":14,"../../common/js/elementFood.js":17,"../../common/js/elementGrid.js":18,"../../common/js/elementPlayer.js":22,"../../common/js/grid.js":25,"../../common/js/settings.js":28}],14:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -985,14 +985,70 @@ module.exports = ElementFood;
 },{"../../common/js/boundingbox.js":14,"../../common/js/element.js":16,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30,"lodash":31}],18:[function(require,module,exports){
 'use strict';
 
+var Element = require('../../common/js/element.js');
+var Settings = require('../../common/js/settings.js');
+var Vector = require('../../common/js/vector.js');
+var Utilities = require('../../common/js/utilities.js');
+var BoundingBox = require('../../common/js/BoundingBox.js');
+var _ = require('lodash');
+
+var ElementGrid = Element({
+	//Constructor actually ignores required things, because this is such a background.. thing.
+	construct: function construct(location, options) {
+		//mandatory
+		this.type = 'grid';
+		this.nothingMatters = true;
+		this.inactive = true;
+		this.priority = 0;
+		//optional
+		this.location = new Vector(0, 0);
+		this.gridSize = Settings.gridSize;
+		this.gridSpace = Settings.gridSpace;
+		this.box = new BoundingBox([new Vector(0, 0), new Vector(this.gridSize, this.gridSize)]);
+	},
+	draw: function draw(view) {
+		var gsi = this.gridSize;
+		var gsp = this.gridSpace;
+		var color = Settings.gridColor;
+		for (var x = 0; x <= gsi; x = x + gsp) {
+			var right = new Vector(0, x);
+			var left = new Vector(gsi, x);
+			var top = new Vector(x, 0);
+			var bottom = new Vector(x, gsi);
+			view.drawPath([left, right], 0.5, color);
+			view.drawPath([top, bottom], 0.5, color);
+		}
+	},
+	step: function step() {
+		return this.constructor.copy(this);
+	},
+	copy: function copy(stuff) {
+		var ret = Utilities.shallowCopy(stuff);
+		ret.location = Vector.copy(stuff.location);
+		ret.box = BoundingBox.copy(stuff.box);
+		return _.merge(new this(ret.location, {}), ret);
+	},
+	matters: function matters(element) {
+		return false;
+	},
+	encounters: function encounters(element) {
+		throw new Error('This should never be called, because .nothingMatters is set to be true.');
+	}
+});
+
+module.exports = ElementGrid;
+
+},{"../../common/js/BoundingBox.js":12,"../../common/js/element.js":16,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30,"lodash":31}],19:[function(require,module,exports){
+'use strict';
+
 var Settings = require('../../common/js/settings.js');
 var BoundingBox = require('../../common/js/boundingbox.js');
 var Grid = require('../../common/js/grid.js');
 
 var members = {
-	grid: require('../../common/js/elementgrid.js'),
-	player: require('../../common/js/elementplayer.js'),
-	food: require('../../common/js/elementfood.js')
+	grid: require('../../common/js/elementGrid.js'),
+	player: require('../../common/js/elementPlayer.js'),
+	food: require('../../common/js/elementFood.js')
 };
 
 var ElementManager = function ElementManager() {
@@ -1064,7 +1120,7 @@ ElementManager.prototype.step = function (mods) {
 
 module.exports = ElementManager;
 
-},{"../../common/js/boundingbox.js":14,"../../common/js/elementfood.js":21,"../../common/js/elementgrid.js":22,"../../common/js/elementplayer.js":23,"../../common/js/grid.js":25,"../../common/js/settings.js":28}],19:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":14,"../../common/js/elementFood.js":17,"../../common/js/elementGrid.js":18,"../../common/js/elementPlayer.js":22,"../../common/js/grid.js":25,"../../common/js/settings.js":28}],20:[function(require,module,exports){
 'use strict';
 
 var Food = require('../../common/js/elementFood.js');
@@ -1102,7 +1158,7 @@ var elementManagerAi = function elementManagerAi(elementManager) {
 
 module.exports = elementManagerAi;
 
-},{"../../common/js/brain.js":15,"../../common/js/elementFood.js":17,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30}],20:[function(require,module,exports){
+},{"../../common/js/brain.js":15,"../../common/js/elementFood.js":17,"../../common/js/move.js":27,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30}],21:[function(require,module,exports){
 'use strict';
 
 var Food = require('../../common/js/elementFood.js');
@@ -1129,122 +1185,7 @@ var elementFoodManager = function elementFoodManager(elementManager) {
 
 module.exports = elementFoodManager;
 
-},{"../../common/js/elementFood.js":17,"../../common/js/settings.js":28,"../../common/js/vector.js":30}],21:[function(require,module,exports){
-'use strict';
-
-var Element = require('../../common/js/element.js');
-var Settings = require('../../common/js/settings.js');
-var Vector = require('../../common/js/vector.js');
-var Utilities = require('../../common/js/utilities.js');
-var BoundingBox = require('../../common/js/boundingbox.js');
-var _ = require('lodash');
-
-var ElementFood = Element({
-	construct: function construct(location, options) {
-		//Non-mandatory
-		this.location = location;
-		this.growing = options.growing || false;
-		this.shrinking = false;
-		this.size = options.growing ? 1 : Settings.foodMaxSize;
-		this.color = Settings.foodPossibleColors[Math.floor(Math.random() * Settings.foodPossibleColors.length)];
-		//Mandatory
-		this.type = 'food';
-		this.nothingMatters = true;
-		this.inactive = true;
-		this.priority = 1;
-		var rad = new Vector(Settings.foodMaxSize, Settings.foodMaxSize);
-		this.box = new BoundingBox([this.location.add(rad), this.location.sub(rad)]);
-	},
-	draw: function draw(view) {
-		view.drawCircle(this.location, this.size, 2, this.color);
-	},
-	step: function step() {
-		var ret = this.constructor.copy(this);
-		if (ret.shrinking) {
-			ret.size = ret.size - Settings.foodGrowthRate;
-		}
-		if (ret.growing) {
-			ret.size = ret.size + Settings.foodGrowthRate;
-		}
-		if (ret.size >= Settings.foodMaxSize) {
-			ret.size = Settings.foodMaxSize;
-			ret.growing = false;
-		}
-		return ret.size <= 0 ? undefined : ret;
-	},
-	copy: function copy(stuff) {
-		var ret = Utilities.shallowCopy(stuff);
-		ret.location = Vector.copy(stuff.location);
-		ret.box = BoundingBox.copy(stuff.box);
-		return _.merge(new this(ret.location, {}), ret);
-	},
-	matters: function matters(element) {
-		return false;
-	},
-	encounters: function encounters(element) {
-		throw new Error("This shouldn't ever be called.");
-	}
-});
-
-module.exports = ElementFood;
-
-},{"../../common/js/boundingbox.js":14,"../../common/js/element.js":16,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30,"lodash":31}],22:[function(require,module,exports){
-'use strict';
-
-var Element = require('../../common/js/element.js');
-var Settings = require('../../common/js/settings.js');
-var Vector = require('../../common/js/vector.js');
-var Utilities = require('../../common/js/utilities.js');
-var BoundingBox = require('../../common/js/BoundingBox.js');
-var _ = require('lodash');
-
-var ElementGrid = Element({
-	//Constructor actually ignores required things, because this is such a background.. thing.
-	construct: function construct(location, options) {
-		//mandatory
-		this.type = 'grid';
-		this.nothingMatters = true;
-		this.inactive = true;
-		this.priority = 0;
-		//optional
-		this.location = new Vector(0, 0);
-		this.gridSize = Settings.gridSize;
-		this.gridSpace = Settings.gridSpace;
-		this.box = new BoundingBox([new Vector(0, 0), new Vector(this.gridSize, this.gridSize)]);
-	},
-	draw: function draw(view) {
-		var gsi = this.gridSize;
-		var gsp = this.gridSpace;
-		var color = Settings.gridColor;
-		for (var x = 0; x <= gsi; x = x + gsp) {
-			var right = new Vector(0, x);
-			var left = new Vector(gsi, x);
-			var top = new Vector(x, 0);
-			var bottom = new Vector(x, gsi);
-			view.drawPath([left, right], 0.5, color);
-			view.drawPath([top, bottom], 0.5, color);
-		}
-	},
-	step: function step() {
-		return this.constructor.copy(this);
-	},
-	copy: function copy(stuff) {
-		var ret = Utilities.shallowCopy(stuff);
-		ret.location = Vector.copy(stuff.location);
-		ret.box = BoundingBox.copy(stuff.box);
-		return _.merge(new this(ret.location, {}), ret);
-	},
-	matters: function matters(element) {
-		return false;
-	},
-	encounters: function encounters(element) {
-		throw new Error('This should never be called, because .nothingMatters is set to be true.');
-	}
-});
-
-module.exports = ElementGrid;
-
-},{"../../common/js/BoundingBox.js":12,"../../common/js/element.js":16,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30,"lodash":31}],23:[function(require,module,exports){
+},{"../../common/js/elementFood.js":17,"../../common/js/settings.js":28,"../../common/js/vector.js":30}],22:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -1376,7 +1317,66 @@ var ElementPlayer = Element({
 
 module.exports = ElementPlayer;
 
-},{"../../common/js/BoundingBox.js":12,"../../common/js/element.js":16,"../../common/js/elementfood.js":21,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30,"lodash":31}],24:[function(require,module,exports){
+},{"../../common/js/BoundingBox.js":12,"../../common/js/element.js":16,"../../common/js/elementfood.js":23,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30,"lodash":31}],23:[function(require,module,exports){
+'use strict';
+
+var Element = require('../../common/js/element.js');
+var Settings = require('../../common/js/settings.js');
+var Vector = require('../../common/js/vector.js');
+var Utilities = require('../../common/js/utilities.js');
+var BoundingBox = require('../../common/js/boundingbox.js');
+var _ = require('lodash');
+
+var ElementFood = Element({
+	construct: function construct(location, options) {
+		//Non-mandatory
+		this.location = location;
+		this.growing = options.growing || false;
+		this.shrinking = false;
+		this.size = options.growing ? 1 : Settings.foodMaxSize;
+		this.color = Settings.foodPossibleColors[Math.floor(Math.random() * Settings.foodPossibleColors.length)];
+		//Mandatory
+		this.type = 'food';
+		this.nothingMatters = true;
+		this.inactive = true;
+		this.priority = 1;
+		var rad = new Vector(Settings.foodMaxSize, Settings.foodMaxSize);
+		this.box = new BoundingBox([this.location.add(rad), this.location.sub(rad)]);
+	},
+	draw: function draw(view) {
+		view.drawCircle(this.location, this.size, 2, this.color);
+	},
+	step: function step() {
+		var ret = this.constructor.copy(this);
+		if (ret.shrinking) {
+			ret.size = ret.size - Settings.foodGrowthRate;
+		}
+		if (ret.growing) {
+			ret.size = ret.size + Settings.foodGrowthRate;
+		}
+		if (ret.size >= Settings.foodMaxSize) {
+			ret.size = Settings.foodMaxSize;
+			ret.growing = false;
+		}
+		return ret.size <= 0 ? undefined : ret;
+	},
+	copy: function copy(stuff) {
+		var ret = Utilities.shallowCopy(stuff);
+		ret.location = Vector.copy(stuff.location);
+		ret.box = BoundingBox.copy(stuff.box);
+		return _.merge(new this(ret.location, {}), ret);
+	},
+	matters: function matters(element) {
+		return false;
+	},
+	encounters: function encounters(element) {
+		throw new Error("This shouldn't ever be called.");
+	}
+});
+
+module.exports = ElementFood;
+
+},{"../../common/js/boundingbox.js":14,"../../common/js/element.js":16,"../../common/js/settings.js":28,"../../common/js/utilities.js":29,"../../common/js/vector.js":30,"lodash":31}],24:[function(require,module,exports){
 'use strict';
 
 var Utilities = require('../../common/js/utilities.js');
@@ -1467,7 +1467,7 @@ var maker = function maker() {
 
 module.exports = maker;
 
-},{"../../common/js/elementManager.js":18,"../../common/js/settings.js":28,"../../common/js/vector.js":30}],27:[function(require,module,exports){
+},{"../../common/js/elementManager.js":19,"../../common/js/settings.js":28,"../../common/js/vector.js":30}],27:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
