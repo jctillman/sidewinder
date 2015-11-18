@@ -1,4 +1,4 @@
-var ElementManager = require('../../common/js/ElementManager.js');
+var ElementManager = require('../../common/js/elementManager.js');
 var Settings = require('../../common/js/settings.js');
 var Move = require('../../common/js/move.js');
 var elementFoodManager = require('../../common/js/elementManagerFood.js');
@@ -12,8 +12,7 @@ var playGame = function(gameState, appState, finished, socket){
 	runningInstance.addListener('clientHandler', clientUtilities.watchHandling(appState, finished, socket));
 	socket.on('sendBoard', function(data){
 		runningInstance.update(data, Settings.latencyAdjustment);
-	})
-
+	});
 }
 
 module.exports = function(appState, finishedCallback){

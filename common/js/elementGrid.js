@@ -2,7 +2,7 @@ var Element = require('../../common/js/element.js');
 var Settings = require('../../common/js/settings.js');
 var Vector = require('../../common/js/vector.js');
 var Utilities = require('../../common/js/utilities.js');
-var BoundingBox = require('../../common/js/BoundingBox.js');
+var BoundingBox = require('../../common/js/boundingbox.js');
 var _ = require('lodash');
 
 var ElementGrid = Element({

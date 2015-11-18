@@ -1,9 +1,9 @@
 var Element = require('../../common/js/element.js');
-var ElementFood = require('../../common/js/elementfood.js');
+var ElementFood = require('../../common/js/elementFood.js');
 var Settings = require('../../common/js/settings.js');
 var Vector = require('../../common/js/vector.js');
 var Utilities = require('../../common/js/utilities.js');
-var BoundingBox = require('../../common/js/BoundingBox.js');
+var BoundingBox = require('../../common/js/boundingBox.js');
 var _ = require('lodash');
 
 

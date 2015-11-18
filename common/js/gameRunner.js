@@ -4,7 +4,7 @@ var BoundingView = require('../../client/js/boundingview.js');
 var Move = require('../../common/js/move.js');
 var View = require('../../client/js/view.js');
 var HighScore = require('../../client/js/highscore.js');
-var ElementManager = require('../../common/js/ElementManager.js');
+var ElementManager = require('../../common/js/elementManager.js');
 
 function gameRunner(gameState, extras){
 	var self = this;
