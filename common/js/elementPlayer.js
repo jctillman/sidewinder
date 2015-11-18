@@ -3,7 +3,7 @@ var ElementFood = require('../../common/js/elementFood.js');
 var Settings = require('../../common/js/settings.js');
 var Vector = require('../../common/js/vector.js');
 var Utilities = require('../../common/js/utilities.js');
-var BoundingBox = require('../../common/js/boundingBox.js');
+var BoundingBox = require('../../common/js/boundingbox.js');
 var _ = require('lodash');
 
 
