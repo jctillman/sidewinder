@@ -6,6 +6,8 @@ module.exports = {
 	sendBoardInterval: 4,
 	latencyAdjustment: 0,
 
+	socketaddress: 'localhost:3000',
+
 	gridSize: 100,
 	gridSpace: 50,
 	gridColor: '#CCC', 

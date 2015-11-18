@@ -75,10 +75,12 @@ var playGame = function playGame(gameState, appState, playerId, finished, socket
 };
 
 module.exports = function (appState, finishedCallback) {
-	var socket = io.connect('192.168.1.153:3000', { multiplex: false });
+	var socket = io.connect(Settings.socketaddress, { multiplex: false });
+	console.log("!");
 	socket.on('initialGameState', function (data) {
 		var gameState = ElementManager.copy(data.elementManager);
 		var playerId = data.playerId;
+		console.log("!");
 		playGame(gameState, appState, playerId, finishedCallback, socket);
 	});
 	socket.emit('multiplayerGame');
@@ -226,7 +228,7 @@ var playGame = function playGame(gameState, appState, finished, socket) {
 };
 
 module.exports = function (appState, finishedCallback) {
-	var socket = io.connect('192.168.1.153:3000', { multiplex: false });
+	var socket = io.connect(Settings.socketaddress, { multiplex: false });
 	socket.on('initialWatchState', function (data) {
 		var gameState = ElementManager.copy(data.elementManager);
 		playGame(gameState, appState, finishedCallback, socket);
@@ -400,7 +402,6 @@ module.exports = function (options) {
 	var singularButton = document.getElementById('singular');
 	var multiplayerButton = document.getElementById('multiplayer');
 	var watchButton = document.getElementById('watch');
-	var loginButton = document.getElementById('login');
 
 	var state = {
 		game: {
@@ -412,8 +413,7 @@ module.exports = function (options) {
 			all: menu,
 			singularButton: singularButton,
 			multiplayerButton: multiplayerButton,
-			watchButton: watchButton,
-			loginButton: loginButton
+			watchButton: watchButton
 		}
 	};
 
@@ -438,10 +438,6 @@ module.exports = function (options) {
 		game.style.display = "block";
 		menu.style.display = "none";
 		options.watchGame(state, goBack);
-	};
-
-	loginButton.onclick = function () {
-		options.login(state, goBack);
 	};
 };
 
@@ -1442,6 +1438,8 @@ module.exports = {
 	sendMoveInterval: 2,
 	sendBoardInterval: 4,
 	latencyAdjustment: 0,
+
+	socketaddress: 'localhost:3000',
 
 	gridSize: 100,
 	gridSpace: 50,

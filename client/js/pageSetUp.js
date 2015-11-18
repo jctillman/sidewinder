@@ -15,7 +15,6 @@ module.exports = function(options){
 	var singularButton = document.getElementById('singular');
 	var multiplayerButton = document.getElementById('multiplayer');
 	var watchButton = document.getElementById('watch');
-	var loginButton = document.getElementById('login');
 
 	var state = {
 		game: {
@@ -27,8 +26,7 @@ module.exports = function(options){
 			all: menu, 
 			singularButton: singularButton,
 			multiplayerButton: multiplayerButton,
-			watchButton: watchButton,
-			loginButton: loginButton
+			watchButton: watchButton
 		}
 	}; 
 
@@ -55,7 +53,4 @@ module.exports = function(options){
 		options.watchGame(state, goBack);
 	}
 
-	loginButton.onclick = function(){
-		options.login(state, goBack);
-	}
 }

@@ -11,5 +11,4 @@ realtime(io);
 //Serve static resources
 app.use(express.static(__dirname + '/../dist'));
 
-
 server.listen(3000)

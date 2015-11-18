@@ -17,7 +17,7 @@ var playGame = function(gameState, appState, finished, socket){
 }
 
 module.exports = function(appState, finishedCallback){
-	var socket = io.connect('192.168.1.153:3000', {multiplex: false});
+	var socket = io.connect(Settings.socketaddress, {multiplex: false});
 	socket.on('initialWatchState', function(data){
 		var gameState = ElementManager.copy(data.elementManager);
 		playGame(gameState, appState, finishedCallback, socket)

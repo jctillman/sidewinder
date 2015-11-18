@@ -6,12 +6,14 @@ module.exports = function(io){
 	io.on('connection', function(socket){
 		console.log("A connection happened!");
 
-		//When someone wishes to join a game.
+		//Single-player games happen entirely on client side.
+
+		//Multi-player games happen here.
 		socket.on('multiplayerGame', function(){
 			connectionHandler.multiplayerConnection(rh, socket)
 		});
 
-		//When someone just wishes to start watching a game.
+		//Spectating a game happens here.
 		socket.on('watchGame', function(){
 			connectionHandler.watchConnection(rh, socket)
 		});
