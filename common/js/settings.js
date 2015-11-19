@@ -1,5 +1,3 @@
-var test = false;
-
 module.exports = {
 
 	resizeRate: 50,
@@ -8,9 +6,7 @@ module.exports = {
 	sendBoardInterval: 4,
 	latencyAdjustment: 0,
 
-	clientSocketConnection: (test) ? ('localhost:3000') : ('//damp-eyrie-6067.herokuapp.com:' + (process.env.PORT || 3000)),
-	portNum: (test) ? 3000 : (process.env.PORT || 3000),
-	//socketaddress: 'localhost:' + (process.env.PORT || 3000),
+	portNum: (process.env.PORT || 3000),
 
 	gridSize: 300,
 	gridSpace: 50,
