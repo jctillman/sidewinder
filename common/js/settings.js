@@ -8,8 +8,9 @@ module.exports = {
 	sendBoardInterval: 4,
 	latencyAdjustment: 0,
 
-	portNum: (test) ? (process.env.PORT || 3000) : 80,
-	socketaddress: 'localhost:' + (process.env.PORT || 3000),
+	clientSocketConnection: (test) ? ('localhost:3000') : ('//damp-eyrie-6067.herokuapp.com:80'),
+	portNum: (test) ? 3000 : (process.env.PORT || 3000),
+	//socketaddress: 'localhost:' + (process.env.PORT || 3000),
 
 	gridSize: 100,
 	gridSpace: 50,

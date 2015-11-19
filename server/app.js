@@ -1,10 +1,13 @@
 var express = require('express');
 var app = express();
 var server = require('http').Server(app);
-var io = require('socket.io')(server);
+
+var io = require('socket.io')(server)
+
 var Settings = require("../common/js/settings.js");
 
 var realtime = require('./js/realtime.js');
+
 
 //Handle things going through socket
 realtime(io);
@@ -12,4 +15,4 @@ realtime(io);
 //Serve static resources
 app.use(express.static(__dirname + '/../dist'));
 
-server.listen(process.env.PORT || 3000)
+server.listen(Settings.portNum)

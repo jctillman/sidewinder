@@ -67,8 +67,8 @@ var playGame = function playGame(gameState, appState, playerId, finished, socket
 };
 
 module.exports = function (appState, finishedCallback) {
-	var socketName = window.location.hostname + ":" + Settings.portNum;
-	var socket = io.connect(socketName, { multiplex: false });
+	console.log(Settings.clientSocketConnection);
+	var socket = io.connect(Settings.clientSocketConnection, { multiplex: false });
 	socket.on('initialGameState', function (data) {
 		var gameState = ElementManager.copy(data.elementManager);
 		var playerId = data.playerId;
@@ -219,8 +219,7 @@ var playGame = function playGame(gameState, appState, finished, socket) {
 };
 
 module.exports = function (appState, finishedCallback) {
-	var socketName = window.location.hostname + ":" + Settings.portNum;
-	var socket = io.connect(socketName, { multiplex: false });
+	var socket = io.connect(Settings.clientSocketConnection, { multiplex: false });
 	socket.on('initialWatchState', function (data) {
 		var gameState = ElementManager.copy(data.elementManager);
 		playGame(gameState, appState, finishedCallback, socket);
@@ -1387,8 +1386,9 @@ module.exports = {
 	sendBoardInterval: 4,
 	latencyAdjustment: 0,
 
-	portNum: test ? process.env.PORT || 3000 : 80,
-	socketaddress: 'localhost:' + (process.env.PORT || 3000),
+	clientSocketConnection: test ? 'localhost:3000' : '//damp-eyrie-6067.herokuapp.com:80',
+	portNum: test ? 3000 : process.env.PORT || 3000,
+	//socketaddress: 'localhost:' + (process.env.PORT || 3000),
 
 	gridSize: 100,
 	gridSpace: 50,
