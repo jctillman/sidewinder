@@ -28,12 +28,11 @@ var playGame = function(gameState, appState, playerId, finished, socket){
 
 module.exports = function(appState, finishedCallback){
 	var socket = io.connect(Settings.socketaddress, {multiplex: false});
-	console.log("!")
 	socket.on('initialGameState', function(data){
 		var gameState = ElementManager.copy(data.elementManager);
 		var playerId = data.playerId;
 		console.log("!")
 		playGame(gameState, appState, playerId, finishedCallback, socket)
 	});
-	socket.emit('multiplayerGame')
+	socket.emit('multiplayer')
 }

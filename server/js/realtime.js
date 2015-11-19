@@ -9,7 +9,7 @@ module.exports = function(io){
 		//Single-player games happen entirely on client side.
 
 		//Multi-player games happen here.
-		socket.on('multiplayerGame', function(){
+		socket.on('multiplayer', function(){
 			connectionHandler.multiplayerConnection(rh, socket)
 		});
 

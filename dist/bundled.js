@@ -68,14 +68,13 @@ var playGame = function playGame(gameState, appState, playerId, finished, socket
 
 module.exports = function (appState, finishedCallback) {
 	var socket = io.connect(Settings.socketaddress, { multiplex: false });
-	console.log("!");
 	socket.on('initialGameState', function (data) {
 		var gameState = ElementManager.copy(data.elementManager);
 		var playerId = data.playerId;
 		console.log("!");
 		playGame(gameState, appState, playerId, finishedCallback, socket);
 	});
-	socket.emit('multiplayerGame');
+	socket.emit('multiplayer');
 };
 
 },{"../../client/js/clientUtilities.js":5,"../../common/js/ElementManager.js":11,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":21,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26}],4:[function(require,module,exports){
@@ -1385,8 +1384,8 @@ module.exports = {
 	sendBoardInterval: 4,
 	latencyAdjustment: 0,
 
-	port: process.env.PORT || 3000,
-	socketaddress: 'damp-eyrie-6067.herokuapp.com:' + (process.env.PORT || 3000),
+	portNum: process.env.PORT || 3000,
+	socketaddress: 'localhost:' + (process.env.PORT || 3000),
 
 	gridSize: 100,
 	gridSpace: 50,
@@ -1407,6 +1406,7 @@ module.exports = {
 	framesToViewAfterDeath: 50,
 
 	roomCapacity: 2,
+	roomDeleteInterval: 5000,
 
 	treeResolution: 2500,
 

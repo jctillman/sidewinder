@@ -12,4 +12,4 @@ realtime(io);
 //Serve static resources
 app.use(express.static(__dirname + '/../dist'));
 
-server.listen(Settings.port)
+server.listen(Settings.portNum)

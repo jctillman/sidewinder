@@ -6,7 +6,17 @@ var elementFoodManager = require('../../common/js/elementManagerFood.js');
 var elementAIManager = require('../../common/js/elementManagerAi.js');
 
 var RoomHandler = function(maxOccupancy){
+	var self = this;	
 	this.rooms = [];
+	setInterval(function(){
+		self.rooms = self.rooms.filter(function(room){
+			var playerCount = room.gameState.elements.filter(function(element){
+				return element.type == 'player' && element.isHuman == true;
+			});
+			return playerCount != 0;
+		});
+	}, Settings.roomDeleteInterval);
+
 }
 
 RoomHandler.prototype.getRoomWithSpace = function(){
