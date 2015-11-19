@@ -16,7 +16,8 @@ var playGame = function(gameState, appState, finished, socket){
 }
 
 module.exports = function(appState, finishedCallback){
-	var socket = io.connect(Settings.socketaddress, {multiplex: false});
+	var socketName = window.location.hostname + ":" + Settings.portNum
+	var socket = io.connect(socketName, {multiplex: false});
 	socket.on('initialWatchState', function(data){
 		var gameState = ElementManager.copy(data.elementManager);
 		playGame(gameState, appState, finishedCallback, socket)
