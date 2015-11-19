@@ -8,6 +8,7 @@ var Settings = require("../common/js/settings.js");
 
 var realtime = require('./js/realtime.js');
 
+io.set('transports', ['xhr-polling'])
 
 //Handle things going through socket
 realtime(io);
