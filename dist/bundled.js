@@ -67,7 +67,7 @@ var playGame = function playGame(gameState, appState, playerId, finished, socket
 };
 
 module.exports = function (appState, finishedCallback) {
-	var host = location.origin.replace(/^http/, 'ws');
+	var host = location.origin.replace(/^http/, 'ws') + ':' + Settings.portNum;
 	var socket = new WebSocket(host);
 
 	socket.onopen = function () {
