@@ -12,7 +12,7 @@ module.exports = {
 	portNum: (test) ? 3000 : (process.env.PORT || 3000),
 	//socketaddress: 'localhost:' + (process.env.PORT || 3000),
 
-	gridSize: 100,
+	gridSize: 300,
 	gridSpace: 50,
 	gridColor: '#CCC', 
 
@@ -21,7 +21,7 @@ module.exports = {
 	startDistanceBack: 100,
 
 	aiCheckFrequency: 1,
-	aiMinimum: 0,
+	aiMinimum: 3,
 
 	maxColorLength: 5,
 	maxStripeLength: 10,

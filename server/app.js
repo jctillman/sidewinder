@@ -1,3 +1,6 @@
+
+var WebSocketServer = require("ws").Server
+
 var express = require('express');
 var app = express();
 var server = require('http').Server(app);
@@ -8,10 +11,11 @@ var Settings = require("../common/js/settings.js");
 
 var realtime = require('./js/realtime.js');
 
-io.set('transports', ['xhr-polling'])
+
+var wss = new WebSocketServer({server: server})
 
 //Handle things going through socket
-realtime(io);
+realtime(wss);
 
 //Serve static resources
 app.use(express.static(__dirname + '/../dist'));

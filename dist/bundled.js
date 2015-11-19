@@ -67,14 +67,22 @@ var playGame = function playGame(gameState, appState, playerId, finished, socket
 };
 
 module.exports = function (appState, finishedCallback) {
-	console.log(Settings.clientSocketConnection);
-	var socket = io.connect(Settings.clientSocketConnection, { multiplex: false });
-	socket.on('initialGameState', function (data) {
-		var gameState = ElementManager.copy(data.elementManager);
-		var playerId = data.playerId;
-		playGame(gameState, appState, playerId, finishedCallback, socket);
-	});
-	socket.emit('multiplayer');
+	var host = location.origin.replace(/^http/, 'ws');
+	var socket = new WebSocket(host);
+
+	socket.onopen = function () {
+		// onmessage(function(data){
+		// 	var gameState = ElementManager.copy(data.elementManager);
+		// 	var playerId = data.playerId;
+		// 	playGame(gameState, appState, playerId, finishedCallback, socket)
+		// });
+		socket.send("dddd");
+		console.log("!!!!!");
+	};
+
+	socket.onmessage = function (data) {
+		console.log('data', data);
+	};
 };
 
 },{"../../client/js/clientUtilities.js":5,"../../common/js/ElementManager.js":11,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":21,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26}],4:[function(require,module,exports){
@@ -1386,11 +1394,11 @@ module.exports = {
 	sendBoardInterval: 4,
 	latencyAdjustment: 0,
 
-	clientSocketConnection: test ? 'localhost:3000' : '//damp-eyrie-6067.herokuapp.com:80',
+	clientSocketConnection: test ? 'localhost:3000' : '//damp-eyrie-6067.herokuapp.com:' + (process.env.PORT || 3000),
 	portNum: test ? 3000 : process.env.PORT || 3000,
 	//socketaddress: 'localhost:' + (process.env.PORT || 3000),
 
-	gridSize: 100,
+	gridSize: 300,
 	gridSpace: 50,
 	gridColor: '#CCC',
 
@@ -1399,7 +1407,7 @@ module.exports = {
 	startDistanceBack: 100,
 
 	aiCheckFrequency: 1,
-	aiMinimum: 0,
+	aiMinimum: 3,
 
 	maxColorLength: 5,
 	maxStripeLength: 10,

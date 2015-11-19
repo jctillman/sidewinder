@@ -27,12 +27,20 @@ var playGame = function(gameState, appState, playerId, finished, socket){
 }
 
 module.exports = function(appState, finishedCallback){
-	console.log(Settings.clientSocketConnection)
-	var socket = io.connect(Settings.clientSocketConnection, {multiplex: false});
-	socket.on('initialGameState', function(data){
-		var gameState = ElementManager.copy(data.elementManager);
-		var playerId = data.playerId;
-		playGame(gameState, appState, playerId, finishedCallback, socket)
-	});
-	socket.emit('multiplayer')
+	var host = location.origin.replace(/^http/, 'ws')
+	var socket = new WebSocket(host);
+	
+	socket.onopen = function(){
+		// onmessage(function(data){
+		// 	var gameState = ElementManager.copy(data.elementManager);
+		// 	var playerId = data.playerId;
+		// 	playGame(gameState, appState, playerId, finishedCallback, socket)
+		// });
+		socket.send("dddd")
+		console.log("!!!!!");
+	};
+
+	socket.onmessage = function(data){
+		console.log('data', data)
+	};
 }
