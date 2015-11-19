@@ -1,3 +1,5 @@
+var test = false;
+
 module.exports = {
 
 	resizeRate: 50,
@@ -6,7 +8,7 @@ module.exports = {
 	sendBoardInterval: 4,
 	latencyAdjustment: 0,
 
-	portNum: (process.env.PORT || 3000),
+	portNum: (test) ? (process.env.PORT || 3000) : 80,
 	socketaddress: 'localhost:' + (process.env.PORT || 3000),
 
 	gridSize: 100,
