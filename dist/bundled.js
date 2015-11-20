@@ -153,12 +153,15 @@ module.exports = {
     var tempView;
     return function (gameState, frameNumber, self) {
       var plyr = gameState.getElement(playerId);
+      tempView && gameState.draw(tempView);
+      HighScore(gameState, appState.game.context, plyr && plyr.id);
       if (plyr == undefined) {
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath) {
           self.end();
           socket && socket.close(); //Disconnect, if there's a socket whence we can disconnect.
           finished();
+          tempView.clear();
         }
       } else {
         //Player lives!
@@ -171,8 +174,6 @@ module.exports = {
         plyr.setMove(movr);
         tempView = new View(bv, appState.game.canvas);
       }
-      gameState.draw(tempView);
-      HighScore(gameState, appState.game.context, plyr && plyr.id);
     };
   },
 
@@ -186,16 +187,16 @@ module.exports = {
     };
 
     return function (gameState, frameNumber, self) {
+      tempView && gameState.draw(tempView);
+      HighScore(gameState, appState.game.context);
       if (done) {
         document.onkeydown = null;
         self.end();
-        socket && socket.disconnect(); //Disconnect, if there's a socket whence we can disconnect.
+        socket && socket.close(); //Disconnect, if there's a socket whence we can disconnect.
         finished();
+        tempView.clear();
       }
       tempView = new View(new BoundingView({ places: [new Vector(0, 0), new Vector(Settings.gridSize, Settings.gridSize)] }, appState.game.canvas), appState.game.canvas);
-
-      gameState.draw(tempView);
-      HighScore(gameState, appState.game.context);
     };
   }
 
@@ -215,7 +216,7 @@ var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function playGame(gameState, appState, finished, socket) {
 	var runningInstance = new GameRunner(gameState, [elementAIManager]);
-	runningInstance.addListener('clientHandler', clientUtilities.watchHandling(appState, finished, socket));
+	runningInstance.addListener('watchHandler', clientUtilities.watchHandling(appState, finished, socket));
 	socket.onmessage = function (data) {
 		var data = JSON.parse(data.data);
 		runningInstance.update(data.contents, Settings.latencyAdjustment);
@@ -234,13 +235,6 @@ module.exports = function (appState, finishedCallback) {
 		var gameState = ElementManager.copy(data.contents.elementManager);
 		playGame(gameState, appState, finishedCallback, socket);
 	};
-
-	// var socket = io.connect(Settings.clientSocketConnection, {multiplex: false});
-	// socket.on('initialWatchState', function(data){
-	// 	var gameState = ElementManager.copy(data.elementManager);
-	// 	playGame(gameState, appState, finishedCallback, socket)
-	// });
-	// socket.emit('watchGame');
 };
 
 },{"../../client/js/clientUtilities.js":5,"../../common/js/elementManager.js":17,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":21,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26}],7:[function(require,module,exports){
@@ -293,12 +287,15 @@ module.exports = {
     var tempView;
     return function (gameState, frameNumber, self) {
       var plyr = gameState.getElement(playerId);
+      tempView && gameState.draw(tempView);
+      HighScore(gameState, appState.game.context, plyr && plyr.id);
       if (plyr == undefined) {
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath) {
           self.end();
           socket && socket.close(); //Disconnect, if there's a socket whence we can disconnect.
           finished();
+          tempView.clear();
         }
       } else {
         //Player lives!
@@ -311,8 +308,6 @@ module.exports = {
         plyr.setMove(movr);
         tempView = new View(bv, appState.game.canvas);
       }
-      gameState.draw(tempView);
-      HighScore(gameState, appState.game.context, plyr && plyr.id);
     };
   },
 
@@ -326,16 +321,16 @@ module.exports = {
     };
 
     return function (gameState, frameNumber, self) {
+      tempView && gameState.draw(tempView);
+      HighScore(gameState, appState.game.context);
       if (done) {
         document.onkeydown = null;
         self.end();
-        socket && socket.disconnect(); //Disconnect, if there's a socket whence we can disconnect.
+        socket && socket.close(); //Disconnect, if there's a socket whence we can disconnect.
         finished();
+        tempView.clear();
       }
       tempView = new View(new BoundingView({ places: [new Vector(0, 0), new Vector(Settings.gridSize, Settings.gridSize)] }, appState.game.canvas), appState.game.canvas);
-
-      gameState.draw(tempView);
-      HighScore(gameState, appState.game.context);
     };
   }
 

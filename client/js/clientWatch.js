@@ -9,7 +9,7 @@ var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function(gameState, appState, finished, socket){
 	var runningInstance = new GameRunner(gameState, [elementAIManager]);
-	runningInstance.addListener('clientHandler', clientUtilities.watchHandling(appState, finished, socket));
+	runningInstance.addListener('watchHandler', clientUtilities.watchHandling(appState, finished, socket));
 	socket.onmessage = function(data){
 		var data = JSON.parse(data.data);
 		runningInstance.update(data.contents, Settings.latencyAdjustment);
@@ -26,11 +26,4 @@ module.exports = function(appState, finishedCallback){
 		var gameState = ElementManager.copy(data.contents.elementManager);
 		playGame(gameState, appState, finishedCallback, socket)
 	};
-
-	// var socket = io.connect(Settings.clientSocketConnection, {multiplex: false});
-	// socket.on('initialWatchState', function(data){
-	// 	var gameState = ElementManager.copy(data.elementManager);
-	// 	playGame(gameState, appState, finishedCallback, socket)
-	// });
-	// socket.emit('watchGame');
 }

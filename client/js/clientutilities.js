@@ -46,12 +46,15 @@ module.exports = {
     var tempView;
     return function(gameState, frameNumber, self){
       var plyr = gameState.getElement(playerId);
+      tempView && gameState.draw(tempView);
+      HighScore(gameState, appState.game.context, plyr && plyr.id);
       if(plyr == undefined){ 
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath){
           self.end();
           socket && socket.close(); //Disconnect, if there's a socket whence we can disconnect.
           finished();
+          tempView.clear();
         }
       }else{  //Player lives!
         var bv = BoundingView(plyr, appState.game.canvas);
@@ -63,8 +66,6 @@ module.exports = {
         plyr.setMove(movr);
         tempView = new View(bv, appState.game.canvas);
       }
-      gameState.draw(tempView);
-      HighScore(gameState, appState.game.context, plyr && plyr.id);
     };
   },
 
@@ -78,19 +79,19 @@ module.exports = {
       }
 
       return function(gameState, frameNumber, self){
+        tempView && gameState.draw(tempView);
+        HighScore(gameState, appState.game.context);
         if(done){
           document.onkeydown = null;
           self.end();
-          socket && socket.disconnect(); //Disconnect, if there's a socket whence we can disconnect.
+          socket && socket.close(); //Disconnect, if there's a socket whence we can disconnect.
           finished();
+          tempView.clear();
         }
         tempView = new View(
           new BoundingView({places: [new Vector(0,0), new Vector(Settings.gridSize, Settings.gridSize)]},
             appState.game.canvas),
         appState.game.canvas);
-
-        gameState.draw(tempView);
-        HighScore(gameState, appState.game.context);
       };
     }
 

@@ -37,7 +37,6 @@ var connectionHandler = {
 			});
 		}catch(err){
 			console.log(err)
-
 		}
 
 	},
@@ -50,7 +49,6 @@ var connectionHandler = {
 			
 			var listenId = Utilities.makeUniqueId()
 			runningInstance.addListener(listenId, function(gameState, frameNumber){
-				console.log("!")
 				if (frameNumber % Settings.sendBoardInterval == 0){
 					socket.send(JSON.stringify({tag: 'sendBoard', contents: runningInstance.gameState}))
 				}
