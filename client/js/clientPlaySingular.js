@@ -14,6 +14,6 @@ var playGame = function(gameState, appState, playerId, finished){
 
 module.exports = function(appState, finishedCallback){
 	var gameState = require('../../common/js/initialgamecreator.js')();
-	var playerId = Utilities.addPlayer('human', gameState);
+	var playerId = Utilities.addPlayer({isHuman: true, name: appState.menu.nameText.value}, gameState);
 	playGame(gameState, appState, playerId, finishedCallback)
 }

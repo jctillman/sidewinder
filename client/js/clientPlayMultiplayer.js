@@ -7,7 +7,7 @@ var GameRunner = require('../../common/js/gameRunner.js');
 var Utilities = require('../../common/js/utilities.js');
 var clientUtilities = require('../../client/js/clientUtilities.js');
 
-var playGame = function(gameState, appState, playerId, finished, socket){
+var playGame = function(gameState, appState, playerId, finished, socket, name){
 	var runningInstance = new GameRunner(gameState, [elementAIManager]);
 	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished, socket));
 	runningInstance.addListener('moveEmitter', function(gameState, frameNumber){
@@ -15,7 +15,7 @@ var playGame = function(gameState, appState, playerId, finished, socket){
 		if (player){
 			var movr = new Move({aim: player.aim});
 			if (frameNumber % Settings.sendMoveInterval == 0 && movr){
-				socket.send(JSON.stringify({'tag':'playerMove', 'contents': {move: movr, playerId: playerId} }))
+				socket.send(JSON.stringify({'tag':'playerMove', 'contents': {move: movr, playerId: playerId, name: name} }))
 			}
 		}
 	});
@@ -34,6 +34,6 @@ module.exports = function(appState, finishedCallback){
 		var data = JSON.parse(data.data);
 		var gameState = ElementManager.copy(data.contents.elementManager);
 		var playerId = data.contents.playerId;
-		playGame(gameState, appState, playerId, finishedCallback, socket)
+		playGame(gameState, appState, playerId, finishedCallback, socket, appState.menu.nameText.value)
 	};
 }

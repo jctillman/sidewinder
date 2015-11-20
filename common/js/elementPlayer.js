@@ -124,9 +124,6 @@ var ElementPlayer = Element({
 				}
 			}
 		}
-	},
-	setMove: function(move){
-		this.aim = Vector.copy(move.aim);
 	}
 });
 

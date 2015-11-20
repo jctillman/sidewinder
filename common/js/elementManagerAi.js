@@ -21,7 +21,7 @@ var elementManagerAi = function(elementManager){
 		}
 	}
 	if (AIs.length < Settings.aiMinimum){
-		Utilities.addPlayer('computer', elementManager);
+		Utilities.addPlayer({isHuman: false}, elementManager);
 	}
 }
 

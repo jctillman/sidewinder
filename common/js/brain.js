@@ -34,7 +34,7 @@ module.exports = {
 			}
 		}
 		if(spot){
-			AI.setMove(new Move({aim: spot}));
+			AI.update(new Move({aim: spot}));
 		}else{
 			var currentlyBad = pathColidesClosely(AI, Players, AI.aim)
 			if(currentlyBad){
@@ -56,7 +56,7 @@ module.exports = {
 					}
 					if (!collides){
 						var n = Vector.copy(rand)
-						AI.setMove(new Move({aim: n}));
+						AI.update(new Move({aim: n}));
 						break;
 					}
 				}

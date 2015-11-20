@@ -100,6 +100,14 @@ var Element = function(options){
 			var rtrn = options[fn].apply(this, args);
 			return rtrn;
 		}
+
+		ret.prototype['update'] = function(obj){
+			var items = Object.keys(obj);
+			for (var x = 0; x < items.length; x++){
+				this[items[x]] = obj[items[x]];
+			}
+		}
+
 	});
 
 	//Add the functions which belong on the object constructor themselves.
@@ -127,7 +135,6 @@ var Element = function(options){
 			var rtrn = options[fn].apply(this, args);
 			return rtrn;
 		}
-
 	});
 
 	//Add the functions that are not required, with stuff.

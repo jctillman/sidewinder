@@ -44,6 +44,7 @@ module.exports = {
   clientHandling: function(appState, playerId, finished, socket){
     var stepsAfterDeath = 0 
     var tempView;
+    
     return function(gameState, frameNumber, self){
       var plyr = gameState.getElement(playerId);
       tempView && gameState.draw(tempView);
@@ -63,7 +64,7 @@ module.exports = {
           boundingView: bv,
           canvas: appState.game.canvas
         });
-        plyr.setMove(movr);
+        plyr.update(movr);
         tempView = new View(bv, appState.game.canvas);
       }
     };

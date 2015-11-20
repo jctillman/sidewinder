@@ -4,14 +4,7 @@ var Move = require('../../common/js/move.js');
 
 module.exports = {
 
-	addPlayer: function(playerKind, elementManager){
-
-		var isHuman
-		if(playerKind == 'human'){
-			isHuman = true;
-		}else{
-			isHuman = false;
-		}
+	addPlayer: function(options, elementManager){
 
 		var side = Math.floor( Math.random() * 4 );
 		var randSpot = Math.random()*Settings.gridSize
@@ -19,33 +12,37 @@ module.exports = {
 		var id;
 
 		if(side == 0){
+			options.direction = 270
 			id = elementManager.addElement(
 				'player',
 				new Vector(distBack, randSpot),
-				{isHuman: isHuman, direction: 270}
+				options
 			);
 		}else if(side == 1){
+			options.direction = 90
 			id = elementManager.addElement(
 				'player',
 				new Vector(-distBack+Settings.gridSize, randSpot),
-				{isHuman: isHuman, direction: 90}
+				options
 			);
 		}else if(side == 2){
+			options.direction = 180
 			id = elementManager.addElement(
 				'player',
 				new Vector(randSpot, distBack),
-				{isHuman: isHuman, direction: 180}
+				options
 			);
 		}else if(side == 3){
+			options.direction = 0
 			id = elementManager.addElement(
 				'player',
 				new Vector(randSpot, -distBack+Settings.gridSize),
-				{isHuman: isHuman, direction: 0}
+				options
 			);
 		}
 
-		if (!isHuman){
-			elementManager.getElement(id).setMove(
+		if (!options.isHuman){
+			elementManager.getElement(id).update(
 				new Move(
 					{
 						aim: new Vector(Math.random()*Settings.gridSize, Math.random()*Settings.gridSize)

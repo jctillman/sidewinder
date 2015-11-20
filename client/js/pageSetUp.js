@@ -15,18 +15,20 @@ module.exports = function(options){
 	var singularButton = document.getElementById('singular');
 	var multiplayerButton = document.getElementById('multiplayer');
 	var watchButton = document.getElementById('watch');
+	var nameText = document.getElementById('name');
 
 	var state = {
 		game: {
 			canvas: cnv,
 			context: ctx,
-			mousePosition: mousePos
+			mousePosition: mousePos,
 		}, 
 		menu: {
 			all: menu, 
 			singularButton: singularButton,
 			multiplayerButton: multiplayerButton,
-			watchButton: watchButton
+			watchButton: watchButton,
+			nameText: nameText
 		}
 	}; 
 

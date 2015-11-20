@@ -48,7 +48,7 @@ var GameRunner = require('../../common/js/gameRunner.js');
 var Utilities = require('../../common/js/utilities.js');
 var clientUtilities = require('../../client/js/clientUtilities.js');
 
-var playGame = function playGame(gameState, appState, playerId, finished, socket) {
+var playGame = function playGame(gameState, appState, playerId, finished, socket, name) {
 	var runningInstance = new GameRunner(gameState, [elementAIManager]);
 	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished, socket));
 	runningInstance.addListener('moveEmitter', function (gameState, frameNumber) {
@@ -56,7 +56,7 @@ var playGame = function playGame(gameState, appState, playerId, finished, socket
 		if (player) {
 			var movr = new Move({ aim: player.aim });
 			if (frameNumber % Settings.sendMoveInterval == 0 && movr) {
-				socket.send(JSON.stringify({ 'tag': 'playerMove', 'contents': { move: movr, playerId: playerId } }));
+				socket.send(JSON.stringify({ 'tag': 'playerMove', 'contents': { move: movr, playerId: playerId, name: name } }));
 			}
 		}
 	});
@@ -76,7 +76,7 @@ module.exports = function (appState, finishedCallback) {
 		var data = JSON.parse(data.data);
 		var gameState = ElementManager.copy(data.contents.elementManager);
 		var playerId = data.contents.playerId;
-		playGame(gameState, appState, playerId, finishedCallback, socket);
+		playGame(gameState, appState, playerId, finishedCallback, socket, appState.menu.nameText.value);
 	};
 };
 
@@ -99,7 +99,7 @@ var playGame = function playGame(gameState, appState, playerId, finished) {
 
 module.exports = function (appState, finishedCallback) {
 	var gameState = require('../../common/js/initialgamecreator.js')();
-	var playerId = Utilities.addPlayer('human', gameState);
+	var playerId = Utilities.addPlayer({ isHuman: true, name: appState.menu.nameText.value }, gameState);
 	playGame(gameState, appState, playerId, finishedCallback);
 };
 
@@ -151,6 +151,7 @@ module.exports = {
   clientHandling: function clientHandling(appState, playerId, finished, socket) {
     var stepsAfterDeath = 0;
     var tempView;
+
     return function (gameState, frameNumber, self) {
       var plyr = gameState.getElement(playerId);
       tempView && gameState.draw(tempView);
@@ -171,7 +172,7 @@ module.exports = {
           boundingView: bv,
           canvas: appState.game.canvas
         });
-        plyr.setMove(movr);
+        plyr.update(movr);
         tempView = new View(bv, appState.game.canvas);
       }
     };
@@ -285,6 +286,7 @@ module.exports = {
   clientHandling: function clientHandling(appState, playerId, finished, socket) {
     var stepsAfterDeath = 0;
     var tempView;
+
     return function (gameState, frameNumber, self) {
       var plyr = gameState.getElement(playerId);
       tempView && gameState.draw(tempView);
@@ -305,7 +307,7 @@ module.exports = {
           boundingView: bv,
           canvas: appState.game.canvas
         });
-        plyr.setMove(movr);
+        plyr.update(movr);
         tempView = new View(bv, appState.game.canvas);
       }
     };
@@ -412,6 +414,7 @@ module.exports = function (options) {
 	var singularButton = document.getElementById('singular');
 	var multiplayerButton = document.getElementById('multiplayer');
 	var watchButton = document.getElementById('watch');
+	var nameText = document.getElementById('name');
 
 	var state = {
 		game: {
@@ -423,7 +426,8 @@ module.exports = function (options) {
 			all: menu,
 			singularButton: singularButton,
 			multiplayerButton: multiplayerButton,
-			watchButton: watchButton
+			watchButton: watchButton,
+			nameText: nameText
 		}
 	};
 
@@ -687,7 +691,7 @@ module.exports = {
 			}
 		}
 		if (spot) {
-			AI.setMove(new Move({ aim: spot }));
+			AI.update(new Move({ aim: spot }));
 		} else {
 			var currentlyBad = pathColidesClosely(AI, Players, AI.aim);
 			if (currentlyBad) {
@@ -709,7 +713,7 @@ module.exports = {
 					}
 					if (!collides) {
 						var n = Vector.copy(rand);
-						AI.setMove(new Move({ aim: n }));
+						AI.update(new Move({ aim: n }));
 						break;
 					}
 				}
@@ -821,6 +825,13 @@ var Element = function Element(options) {
 			}
 			var rtrn = options[fn].apply(this, args);
 			return rtrn;
+		};
+
+		ret.prototype['update'] = function (obj) {
+			var items = Object.keys(obj);
+			for (var x = 0; x < items.length; x++) {
+				this[items[x]] = obj[items[x]];
+			}
 		};
 	});
 
@@ -1092,7 +1103,7 @@ var elementManagerAi = function elementManagerAi(elementManager) {
 		}
 	}
 	if (AIs.length < Settings.aiMinimum) {
-		Utilities.addPlayer('computer', elementManager);
+		Utilities.addPlayer({ isHuman: false }, elementManager);
 	}
 };
 
@@ -1250,9 +1261,6 @@ var ElementPlayer = Element({
 				}
 			}
 		}
-	},
-	setMove: function setMove(move) {
-		this.aim = Vector.copy(move.aim);
 	}
 });
 
@@ -1300,10 +1308,10 @@ gameRunner.prototype.killListener = function (name) {
 	});
 };
 
-gameRunner.prototype.setPlayerMove = function (playerId, playerMove) {
-	if (playerId && playerMove) {
-		var plyr = this.gameState.getElement(playerId);
-		plyr && plyr.setMove(playerMove);
+gameRunner.prototype.updateElement = function (elementId, updateWith) {
+	if (elementId && updateWith) {
+		var ele = this.gameState.getElement(elementId);
+		ele && ele.update(updateWith);
 	}
 };
 
@@ -1451,14 +1459,7 @@ var Move = require('../../common/js/move.js');
 
 module.exports = {
 
-	addPlayer: function addPlayer(playerKind, elementManager) {
-
-		var isHuman;
-		if (playerKind == 'human') {
-			isHuman = true;
-		} else {
-			isHuman = false;
-		}
+	addPlayer: function addPlayer(options, elementManager) {
 
 		var side = Math.floor(Math.random() * 4);
 		var randSpot = Math.random() * Settings.gridSize;
@@ -1466,17 +1467,21 @@ module.exports = {
 		var id;
 
 		if (side == 0) {
-			id = elementManager.addElement('player', new Vector(distBack, randSpot), { isHuman: isHuman, direction: 270 });
+			options.direction = 270;
+			id = elementManager.addElement('player', new Vector(distBack, randSpot), options);
 		} else if (side == 1) {
-			id = elementManager.addElement('player', new Vector(-distBack + Settings.gridSize, randSpot), { isHuman: isHuman, direction: 90 });
+			options.direction = 90;
+			id = elementManager.addElement('player', new Vector(-distBack + Settings.gridSize, randSpot), options);
 		} else if (side == 2) {
-			id = elementManager.addElement('player', new Vector(randSpot, distBack), { isHuman: isHuman, direction: 180 });
+			options.direction = 180;
+			id = elementManager.addElement('player', new Vector(randSpot, distBack), options);
 		} else if (side == 3) {
-			id = elementManager.addElement('player', new Vector(randSpot, -distBack + Settings.gridSize), { isHuman: isHuman, direction: 0 });
+			options.direction = 0;
+			id = elementManager.addElement('player', new Vector(randSpot, -distBack + Settings.gridSize), options);
 		}
 
-		if (!isHuman) {
-			elementManager.getElement(id).setMove(new Move({
+		if (!options.isHuman) {
+			elementManager.getElement(id).update(new Move({
 				aim: new Vector(Math.random() * Settings.gridSize, Math.random() * Settings.gridSize)
 			}));
 		}

@@ -1,10 +1,11 @@
 var Utilities = require('../../common/js/utilities.js');
 var Settings = require('../../common/js/settings.js');
+var Vector = require('../../common/js/vector.js');
 
 var connectionHandler = {
-	multiplayerConnection: function(rh, socket){
+	multiplayerConnection: function(rh, socket, name){
 		var runningInstance = rh.getRoomWithSpace(); 
-		var playerId = Utilities.addPlayer('human', runningInstance.gameState);
+		var playerId = Utilities.addPlayer({isHuman: true, name: name}, runningInstance.gameState);
 		var newGameInformation = {
 			elementManager: runningInstance.gameState,
 			playerId: playerId
@@ -14,9 +15,11 @@ var connectionHandler = {
 		socket.on('message', function(data){
 			var data = JSON.parse(data)
 			if (data.tag === 'playerMove'){
-				var move = data.contents.move;
+				var move = {aim: Vector.copy(data.contents.move.aim)};
+				var name = {name: data.contents.name};
 				var playerId = data.contents.playerId;
-				runningInstance.setPlayerMove(playerId, move)
+				runningInstance.updateElement(playerId, move)
+				runningInstance.updateElement(playerId, name)
 			}
 		});
 

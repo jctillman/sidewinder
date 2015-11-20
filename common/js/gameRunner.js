@@ -35,10 +35,10 @@ gameRunner.prototype.killListener = function(name){
 	this.listeners = this.listeners.filter(function(el){ return el.name !== name });
 }
 
-gameRunner.prototype.setPlayerMove = function(playerId, playerMove){
-	if(playerId && playerMove){
-		var plyr = this.gameState.getElement(playerId)
-		plyr && plyr.setMove(playerMove);
+gameRunner.prototype.updateElement = function(elementId, updateWith){
+	if(elementId && updateWith){
+		var ele = this.gameState.getElement(elementId);
+		ele && ele.update(updateWith);
 	}
 }
 
