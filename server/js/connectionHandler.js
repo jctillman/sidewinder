@@ -22,14 +22,23 @@ var connectionHandler = {
 
 		runningInstance.addListener(playerId, function(gameState, frameNumber){
 			if (frameNumber % Settings.sendBoardInterval == 0){
-				socket.send(JSON.stringify({tag: 'sendBoard', contents: runningInstance.gameState}))
+				try{
+					socket.send(JSON.stringify({tag: 'sendBoard', contents: runningInstance.gameState}))
+				}catch(err){
+					console.log(err)
+				}
 			}
 		});
 
-		socket.on('close', function(socket){
-			runningInstance.killListener(playerId);
-			console.log("A disconnection!");
-		});
+		try{
+			socket.on('close', function(socket){
+				runningInstance.killListener(playerId);
+				console.log("A disconnection!");
+			});
+		}catch(err){
+			console.log(err)
+
+		}
 
 	},
 	watchConnection: function(rh, socket){
