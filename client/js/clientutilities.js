@@ -4,6 +4,7 @@ var Move = require('../../common/js/move.js');
 var View = require('../../client/js/view.js');
 var HighScore = require('../../client/js/highscore.js');
 var Settings = require('../../common/js/settings.js');
+var BoundingBox = require('../../common/js/boundingbox.js')
 
 module.exports = {
 
@@ -89,10 +90,8 @@ module.exports = {
           finished();
           tempView.clear();
         }
-        tempView = new View(
-          new BoundingView({places: [new Vector(0,0), new Vector(Settings.gridSize, Settings.gridSize)]},
-            appState.game.canvas),
-        appState.game.canvas);
+        var bb = new BoundingView({places:[new Vector(100,100), new Vector(Settings.gridSize-100, Settings.gridSize-100)]}, appState.game.canvas)
+        tempView = new View(bb, appState.game.canvas);
       };
     }
 

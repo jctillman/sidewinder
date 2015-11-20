@@ -112,6 +112,7 @@ var Move = require('../../common/js/move.js');
 var View = require('../../client/js/view.js');
 var HighScore = require('../../client/js/highscore.js');
 var Settings = require('../../common/js/settings.js');
+var BoundingBox = require('../../common/js/boundingbox.js');
 
 module.exports = {
 
@@ -197,13 +198,14 @@ module.exports = {
         finished();
         tempView.clear();
       }
-      tempView = new View(new BoundingView({ places: [new Vector(0, 0), new Vector(Settings.gridSize, Settings.gridSize)] }, appState.game.canvas), appState.game.canvas);
+      var bb = new BoundingView({ places: [new Vector(100, 100), new Vector(Settings.gridSize - 100, Settings.gridSize - 100)] }, appState.game.canvas);
+      tempView = new View(bb, appState.game.canvas);
     };
   }
 
 };
 
-},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],6:[function(require,module,exports){
+},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/boundingbox.js":12,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],6:[function(require,module,exports){
 'use strict';
 
 var ElementManager = require('../../common/js/elementManager.js');
@@ -247,6 +249,7 @@ var Move = require('../../common/js/move.js');
 var View = require('../../client/js/view.js');
 var HighScore = require('../../client/js/highscore.js');
 var Settings = require('../../common/js/settings.js');
+var BoundingBox = require('../../common/js/boundingbox.js');
 
 module.exports = {
 
@@ -332,13 +335,14 @@ module.exports = {
         finished();
         tempView.clear();
       }
-      tempView = new View(new BoundingView({ places: [new Vector(0, 0), new Vector(Settings.gridSize, Settings.gridSize)] }, appState.game.canvas), appState.game.canvas);
+      var bb = new BoundingView({ places: [new Vector(100, 100), new Vector(Settings.gridSize - 100, Settings.gridSize - 100)] }, appState.game.canvas);
+      tempView = new View(bb, appState.game.canvas);
     };
   }
 
 };
 
-},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],8:[function(require,module,exports){
+},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/boundingbox.js":12,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],8:[function(require,module,exports){
 'use strict';
 
 var HighScore = function HighScore(elementManager, ctx, playerId) {
