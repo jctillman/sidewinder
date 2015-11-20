@@ -10,16 +10,27 @@ var clientUtilities = require('../../client/js/clientUtilities.js');
 var playGame = function(gameState, appState, finished, socket){
 	var runningInstance = new GameRunner(gameState, [elementAIManager]);
 	runningInstance.addListener('clientHandler', clientUtilities.watchHandling(appState, finished, socket));
-	socket.on('sendBoard', function(data){
-		runningInstance.update(data, Settings.latencyAdjustment);
-	});
+	socket.onmessage = function(data){
+		var data = JSON.parse(data.data);
+		runningInstance.update(data.contents, Settings.latencyAdjustment);
+	};
 }
 
 module.exports = function(appState, finishedCallback){
-	var socket = io.connect(Settings.clientSocketConnection, {multiplex: false});
-	socket.on('initialWatchState', function(data){
-		var gameState = ElementManager.copy(data.elementManager);
+
+	var host = location.origin.replace(/^http/, 'ws') 
+	var socket = new WebSocket(host);
+	socket.onopen = function(){ socket.send("watch") };
+	socket.onmessage = function(data){
+		var data = JSON.parse(data.data);
+		var gameState = ElementManager.copy(data.contents.elementManager);
 		playGame(gameState, appState, finishedCallback, socket)
-	});
-	socket.emit('watchGame');
+	};
+
+	// var socket = io.connect(Settings.clientSocketConnection, {multiplex: false});
+	// socket.on('initialWatchState', function(data){
+	// 	var gameState = ElementManager.copy(data.elementManager);
+	// 	playGame(gameState, appState, finishedCallback, socket)
+	// });
+	// socket.emit('watchGame');
 }

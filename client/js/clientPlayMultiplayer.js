@@ -15,32 +15,25 @@ var playGame = function(gameState, appState, playerId, finished, socket){
 		if (player){
 			var movr = new Move({aim: player.aim});
 			if (frameNumber % Settings.sendMoveInterval == 0 && movr){
-				socket.emit('playerMove', {move: movr, playerId: playerId})
+				socket.send(JSON.stringify({'tag':'playerMove', 'contents': {move: movr, playerId: playerId} }))
 			}
 		}
 	});
-
-	socket.on('sendBoard', function(data){
-		runningInstance.update(data, Settings.latencyAdjustment);
-	})
+	socket.onmessage = function(data){
+		var data = JSON.parse(data.data);
+		runningInstance.update(data.contents, Settings.latencyAdjustment);
+	};
 
 }
 
 module.exports = function(appState, finishedCallback){
 	var host = location.origin.replace(/^http/, 'ws') 
 	var socket = new WebSocket(host);
-	
-	socket.onopen = function(){
-		// onmessage(function(data){
-		// 	var gameState = ElementManager.copy(data.elementManager);
-		// 	var playerId = data.playerId;
-		// 	playGame(gameState, appState, playerId, finishedCallback, socket)
-		// });
-		socket.send("dddd")
-		console.log("!!!!!");
-	};
-
+	socket.onopen = function(){ socket.send("multiplayer") };
 	socket.onmessage = function(data){
-		console.log('data', data)
+		var data = JSON.parse(data.data);
+		var gameState = ElementManager.copy(data.contents.elementManager);
+		var playerId = data.contents.playerId;
+		playGame(gameState, appState, playerId, finishedCallback, socket)
 	};
 }

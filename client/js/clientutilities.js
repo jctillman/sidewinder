@@ -50,7 +50,7 @@ module.exports = {
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath){
           self.end();
-          socket && socket.disconnect(); //Disconnect, if there's a socket whence we can disconnect.
+          socket && socket.close(); //Disconnect, if there's a socket whence we can disconnect.
           finished();
         }
       }else{  //Player lives!

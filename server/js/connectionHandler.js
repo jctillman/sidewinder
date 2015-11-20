@@ -9,38 +9,45 @@ var connectionHandler = {
 			elementManager: runningInstance.gameState,
 			playerId: playerId
 		}
-		socket.emit('initialGameState', newGameInformation)
-		socket.on('playerMove', function(data){
-			var move = data.move;
-			var playerId = data.playerId;
-			runningInstance.setPlayerMove(data.playerId, data.move)
-		});
-		runningInstance.addListener(playerId, function(gameState, frameNumber){
-			if (frameNumber % Settings.sendBoardInterval == 0){
-				socket.emit('sendBoard', runningInstance.gameState)
+		socket.send(JSON.stringify({'tag': 'initialGameState', 'contents': newGameInformation}));
+
+		socket.on('message', function(data){
+			var data = JSON.parse(data)
+			if (data.tag === 'playerMove'){
+				var move = data.contents.move;
+				var playerId = data.contents.playerId;
+				runningInstance.setPlayerMove(playerId, move)
 			}
 		});
 
-		socket.on('disconnect', function(socket){
+		runningInstance.addListener(playerId, function(gameState, frameNumber){
+			if (frameNumber % Settings.sendBoardInterval == 0){
+				socket.send(JSON.stringify({tag: 'sendBoard', contents: runningInstance.gameState}))
+			}
+		});
+
+		socket.on('close', function(socket){
 			runningInstance.killListener(playerId);
 			console.log("A disconnection!");
 		});
+
 	},
 	watchConnection: function(rh, socket){
-			var runningInstance = rh.getRoomWithSpace(); 
+			var runningInstance = rh.getRoomWithPlayers(); 
 			var newGameInformation = {
 				elementManager: runningInstance.gameState,
 			};
+			socket.send(JSON.stringify({'tag': 'initialGameState', 'contents': newGameInformation}));
 			
-			socket.emit('initialWatchState', newGameInformation)
 			var listenId = Utilities.makeUniqueId()
 			runningInstance.addListener(listenId, function(gameState, frameNumber){
+				console.log("!")
 				if (frameNumber % Settings.sendBoardInterval == 0){
-					socket.emit('sendBoard', runningInstance.gameState)
+					socket.send(JSON.stringify({tag: 'sendBoard', contents: runningInstance.gameState}))
 				}
 			});
 
-			socket.on('disconnect', function(socket){
+			socket.on('close', function(socket){
 				runningInstance.killListener(listenId);
 				console.log("A disconnection!");
 			});
