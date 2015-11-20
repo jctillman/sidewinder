@@ -24,6 +24,7 @@ var ElementPlayer = Element({
 		this.kink = 0; 
 		this.dying = false;
 		this.dead = undefined;
+		this.name = options.name || "Unnamed Snake"
 
 		//Optional--display elements.	
 		var colorLength = 1 + ( Math.random() * Settings.maxColorLength );

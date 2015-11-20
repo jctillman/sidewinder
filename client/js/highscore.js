@@ -18,8 +18,8 @@ var HighScore = function(elementManager, ctx, playerId){
 	for(var x = 0; x < done.length; x++){
 		var plyr = done[x]
 		var length = done[x].places.length;
-		var width = length / plyr.colors.length;
-		var fromTop = 50 + x * 10;
+		var width = 17 // length / plyr.colors.length;
+		var fromTop = 50 + x * 20;
 		if (playerId == plyr.id){
 			var pth = new Path2D();
 			pth.moveTo(length+2, fromTop);
@@ -27,6 +27,15 @@ var HighScore = function(elementManager, ctx, playerId){
 			ctx.lineWidth = 1;
 			ctx.strokeStyle = '#444';
 			ctx.stroke(pth);
+
+			ctx.font = "16px Arial";
+			ctx.fillStyle = "red";
+			ctx.fillText(plyr.name,100,fromTop+5);
+
+		}else{
+			ctx.font = "16px Arial";
+			ctx.fillStyle = "black";
+			ctx.fillText(plyr.name,100,fromTop+5);
 		}
 
 	 	for(var y = 0; y < plyr.colors.length; y++){
@@ -39,8 +48,6 @@ var HighScore = function(elementManager, ctx, playerId){
 			ctx.stroke(pth);
 		}
 	}
-
-
 }
 
 module.exports = HighScore;
