@@ -1305,7 +1305,7 @@ gameRunner.prototype.update = function (gameState) {
 			if (baseFrame > newFrame) {
 				this.gameState.frameNumber--;
 				for (var x = 0; x < baseFrame - newFrame - 1; x++) {
-					console.log(newFrame, baseFrame, lastUpdate);
+					console.log(baseFrame - newFrame - 1);
 					this.gameState = this.gameState.step();
 				}
 			}
