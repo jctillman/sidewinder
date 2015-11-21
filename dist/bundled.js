@@ -1295,32 +1295,23 @@ gameRunner.prototype.update = function (gameState) {
 
 	var newFrame = gameState.frameNumber;
 	var baseFrame = this.gameState.frameNumber;
+	var lastUpdate = this.lastUpdateNum;
 
-	if (this.lastUpdateNum > newFrame) {
+	if (lastUpdate > newFrame) {
 		//console.log("Old Frame!")
 	} else {
 			//console.log(newFrame, baseFrame)
 			this.gameState = ElementManager.copy(gameState);
+			if (baseFrame > newFrame) {
 
-			if (this.gameState.frameNumber > newFrame) {
 				this.gameState.frameNumber--;
-				console.log("!");
 				while (this.gameState.frameNumber > newFrame) {
+					console.log(newFrame, baseFrame, lastUpdate);
 					this.gameState = this.gameState.step();
 				}
 			}
 			this.lastUpdateNum = newFrame;
 		}
-
-	//var m = 0;
-	//while(this.gameState.frameNumber < oldGameStateFrameNumber ){
-	//	m++;
-	//	this.gameState = this.gameState.step();
-	//}
-
-	//this.gameState.frameNumber = this.oldGameStateFrameNumber - 1;
-
-	//console.log(m);
 };
 
 gameRunner.prototype.addListener = function (name, callback) {
