@@ -1303,9 +1303,8 @@ gameRunner.prototype.update = function (gameState) {
 			//console.log(newFrame, baseFrame)
 			this.gameState = ElementManager.copy(gameState);
 			if (baseFrame > newFrame) {
-
 				this.gameState.frameNumber--;
-				while (this.gameState.frameNumber > newFrame) {
+				for (var x = 0; x < baseFrame - newFrame - 1; x++) {
 					console.log(newFrame, baseFrame, lastUpdate);
 					this.gameState = this.gameState.step();
 				}
