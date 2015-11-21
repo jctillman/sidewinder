@@ -45,7 +45,7 @@ var Move = require('../../common/js/move.js');
 var elementFoodManager = require('../../common/js/elementManagerFood.js');
 var elementAIManager = require('../../common/js/elementManagerAi.js');
 var GameRunner = require('../../common/js/gameRunner.js');
-var Utilities = require('../../common/js/utilities.js');
+//var Utilities = require('../../common/js/utilities.js');
 var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function playGame(gameState, appState, playerId, finished, socket, name) {
@@ -80,7 +80,7 @@ module.exports = function (appState, finishedCallback) {
 	};
 };
 
-},{"../../client/js/clientUtilities.js":5,"../../common/js/ElementManager.js":11,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":21,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26}],4:[function(require,module,exports){
+},{"../../client/js/clientUtilities.js":5,"../../common/js/ElementManager.js":11,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":21,"../../common/js/move.js":24,"../../common/js/settings.js":25}],4:[function(require,module,exports){
 'use strict';
 
 var ElementManager = require('../../common/js/ElementManager.js');
@@ -114,7 +114,7 @@ var HighScore = require('../../client/js/highscore.js');
 var Settings = require('../../common/js/settings.js');
 var BoundingBox = require('../../common/js/boundingbox.js');
 
-module.exports = {
+var clientUtilities = {
 
   throttledResize: function throttledResize(msbetween, cnv) {
     var resizer = function resizer() {
@@ -160,10 +160,7 @@ module.exports = {
       if (plyr == undefined) {
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath) {
-          self.end();
-          socket && socket.close(); //Disconnect, if there's a socket whence we can disconnect.
-          finished();
-          tempView.clear();
+          clientUtilities.shutdown(socket, self, finished, tempView);
         }
       } else {
         //Player lives!
@@ -180,10 +177,10 @@ module.exports = {
   },
 
   watchHandling: function watchHandling(appState, finished, socket) {
+
     var stepsAfterDeath = 0;
     var tempView;
     var done = false;
-
     document.onkeydown = function () {
       done = true;
     };
@@ -192,18 +189,24 @@ module.exports = {
       tempView && gameState.draw(tempView);
       HighScore(gameState, appState.game.context);
       if (done) {
-        document.onkeydown = null;
-        self.end();
-        socket && socket.close(); //Disconnect, if there's a socket whence we can disconnect.
-        finished();
-        tempView.clear();
+        clientUtilities.shutdown(socket, self, finished, tempView);
       }
       var bb = new BoundingView({ places: [new Vector(100, 100), new Vector(Settings.gridSize - 100, Settings.gridSize - 100)] }, appState.game.canvas);
       tempView = new View(bb, appState.game.canvas);
     };
+  },
+
+  shutdown: function shutdown(socket, self, finished, view) {
+    document.onkeydown = null;
+    self.end();
+    socket && socket.close();
+    finished();
+    view.clear();
   }
 
 };
+
+module.exports = clientUtilities;
 
 },{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/boundingbox.js":12,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],6:[function(require,module,exports){
 'use strict';
@@ -227,7 +230,6 @@ var playGame = function playGame(gameState, appState, finished, socket) {
 };
 
 module.exports = function (appState, finishedCallback) {
-
 	var host = location.origin.replace(/^http/, 'ws');
 	var socket = new WebSocket(host);
 	socket.onopen = function () {
@@ -251,7 +253,7 @@ var HighScore = require('../../client/js/highscore.js');
 var Settings = require('../../common/js/settings.js');
 var BoundingBox = require('../../common/js/boundingbox.js');
 
-module.exports = {
+var clientUtilities = {
 
   throttledResize: function throttledResize(msbetween, cnv) {
     var resizer = function resizer() {
@@ -297,10 +299,7 @@ module.exports = {
       if (plyr == undefined) {
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath) {
-          self.end();
-          socket && socket.close(); //Disconnect, if there's a socket whence we can disconnect.
-          finished();
-          tempView.clear();
+          clientUtilities.shutdown(socket, self, finished, tempView);
         }
       } else {
         //Player lives!
@@ -317,10 +316,10 @@ module.exports = {
   },
 
   watchHandling: function watchHandling(appState, finished, socket) {
+
     var stepsAfterDeath = 0;
     var tempView;
     var done = false;
-
     document.onkeydown = function () {
       done = true;
     };
@@ -329,57 +328,49 @@ module.exports = {
       tempView && gameState.draw(tempView);
       HighScore(gameState, appState.game.context);
       if (done) {
-        document.onkeydown = null;
-        self.end();
-        socket && socket.close(); //Disconnect, if there's a socket whence we can disconnect.
-        finished();
-        tempView.clear();
+        clientUtilities.shutdown(socket, self, finished, tempView);
       }
       var bb = new BoundingView({ places: [new Vector(100, 100), new Vector(Settings.gridSize - 100, Settings.gridSize - 100)] }, appState.game.canvas);
       tempView = new View(bb, appState.game.canvas);
     };
+  },
+
+  shutdown: function shutdown(socket, self, finished, view) {
+    document.onkeydown = null;
+    self.end();
+    socket && socket.close();
+    finished();
+    view.clear();
   }
 
 };
 
+module.exports = clientUtilities;
+
 },{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/boundingbox.js":12,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],8:[function(require,module,exports){
-'use strict';
+"use strict";
 
 var HighScore = function HighScore(elementManager, ctx, playerId) {
 
-	//Get top
-	var top = [];
-
-	var top = elementManager.elements.map(function (n) {
+	var done = elementManager.elements.map(function (n) {
 		return n;
 	}).filter(function (m) {
 		return m.type == 'player';
-	});
-
-	top.sort(function (a, b) {
+	}).sort(function (a, b) {
 		return b.places.length - a.places.length;
-	});
-
-	var done = top.slice(0, 10);
+	}).slice(0, 10);
 
 	for (var x = 0; x < done.length; x++) {
 		var plyr = done[x];
-		var length = done[x].places.length;
-		var width = 17; // length / plyr.colors.length;
+		var length = plyr.places.length;
+		var width = 16;
 		var fromTop = 50 + x * 20;
-		if (playerId == plyr.id) {
-			var pth = new Path2D();
-			pth.moveTo(length + 2, fromTop);
-			pth.lineTo(length + 5, fromTop);
-			ctx.lineWidth = 1;
-			ctx.strokeStyle = '#444';
-			ctx.stroke(pth);
 
-			ctx.font = "16px Arial";
+		ctx.font = "16px Arial";
+		if (playerId == plyr.id) {
 			ctx.fillStyle = "red";
 			ctx.fillText(plyr.name, 100, fromTop + 5);
 		} else {
-			ctx.font = "16px Arial";
 			ctx.fillStyle = "black";
 			ctx.fillText(plyr.name, 100, fromTop + 5);
 		}
@@ -389,7 +380,7 @@ var HighScore = function HighScore(elementManager, ctx, playerId) {
 			var pth = new Path2D();
 			pth.moveTo(y * width, fromTop);
 			pth.lineTo((y + 1) * width - 2, fromTop);
-			ctx.lineWidth = 5;
+			ctx.lineWidth = 7;
 			ctx.strokeStyle = color;
 			ctx.stroke(pth);
 		}
@@ -519,6 +510,7 @@ var members = {
 };
 
 var ElementManager = function ElementManager() {
+	this.frameNumber = 0;
 	this.elements = [];
 };
 
@@ -529,6 +521,7 @@ ElementManager.copy = function (stuff) {
 		var toAdd = members[val.type].copy(val);
 		ret.elements.push(toAdd);
 	}
+	ret.frameNumber = stuff.frameNumber;
 	return ret;
 };
 
@@ -578,6 +571,7 @@ ElementManager.prototype.step = function (mods) {
 	//Make new thing, and return it.
 	var ret = new ElementManager();
 	ret.elements = filteredElements;
+	ret.frameNumber = this.frameNumber + 1;
 	mods = mods || [];
 	for (var x = 0; x < mods.length; x++) {
 		mods[x](ret);
@@ -1007,6 +1001,7 @@ var members = {
 };
 
 var ElementManager = function ElementManager() {
+	this.frameNumber = 0;
 	this.elements = [];
 };
 
@@ -1017,6 +1012,7 @@ ElementManager.copy = function (stuff) {
 		var toAdd = members[val.type].copy(val);
 		ret.elements.push(toAdd);
 	}
+	ret.frameNumber = stuff.frameNumber;
 	return ret;
 };
 
@@ -1066,6 +1062,7 @@ ElementManager.prototype.step = function (mods) {
 	//Make new thing, and return it.
 	var ret = new ElementManager();
 	ret.elements = filteredElements;
+	ret.frameNumber = this.frameNumber + 1;
 	mods = mods || [];
 	for (var x = 0; x < mods.length; x++) {
 		mods[x](ret);
@@ -1275,7 +1272,6 @@ module.exports = ElementPlayer;
 
 var Utilities = require('../../common/js/utilities.js');
 var Settings = require('../../common/js/settings.js');
-var BoundingView = require('../../client/js/boundingview.js');
 var Move = require('../../common/js/move.js');
 var View = require('../../client/js/view.js');
 var HighScore = require('../../client/js/highscore.js');
@@ -1283,23 +1279,27 @@ var ElementManager = require('../../common/js/elementManager.js');
 
 function gameRunner(gameState, extras) {
 	var self = this;
-	var frameNumber = 0;
+	this.frameNumber = 0;
 	this.listeners = [];
 	this.gameState = gameState;
 	this.physicsLoops = setInterval(Utilities.timed(false, function () {
-		frameNumber++;
+		self.frameNumber++;
 		self.gameState = self.gameState.step(extras);
 		for (var x = 0; x < self.listeners.length; x++) {
-			self.listeners[x].func(self.gameState, frameNumber, self);
+			self.listeners[x].func(self.gameState, self.frameNumber, self);
 		}
 	}), Settings.physicsRate);
 }
 
-gameRunner.prototype.update = function (gameState, latencyAdjustment) {
+gameRunner.prototype.update = function (gameState) {
+	var oldGameStateFrameNumber = this.gameState.frameNumber;
 	this.gameState = ElementManager.copy(gameState);
-	for (var m = 0; m < latencyAdjustment; m++) {
+	var m = 0;
+	while (this.gameState.frameNumber < oldGameStateFrameNumber - 1) {
+		m++;
 		this.gameState = this.gameState.step();
 	}
+	console.log(m);
 };
 
 gameRunner.prototype.addListener = function (name, callback) {
@@ -1325,7 +1325,7 @@ gameRunner.prototype.end = function () {
 
 module.exports = gameRunner;
 
-},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/elementManager.js":17,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26}],22:[function(require,module,exports){
+},{"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/elementManager.js":17,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26}],22:[function(require,module,exports){
 'use strict';
 
 var BoundingBox = require('../../common/js/boundingbox.js');
@@ -1418,7 +1418,7 @@ module.exports = {
 
 	portNum: process.env.PORT || 3000,
 
-	gridSize: 300,
+	gridSize: 500,
 	gridSpace: 50,
 	gridColor: '#CCC',
 

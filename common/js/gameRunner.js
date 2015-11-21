@@ -1,6 +1,5 @@
 var Utilities = require('../../common/js/utilities.js');
 var Settings = require('../../common/js/settings.js');
-var BoundingView = require('../../client/js/boundingview.js');
 var Move = require('../../common/js/move.js');
 var View = require('../../client/js/view.js');
 var HighScore = require('../../client/js/highscore.js');
@@ -8,23 +7,27 @@ var ElementManager = require('../../common/js/elementManager.js');
 
 function gameRunner(gameState, extras){
 	var self = this;
-	var frameNumber = 0;
+	this.frameNumber = 0;
 	this.listeners = [];
 	this.gameState = gameState;
 	this.physicsLoops = setInterval(Utilities.timed(false, function(){
-		frameNumber++;
+		self.frameNumber++;
 		self.gameState = self.gameState.step(extras);
 		for(var x = 0; x < self.listeners.length; x++){
-			self.listeners[x].func(self.gameState, frameNumber, self);
+			self.listeners[x].func(self.gameState, self.frameNumber, self);
 		}
 	}), Settings.physicsRate);
 }
 
-gameRunner.prototype.update = function(gameState, latencyAdjustment){
+gameRunner.prototype.update = function(gameState){
+	var oldGameStateFrameNumber = this.gameState.frameNumber;
 	this.gameState = ElementManager.copy(gameState)
-	for(var m = 0; m < latencyAdjustment; m++){
+	var m = 0;
+	while(this.gameState.frameNumber < oldGameStateFrameNumber - 1){
+		m++;
 		this.gameState = this.gameState.step();
 	}
+	console.log(m);
 }
 
 gameRunner.prototype.addListener = function(name, callback){

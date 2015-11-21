@@ -17,7 +17,6 @@ var playGame = function(gameState, appState, finished, socket){
 }
 
 module.exports = function(appState, finishedCallback){
-
 	var host = location.origin.replace(/^http/, 'ws') 
 	var socket = new WebSocket(host);
 	socket.onopen = function(){ socket.send("watch") };

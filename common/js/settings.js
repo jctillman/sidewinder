@@ -8,7 +8,7 @@ module.exports = {
 
 	portNum: (process.env.PORT || 3000),
 
-	gridSize: 300,
+	gridSize: 500,
 	gridSpace: 50,
 	gridColor: '#CCC', 
 

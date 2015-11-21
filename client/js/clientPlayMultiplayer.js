@@ -4,7 +4,7 @@ var Move = require('../../common/js/move.js');
 var elementFoodManager = require('../../common/js/elementManagerFood.js');
 var elementAIManager = require('../../common/js/elementManagerAi.js');
 var GameRunner = require('../../common/js/gameRunner.js');
-var Utilities = require('../../common/js/utilities.js');
+//var Utilities = require('../../common/js/utilities.js');
 var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function(gameState, appState, playerId, finished, socket, name){

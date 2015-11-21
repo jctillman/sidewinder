@@ -6,17 +6,17 @@ var HighScore = require('../../client/js/highscore.js');
 var Settings = require('../../common/js/settings.js');
 var BoundingBox = require('../../common/js/boundingbox.js')
 
-module.exports = {
+var clientUtilities = {
 
-    throttledResize: function(msbetween, cnv){
-  	var resizer = function() {
-  		cnv.width = document.body.clientWidth; //document.width is obsolete
-  		cnv.height = document.body.clientHeight; //document.height is obsolete
-  	}
-  	resizer();
-  	window.addEventListener("resize", resizeThrottler, false);
-  	var resizeTimeout;
-  	function resizeThrottler() {
+   throttledResize: function(msbetween, cnv){
+    var resizer = function() {
+      cnv.width = document.body.clientWidth; //document.width is obsolete
+      cnv.height = document.body.clientHeight; //document.height is obsolete
+    }
+    resizer();
+    window.addEventListener("resize", resizeThrottler, false);
+    var resizeTimeout;
+    function resizeThrottler() {
       if (!resizeTimeout ) {
         resizeTimeout = setTimeout(function() { 
           resizeTimeout = null;
@@ -32,13 +32,13 @@ module.exports = {
       var rect = cnv.getBoundingClientRect();
       var newRet = new Vector(e.clientX - rect.left, e.clientY - rect.top)
       if (newRet.x != 0 && newRet.y != 0){
-      	ret = newRet;
+        ret = newRet;
       }
 
     }
     cnv.addEventListener('mousemove', getMousePosition, false);
     return function(){
-    	return ret;
+      return ret;
     }
   },
 
@@ -53,10 +53,7 @@ module.exports = {
       if(plyr == undefined){ 
         stepsAfterDeath++;
         if (stepsAfterDeath > Settings.framesToViewAfterDeath){
-          self.end();
-          socket && socket.close(); //Disconnect, if there's a socket whence we can disconnect.
-          finished();
-          tempView.clear();
+          clientUtilities.shutdown(socket, self, finished, tempView);
         }
       }else{  //Player lives!
         var bv = BoundingView(plyr, appState.game.canvas);
@@ -72,28 +69,33 @@ module.exports = {
   },
 
   watchHandling: function(appState, finished, socket){
+
       var stepsAfterDeath = 0 
       var tempView;
       var done = false;
-
-      document.onkeydown = function(){
-        done = true;
-      }
+      document.onkeydown = function(){ done = true;}
 
       return function(gameState, frameNumber, self){
         tempView && gameState.draw(tempView);
         HighScore(gameState, appState.game.context);
-        if(done){
-          document.onkeydown = null;
-          self.end();
-          socket && socket.close(); //Disconnect, if there's a socket whence we can disconnect.
-          finished();
-          tempView.clear();
+        if (done){
+          clientUtilities.shutdown(socket, self, finished, tempView);
         }
         var bb = new BoundingView({places:[new Vector(100,100), new Vector(Settings.gridSize-100, Settings.gridSize-100)]}, appState.game.canvas)
         tempView = new View(bb, appState.game.canvas);
       };
+
+    },
+
+    shutdown: function(socket, self, finished, view){
+      document.onkeydown = null;
+      self.end()
+      socket && socket.close();
+      finished()
+      view.clear()
     }
 
 
-}
+};
+
+module.exports = clientUtilities;

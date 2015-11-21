@@ -9,6 +9,7 @@ var members = {
 }
 
 var ElementManager = function(){ 
+	this.frameNumber = 0;
 	this.elements = [];
 }
 
@@ -19,6 +20,7 @@ ElementManager.copy = function(stuff){
 		var toAdd = members[val.type].copy(val);
 		ret.elements.push(toAdd);
 	}
+	ret.frameNumber = stuff.frameNumber;
 	return ret;
 
 }
@@ -68,7 +70,8 @@ ElementManager.prototype.step = function(mods){
 
 	//Make new thing, and return it.
 	var ret = new ElementManager();
-	ret.elements = filteredElements;	
+	ret.elements = filteredElements;
+	ret.frameNumber = this.frameNumber + 1;	
 	mods = mods || [];
 	for(var x = 0; x < mods.length; x++){
 		mods[x](ret);
