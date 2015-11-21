@@ -23,9 +23,12 @@ gameRunner.prototype.update = function(gameState){
 	var oldGameStateFrameNumber = this.gameState.frameNumber;
 	this.gameState = ElementManager.copy(gameState)
 	var m = 0;
-	while(this.gameState.frameNumber < oldGameStateFrameNumber - 1){
+	while(this.gameState.frameNumber < oldGameStateFrameNumber ){
 		m++;
 		this.gameState = this.gameState.step();
+	}
+	if(m > 0){
+		this.gameState.frameNumber = this.oldGameStateFrameNumber - 1;
 	}
 	console.log(m);
 }
