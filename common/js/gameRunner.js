@@ -25,10 +25,18 @@ gameRunner.prototype.update = function(gameState){
 	var baseFrame = this.gameState.frameNumber;
 
 	if(this.lastUpdateNum > newFrame){
-		console.log("Old Frame!")
+		//console.log("Old Frame!")
 	}else{
-		console.log(newFrame, baseFrame)
+		//console.log(newFrame, baseFrame)
 		this.gameState = ElementManager.copy(gameState)
+
+		if(this.gameState.frameNumber > newFrame){
+			this.gameState.frameNumber--;
+			console.log("!")
+			while(this.gameState.frameNumber > newFrame){
+				this.gameState = this.gameState.step();
+			}
+		}
 		this.lastUpdateNum = newFrame;
 	}
 
