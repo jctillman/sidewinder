@@ -34,7 +34,7 @@ gameRunner.prototype.update = function(gameState){
 			this.gameState.frameNumber--;
 			this.gameState.frameNumber--;
 			for(var x = 0; x < baseFrame - newFrame - 2; x++){
-				console.log(baseFrame - newFrame;
+				console.log(baseFrame - newFrame);
 				this.gameState = this.gameState.step();
 			}
 		}
