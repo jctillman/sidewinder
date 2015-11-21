@@ -7,30 +7,41 @@ var ElementManager = require('../../common/js/elementManager.js');
 
 function gameRunner(gameState, extras){
 	var self = this;
-	this.frameNumber = 0;
+	this.lastUpdateNum = 0;
 	this.listeners = [];
 	this.gameState = gameState;
 	this.physicsLoops = setInterval(Utilities.timed(false, function(){
-		self.frameNumber++;
+		//self.frameNumber++;
 		self.gameState = self.gameState.step(extras);
 		for(var x = 0; x < self.listeners.length; x++){
-			self.listeners[x].func(self.gameState, self.frameNumber, self);
+			self.listeners[x].func(self.gameState, self.gameState.frameNumber, self);
 		}
 	}), Settings.physicsRate);
 }
 
 gameRunner.prototype.update = function(gameState){
-	var oldGameStateFrameNumber = this.gameState.frameNumber;
-	this.gameState = ElementManager.copy(gameState)
-	var m = 0;
-	while(this.gameState.frameNumber < oldGameStateFrameNumber ){
-		m++;
-		this.gameState = this.gameState.step();
+
+	var newFrame = gameState.frameNumber;
+	var baseFrame = this.gameState.frameNumber;
+
+	if(this.lastUpdateNum > newFrame){
+		//do nothing, because we've been updated by something before
+	}else{
+		this.gameState = ElementManager.copy(gameState)
+		this.lastUpdateNum = newFrame;
 	}
-	if(m > 0){
-		this.gameState.frameNumber = this.oldGameStateFrameNumber - 1;
-	}
-	console.log(m);
+
+
+	//var m = 0;
+	//while(this.gameState.frameNumber < oldGameStateFrameNumber ){
+	//	m++;
+	//	this.gameState = this.gameState.step();
+	//}
+	
+	//this.gameState.frameNumber = this.oldGameStateFrameNumber - 1;
+	
+
+	//console.log(m);
 }
 
 gameRunner.prototype.addListener = function(name, callback){
