@@ -6,7 +6,7 @@ module.exports = {
 	sendBoardInterval: 8,
 
 	clientAheadDistance: 8, //steps
-	clientAdjustAmount: 2, //ms
+	clientAdjustAmount: 3, //ms
 
 	maxStateMemory: 30,
 

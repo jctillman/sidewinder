@@ -30,14 +30,14 @@ function gameRunner(gameState, extras, maxStateMemory){
 		(self.gameStates.length > maxStateMemory) && self.gameStates.shift();
 		var endTime = (new Date()).getTime();
 
-		if(self.over){return;}
-		var delay = endTime - startTime + Settings.physicsRate;
-		if(self.client && self.ahead > Settings.clientAheadDistance){
-			delay = delay + Settings.clientAdjustAmount;
-		}else if(self.client && self.ahead < Settings.clientAheadDistance){
-			delay = delay - Settings.clientAdjustAmount;
+		console.log(self.ahead)
+		if(!self.over){
+			var delay = endTime - startTime + Settings.physicsRate;
+			if(self.client){
+				delay = delay + Settings.clientAdjustAmount * (self.ahead - Settings.clientAheadDistance)
+			}
+			self.physicsLoops = setTimeout(Utilities.timed(false, runFunc), delay)
 		}
-		self.physicsLoops = setTimeout(Utilities.timed(false, runFunc), delay)
 	}
 
 	this.physicsLoops = setTimeout(Utilities.timed(false, runFunc), Settings.physicsRate );
@@ -45,8 +45,6 @@ function gameRunner(gameState, extras, maxStateMemory){
 }
 
 gameRunner.prototype.update = function(gameState){
-
-	console.log("!!")
 
 	//Only the client ever calls this.
 	this.client = true;
@@ -56,13 +54,7 @@ gameRunner.prototype.update = function(gameState){
 	this.ahead = currentFrameNumber - receivedFrameNumber;
 
 	var gameState = ElementManager.copy(gameState)
-
-	var start = 0;
-	for(var x = 0; x < this.gameStates.length; x++){
-		if(this.gameStates[x].frameNumber == receivedFrameNumber){
-			start = x;
-		}
-	}
+	var start = this.gameStates.reduce(function(old, cur, x){return cur.frameNumber == receivedFrameNumber ? x : old}, 0);
 
 	this.gameStates[start] = gameState
 	for(var x = start+1; x < this.gameStates.length; x++){
@@ -76,7 +68,7 @@ gameRunner.prototype.update = function(gameState){
 gameRunner.prototype.addListener = function(name, callback){
 	this.listeners.push({name: name, func: callback});
 	this.listeners.sort(function(a,b){ return (b.name < a.name) ? 1 : -1 } );
-	console.log(this.listeners.map(function(n){return n.name}));
+	//console.log(this.listeners.map(function(n){return n.name}));
 }
 
 gameRunner.prototype.killListener = function(name){
