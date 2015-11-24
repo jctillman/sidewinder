@@ -6,6 +6,11 @@ module.exports = {
 	sendBoardInterval: 4,
 	latencyAdjustment: 0,
 
+	clientAheadDistance: 8, //steps
+	clientAdjustAmount: 2, //ms
+
+	maxStateMemory: 30,
+
 	portNum: (process.env.PORT || 3000),
 
 	gridSize: 500,

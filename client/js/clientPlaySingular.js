@@ -8,7 +8,7 @@ var Utilities = require('../../common/js/utilities.js');
 var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function(gameState, appState, playerId, finished){
-	var runningInstance = new GameRunner(gameState, [elementFoodManager, elementAIManager]);
+	var runningInstance = new GameRunner(gameState, [elementFoodManager, elementAIManager], Settings.maxStateMemory);
 	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished));
 } 
 

@@ -22,7 +22,7 @@ var RoomHandler = function(maxOccupancy){
 RoomHandler.prototype.getRoomWithSpace = function(){
 	//If we have no rooms.
 	if (this.rooms.length <= 0){
-		this.rooms.push(new GameRunner( gameInitializer() , [elementFoodManager, elementAIManager]))
+		this.rooms.push(new GameRunner( gameInitializer() , [elementFoodManager, elementAIManager], Settings.maxStateMemory))
 		return this.rooms[0];
 	}
 

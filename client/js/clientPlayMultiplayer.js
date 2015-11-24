@@ -8,20 +8,22 @@ var GameRunner = require('../../common/js/gameRunner.js');
 var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function(gameState, appState, playerId, finished, socket, name){
-	var runningInstance = new GameRunner(gameState, [elementAIManager]);
+	var runningInstance = new GameRunner(gameState, [elementAIManager], Settings.maxStateMemory);
+	
 	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished, socket));
+	
 	runningInstance.addListener('moveEmitter', function(gameState, frameNumber){
 		var player = gameState.getElement(playerId);
 		if (player){
 			var movr = new Move({aim: player.aim});
 			if (frameNumber % Settings.sendMoveInterval == 0 && movr){
-				socket.send(JSON.stringify({'tag':'playerMove', 'contents': {move: movr, playerId: playerId, name: name} }))
+				socket.send(JSON.stringify({'tag':'playerMove', 'contents': {'frameNumber': frameNumber, aim: player.aim, playerId: playerId, name: name} }))
 			}
 		}
 	});
 	socket.onmessage = function(data){
 		var data = JSON.parse(data.data);
-		runningInstance.update(data.contents, Settings.latencyAdjustment);
+		runningInstance.update(data.contents);
 	};
 
 }
@@ -33,6 +35,11 @@ module.exports = function(appState, finishedCallback){
 	socket.onmessage = function(data){
 		var data = JSON.parse(data.data);
 		var gameState = ElementManager.copy(data.contents.elementManager);
+
+		for(var x = 0; x < Settings.clientAheadDistance; x++){
+			gameState = gameState.step()
+		}
+
 		var playerId = data.contents.playerId;
 		playGame(gameState, appState, playerId, finishedCallback, socket, appState.menu.nameText.value)
 	};

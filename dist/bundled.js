@@ -49,20 +49,22 @@ var GameRunner = require('../../common/js/gameRunner.js');
 var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function playGame(gameState, appState, playerId, finished, socket, name) {
-	var runningInstance = new GameRunner(gameState, [elementAIManager]);
+	var runningInstance = new GameRunner(gameState, [elementAIManager], Settings.maxStateMemory);
+
 	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished, socket));
+
 	runningInstance.addListener('moveEmitter', function (gameState, frameNumber) {
 		var player = gameState.getElement(playerId);
 		if (player) {
 			var movr = new Move({ aim: player.aim });
 			if (frameNumber % Settings.sendMoveInterval == 0 && movr) {
-				socket.send(JSON.stringify({ 'tag': 'playerMove', 'contents': { move: movr, playerId: playerId, name: name } }));
+				socket.send(JSON.stringify({ 'tag': 'playerMove', 'contents': { 'frameNumber': frameNumber, aim: player.aim, playerId: playerId, name: name } }));
 			}
 		}
 	});
 	socket.onmessage = function (data) {
 		var data = JSON.parse(data.data);
-		runningInstance.update(data.contents, Settings.latencyAdjustment);
+		runningInstance.update(data.contents);
 	};
 };
 
@@ -75,6 +77,11 @@ module.exports = function (appState, finishedCallback) {
 	socket.onmessage = function (data) {
 		var data = JSON.parse(data.data);
 		var gameState = ElementManager.copy(data.contents.elementManager);
+
+		for (var x = 0; x < Settings.clientAheadDistance; x++) {
+			gameState = gameState.step();
+		}
+
 		var playerId = data.contents.playerId;
 		playGame(gameState, appState, playerId, finishedCallback, socket, appState.menu.nameText.value);
 	};
@@ -93,7 +100,7 @@ var Utilities = require('../../common/js/utilities.js');
 var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function playGame(gameState, appState, playerId, finished) {
-	var runningInstance = new GameRunner(gameState, [elementFoodManager, elementAIManager]);
+	var runningInstance = new GameRunner(gameState, [elementFoodManager, elementAIManager], Settings.maxStateMemory);
 	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished));
 };
 
@@ -103,7 +110,7 @@ module.exports = function (appState, finishedCallback) {
 	playGame(gameState, appState, playerId, finishedCallback);
 };
 
-},{"../../client/js/clientUtilities.js":5,"../../common/js/ElementManager.js":11,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":21,"../../common/js/initialgamecreator.js":23,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26}],5:[function(require,module,exports){
+},{"../../client/js/clientUtilities.js":5,"../../common/js/ElementManager.js":11,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":21,"../../common/js/initialgamecreator.js":23,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":27}],5:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -170,7 +177,7 @@ var clientUtilities = {
           boundingView: bv,
           canvas: appState.game.canvas
         });
-        plyr.update(movr);
+        self.updateElement(playerId, movr, frameNumber);
         tempView = new View(bv, appState.game.canvas);
       }
     };
@@ -208,7 +215,7 @@ var clientUtilities = {
 
 module.exports = clientUtilities;
 
-},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/boundingbox.js":12,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],6:[function(require,module,exports){
+},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/boundingbox.js":12,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":28}],6:[function(require,module,exports){
 'use strict';
 
 var ElementManager = require('../../common/js/elementManager.js');
@@ -242,7 +249,7 @@ module.exports = function (appState, finishedCallback) {
 	};
 };
 
-},{"../../client/js/clientUtilities.js":5,"../../common/js/elementManager.js":17,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":21,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26}],7:[function(require,module,exports){
+},{"../../client/js/clientUtilities.js":5,"../../common/js/elementManager.js":17,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":21,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":27}],7:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -309,7 +316,7 @@ var clientUtilities = {
           boundingView: bv,
           canvas: appState.game.canvas
         });
-        plyr.update(movr);
+        self.updateElement(playerId, movr, frameNumber);
         tempView = new View(bv, appState.game.canvas);
       }
     };
@@ -347,7 +354,7 @@ var clientUtilities = {
 
 module.exports = clientUtilities;
 
-},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/boundingbox.js":12,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],8:[function(require,module,exports){
+},{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/boundingbox.js":12,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":28}],8:[function(require,module,exports){
 "use strict";
 
 var HighScore = function HighScore(elementManager, ctx, playerId) {
@@ -450,7 +457,7 @@ module.exports = function (options) {
 	};
 };
 
-},{"../../client/js/clientutilities.js":7,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],10:[function(require,module,exports){
+},{"../../client/js/clientutilities.js":7,"../../common/js/settings.js":25,"../../common/js/vector.js":28}],10:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -496,7 +503,7 @@ View.prototype.drawCircle = function (center, width, thickness, color) {
 
 module.exports = View;
 
-},{"../../common/js/boundingbox.js":12,"../../common/js/vector.js":27}],11:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":12,"../../common/js/vector.js":28}],11:[function(require,module,exports){
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
@@ -651,7 +658,7 @@ BoundingBox.prototype.intersects = function (otherBox) {
 
 module.exports = BoundingBox;
 
-},{"../../common/js/vector.js":27}],13:[function(require,module,exports){
+},{"../../common/js/vector.js":28}],13:[function(require,module,exports){
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
@@ -720,7 +727,7 @@ module.exports = {
 	}
 };
 
-},{"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27}],14:[function(require,module,exports){
+},{"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":27,"../../common/js/vector.js":28}],14:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -872,7 +879,7 @@ var Element = function Element(options) {
 
 module.exports = Element;
 
-},{"../../client/js/view.js":10,"../../common/js/utilities.js":26,"../../common/js/vector.js":27}],15:[function(require,module,exports){
+},{"../../client/js/view.js":10,"../../common/js/utilities.js":27,"../../common/js/vector.js":28}],15:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -931,7 +938,7 @@ var ElementFood = Element({
 
 module.exports = ElementFood;
 
-},{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27,"lodash":29}],16:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/settings.js":25,"../../common/js/utilities.js":27,"../../common/js/vector.js":28,"lodash":30}],16:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -987,7 +994,7 @@ var ElementGrid = Element({
 
 module.exports = ElementGrid;
 
-},{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27,"lodash":29}],17:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/settings.js":25,"../../common/js/utilities.js":27,"../../common/js/vector.js":28,"lodash":30}],17:[function(require,module,exports){
 'use strict';
 
 var Settings = require('../../common/js/settings.js');
@@ -1110,7 +1117,7 @@ var elementManagerAi = function elementManagerAi(elementManager) {
 
 module.exports = elementManagerAi;
 
-},{"../../common/js/brain.js":13,"../../common/js/elementFood.js":15,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27}],19:[function(require,module,exports){
+},{"../../common/js/brain.js":13,"../../common/js/elementFood.js":15,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":27,"../../common/js/vector.js":28}],19:[function(require,module,exports){
 'use strict';
 
 var Food = require('../../common/js/elementFood.js');
@@ -1137,7 +1144,7 @@ var elementFoodManager = function elementFoodManager(elementManager) {
 
 module.exports = elementFoodManager;
 
-},{"../../common/js/elementFood.js":15,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],20:[function(require,module,exports){
+},{"../../common/js/elementFood.js":15,"../../common/js/settings.js":25,"../../common/js/vector.js":28}],20:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -1267,7 +1274,7 @@ var ElementPlayer = Element({
 
 module.exports = ElementPlayer;
 
-},{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/elementFood.js":15,"../../common/js/settings.js":25,"../../common/js/utilities.js":26,"../../common/js/vector.js":27,"lodash":29}],21:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/elementFood.js":15,"../../common/js/settings.js":25,"../../common/js/utilities.js":27,"../../common/js/vector.js":28,"lodash":30}],21:[function(require,module,exports){
 'use strict';
 
 var Utilities = require('../../common/js/utilities.js');
@@ -1276,19 +1283,60 @@ var Move = require('../../common/js/move.js');
 var View = require('../../client/js/view.js');
 var HighScore = require('../../client/js/highscore.js');
 var ElementManager = require('../../common/js/elementManager.js');
+var UpdateMemory = require('../../common/js/updateMemory.js');
 
-function gameRunner(gameState, extras) {
+function gameRunner(gameState, extras, maxStateMemory) {
 	var self = this;
+	var maxStateMemory = maxStateMemory || 1;
+	this.over = false;
+	this.client = false;
+	this.updateMemory = new UpdateMemory(maxStateMemory);
+	this.ahead = 0;
 	this.lastUpdateNum = 0;
+	this.extras = extras;
 	this.listeners = [];
+	this.gameStates = [gameState];
 	this.gameState = gameState;
-	this.physicsLoops = setInterval(Utilities.timed(false, function () {
-		//self.frameNumber++;
-		self.gameState = self.gameState.step(extras);
+
+	var runFunc = function runFunc() {
+
+		var startTime = new Date().getTime();
+
+		self.updateMemory.updateGameState(self.gameStates[self.gameStates.length - 1]);
+
+		self.gameStates.push(self.gameStates[self.gameStates.length - 1].step(extras));
+		self.gameState = self.gameStates[self.gameStates.length - 1];
+
 		for (var x = 0; x < self.listeners.length; x++) {
 			self.listeners[x].func(self.gameState, self.gameState.frameNumber, self);
 		}
-	}), Settings.physicsRate);
+
+		if (self.gameStates.length > maxStateMemory) {
+			self.gameStates.shift();
+		}
+
+		var endTime = new Date().getTime();
+		//console.log("ahead", self.ahead)
+		if (self.over) {
+			return;
+		}
+
+		if (!self.client) {
+			//console.log("Am not client")
+			self.physicsLoops = setTimeout(Utilities.timed(false, runFunc), Settings.physicsRate - (endTime - startTime));
+		} else {
+			//console.log("Am client")
+			if (self.ahead > Settings.clientAheadDistance) {
+				self.physicsLoops = setTimeout(Utilities.timed(false, runFunc), Settings.physicsRate - (endTime - startTime) + Settings.clientAdjustAmount);
+			} else if (self.ahead < Settings.clientAheadDistance) {
+				self.physicsLoops = setTimeout(Utilities.timed(false, runFunc), Settings.physicsRate - (endTime - startTime) - Settings.clientAdjustAmount);
+			} else {
+				self.physicsLoops = setTimeout(Utilities.timed(false, runFunc), Settings.physicsRate - (endTime - startTime));
+			}
+		}
+	};
+
+	this.physicsLoops = setTimeout(Utilities.timed(false, runFunc), Settings.physicsRate);
 }
 
 gameRunner.prototype.update = function (gameState) {
@@ -1297,20 +1345,28 @@ gameRunner.prototype.update = function (gameState) {
 	var baseFrame = this.gameState.frameNumber;
 	var lastUpdate = this.lastUpdateNum;
 
+	var gameState = ElementManager.copy(gameState);
+
+	this.ahead = this.gameStates[this.gameStates.length - 1].frameNumber - gameState.frameNumber;
+	this.client = true;
+
 	if (lastUpdate > newFrame) {
 		//console.log("Old Frame!")
 	} else {
-			//console.log(newFrame, baseFrame)
-			this.gameState = ElementManager.copy(gameState);
-			if (baseFrame > newFrame) {
-				this.gameState.frameNumber--;
-				this.gameState.frameNumber--;
-				for (var x = 0; x < baseFrame - newFrame - 2; x++) {
-					console.log(baseFrame - newFrame);
-					this.gameState = this.gameState.step();
+
+			var start = 0;
+			for (var x = 0; x < this.gameStates.length; x++) {
+				if (this.gameStates[x].frameNumber == newFrame) {
+					start = x;
 				}
 			}
-			this.lastUpdateNum = newFrame;
+
+			this.gameStates[start] = gameState;
+			for (var x = start + 1; x < this.gameStates.length; x++) {
+				this.updateMemory.updateGameState(this.gameStates[x - 1]);
+				this.gameStates[x] = this.gameStates[x - 1].step(this.extras);
+			}
+			this.gameState = this.gameStates[this.gameStates.length - 1];
 		}
 };
 
@@ -1324,20 +1380,22 @@ gameRunner.prototype.killListener = function (name) {
 	});
 };
 
-gameRunner.prototype.updateElement = function (elementId, updateWith) {
-	if (elementId && updateWith) {
+gameRunner.prototype.updateElement = function (elementId, updateWith, frameNumber) {
+	if (elementId && updateWith && !frameNumber) {
 		var ele = this.gameState.getElement(elementId);
 		ele && ele.update(updateWith);
+	} else {
+		this.updateMemory.update(elementId, updateWith, frameNumber);
 	}
 };
 
 gameRunner.prototype.end = function () {
-	clearInterval(this.physicsLoops);
+	this.over = true;
 };
 
 module.exports = gameRunner;
 
-},{"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/elementManager.js":17,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":26}],22:[function(require,module,exports){
+},{"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/elementManager.js":17,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/updateMemory.js":26,"../../common/js/utilities.js":27}],22:[function(require,module,exports){
 'use strict';
 
 var BoundingBox = require('../../common/js/boundingbox.js');
@@ -1355,7 +1413,7 @@ for (var x = 0; x < gridSize; x = x + inc) {
 
 module.exports = grids;
 
-},{"../../common/js/boundingbox.js":12,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],23:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":12,"../../common/js/settings.js":25,"../../common/js/vector.js":28}],23:[function(require,module,exports){
 'use strict';
 
 var ElementManager = require('../../common/js/elementManager.js');
@@ -1373,7 +1431,7 @@ var maker = function maker() {
 
 module.exports = maker;
 
-},{"../../common/js/elementManager.js":17,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],24:[function(require,module,exports){
+},{"../../common/js/elementManager.js":17,"../../common/js/settings.js":25,"../../common/js/vector.js":28}],24:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -1416,7 +1474,7 @@ var Move = function Move(options) {
 
 module.exports = Move;
 
-},{"../../common/js/boundingbox.js":12,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],25:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":12,"../../common/js/settings.js":25,"../../common/js/vector.js":28}],25:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -1427,6 +1485,11 @@ module.exports = {
 	sendMoveInterval: 2,
 	sendBoardInterval: 4,
 	latencyAdjustment: 0,
+
+	clientAheadDistance: 8, //steps
+	clientAdjustAmount: 2, //ms
+
+	maxStateMemory: 30,
 
 	portNum: process.env.PORT || 3000,
 
@@ -1466,7 +1529,63 @@ module.exports = {
 };
 
 }).call(this,require('_process'))
-},{"_process":28}],26:[function(require,module,exports){
+},{"_process":29}],26:[function(require,module,exports){
+"use strict";
+
+var UpdateMemory = function UpdateMemory(maxFrames) {
+
+	this.maxFrames = maxFrames;
+	this.updates = {};
+};
+
+UpdateMemory.prototype.update = function (elementId, update, frameNumber) {
+
+	if (frameNumber in this.updates) {
+		this.updates[frameNumber][elementId] = update;
+	} else {
+		this.updates[frameNumber] = {};
+		if (!(elementId in this.updates[frameNumber])) {
+			this.updates[frameNumber][elementId] = {};
+		}
+
+		var updateKeys = Object.keys(update);
+		for (var x = 0; x < updateKeys.length; x++) {
+			this.updates[frameNumber][elementId][updateKeys[x]] = update[updateKeys[x]];
+		}
+	}
+
+	var frames = Object.keys(this.updates);
+	if (frames.length > this.maxFrames) {
+		frames.sort(function (a, b) {
+			return parseInt(a) - parseInt(b);
+		});
+		var oldFrame = frames[0];
+		delete this.updates[oldFrame];
+	}
+};
+
+UpdateMemory.prototype.updateGameState = function (gameState) {
+	var frameNumber = gameState.frameNumber;
+	if (frameNumber in this.updates) {
+		var elements = Object.keys(this.updates[frameNumber]);
+		for (var x = 0; x < elements.length; x++) {
+			var element = gameState.getElement(elements[x]);
+			element.update(this.updates[frameNumber][elements[x]]);
+		}
+	}
+};
+
+UpdateMemory.prototype.frameUpdate = function (frameNumber) {
+	if (frameNumber in this.updates) {
+		return this.updates[frameNumber];
+	} else {
+		return {};
+	}
+};
+
+module.exports = UpdateMemory;
+
+},{}],27:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -1561,7 +1680,7 @@ module.exports = {
 
 };
 
-},{"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":27}],27:[function(require,module,exports){
+},{"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":28}],28:[function(require,module,exports){
 'use strict';
 
 function Vector(x, y) {
@@ -1636,7 +1755,7 @@ Vector.prototype.toUnit = function () {
 
 module.exports = Vector;
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -1729,7 +1848,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 (function (global){
 /**
  * @license

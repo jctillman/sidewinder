@@ -15,11 +15,10 @@ var connectionHandler = {
 		socket.on('message', function(data){
 			var data = JSON.parse(data)
 			if (data.tag === 'playerMove'){
-				var move = {aim: Vector.copy(data.contents.move.aim)};
-				var name = {name: data.contents.name};
+				var update = {aim: Vector.copy(data.contents.aim), name: data.contents.name};
 				var playerId = data.contents.playerId;
-				runningInstance.updateElement(playerId, move)
-				runningInstance.updateElement(playerId, name)
+				var frameNumber = data.contents.frameNumber;
+				runningInstance.updateElement(playerId, update, frameNumber)
 			}
 		});
 

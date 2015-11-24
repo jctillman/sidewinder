@@ -62,7 +62,7 @@ var clientUtilities = {
           boundingView: bv,
           canvas: appState.game.canvas
         });
-        plyr.update(movr);
+        self.updateElement(playerId, movr, frameNumber);
         tempView = new View(bv, appState.game.canvas);
       }
     };
