@@ -36,7 +36,7 @@ UpdateMemory.prototype.updateGameState = function(gameState){
 		var elements = Object.keys( this.updates[frameNumber] )
 		for(var x = 0; x < elements.length; x++){
 			var element = gameState.getElement(elements[x]);
-			element.update(this.updates[frameNumber][elements[x]]);
+			element && element.update(this.updates[frameNumber][elements[x]]);
 		}
 	}
 }

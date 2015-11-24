@@ -2,9 +2,8 @@ module.exports = {
 
 	resizeRate: 50,
 	physicsRate: 25,
-	sendMoveInterval: 2,
-	sendBoardInterval: 4,
-	latencyAdjustment: 0,
+	sendMoveInterval: 1,
+	sendBoardInterval: 8,
 
 	clientAheadDistance: 8, //steps
 	clientAdjustAmount: 2, //ms

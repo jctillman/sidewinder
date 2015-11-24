@@ -17,7 +17,7 @@ var connectionHandler = {
 			if (data.tag === 'playerMove'){
 				var update = {aim: Vector.copy(data.contents.aim), name: data.contents.name};
 				var playerId = data.contents.playerId;
-				var frameNumber = data.contents.frameNumber;
+				var frameNumber = data.contents.frameNumber - 1;
 				runningInstance.updateElement(playerId, update, frameNumber)
 			}
 		});
