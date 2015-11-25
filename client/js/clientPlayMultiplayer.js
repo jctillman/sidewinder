@@ -23,6 +23,9 @@ var playGame = function(gameState, appState, playerId, finished, socket, name){
 	});
 	socket.onmessage = function(data){
 		var data = JSON.parse(data.data);
+		console.log("!!!")
+		console.log(data.contents.frameNumber);
+		console.log(runningInstance.gameState.frameNumber)
 		runningInstance.update(data.contents);
 	};
 
@@ -35,11 +38,9 @@ module.exports = function(appState, finishedCallback){
 	socket.onmessage = function(data){
 		var data = JSON.parse(data.data);
 		var gameState = ElementManager.copy(data.contents.elementManager);
-
 		for(var x = 0; x < Settings.clientAheadDistance; x++){
-			gameState = gameState.step()
+			gameState = gameState.step();
 		}
-
 		var playerId = data.contents.playerId;
 		playGame(gameState, appState, playerId, finishedCallback, socket, appState.menu.nameText.value)
 	};

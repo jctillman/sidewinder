@@ -15,16 +15,17 @@ var connectionHandler = {
 		socket.on('message', function(data){
 			var data = JSON.parse(data)
 			if (data.tag === 'playerMove'){
-				var update = {aim: Vector.copy(data.contents.aim), name: data.contents.name};
-				var playerId = data.contents.playerId;
-				var frameNumber = data.contents.frameNumber - 1;
-				runningInstance.updateElement(playerId, update, frameNumber)
+				runningInstance.updateElement(
+					data.contents.playerId,
+					{aim: Vector.copy(data.contents.aim), name: data.contents.name},
+					data.contents.frameNumber - 1);
 			}
 		});
 
 		runningInstance.addListener(playerId, function(gameState, frameNumber){
-			if (frameNumber % Settings.sendBoardInterval == 0){
+			if (frameNumber % Settings.sendBoardInterval == 0 && frameNumber){
 				try{
+					console.log("framenumber,", frameNumber)
 					socket.send(JSON.stringify({tag: 'sendBoard', contents: runningInstance.gameState}))
 				}catch(err){
 					console.log(err)
@@ -52,7 +53,11 @@ var connectionHandler = {
 			var listenId = Utilities.makeUniqueId()
 			runningInstance.addListener(listenId, function(gameState, frameNumber){
 				if (frameNumber % Settings.sendBoardInterval == 0){
-					socket.send(JSON.stringify({tag: 'sendBoard', contents: runningInstance.gameState}))
+					try{
+						socket.send(JSON.stringify({tag: 'sendBoard', contents: runningInstance.gameState}))
+					}catch(err){
+						console.log(err)
+					}
 				}
 			});
 

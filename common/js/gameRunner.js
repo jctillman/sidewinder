@@ -12,14 +12,14 @@ function gameRunner(gameState, extras, maxStateMemory){
 	this.over = false;
 	this.client = false;
 	this.updateMemory = new UpdateMemory(maxStateMemory);
-	this.ahead = 0;
-	this.lastUpdateNum = 0;
+	this.ahead = Settings.clientAheadDistance;
 	this.extras = extras;
 	this.listeners = [];
 	this.gameStates = [gameState];
 	this.gameState = gameState;
 
 	var runFunc = function(){
+
 		var startTime = (new Date()).getTime();
 		for(var x = 0; x < self.listeners.length; x++){
 			self.listeners[x].func(self.gameState, self.gameState.frameNumber, self);
@@ -30,7 +30,7 @@ function gameRunner(gameState, extras, maxStateMemory){
 		(self.gameStates.length > maxStateMemory) && self.gameStates.shift();
 		var endTime = (new Date()).getTime();
 
-		console.log(self.ahead)
+		console.log(self.ahead, self.gameState.frameNumber)
 		if(!self.over){
 			var delay = endTime - startTime + Settings.physicsRate;
 			if(self.client){
@@ -39,7 +39,6 @@ function gameRunner(gameState, extras, maxStateMemory){
 			self.physicsLoops = setTimeout(Utilities.timed(false, runFunc), delay)
 		}
 	}
-
 	this.physicsLoops = setTimeout(Utilities.timed(false, runFunc), Settings.physicsRate );
 
 }
@@ -67,8 +66,6 @@ gameRunner.prototype.update = function(gameState){
 
 gameRunner.prototype.addListener = function(name, callback){
 	this.listeners.push({name: name, func: callback});
-	this.listeners.sort(function(a,b){ return (b.name < a.name) ? 1 : -1 } );
-	//console.log(this.listeners.map(function(n){return n.name}));
 }
 
 gameRunner.prototype.killListener = function(name){

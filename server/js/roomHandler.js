@@ -9,17 +9,31 @@ var RoomHandler = function(maxOccupancy){
 	var self = this;	
 	this.rooms = [];
 	setInterval(function(){
+
+		for(var x = 0; x < self.rooms.length; x++){
+			var playerCount = self.rooms[x].gameState.elements.filter(function(element){
+				return element.type == 'player' && element.isHuman == true;
+			});
+			if (playerCount == 0){
+				self.rooms[x].end();
+				self.rooms[x] = null;
+			}
+		}
+
 		self.rooms = self.rooms.filter(function(room){
-			var playerCount = room.gameState.elements.filter(function(element){
+			var playerCount = (room == null) ? 0 : room.gameState.elements.filter(function(element){
 				return element.type == 'player' && element.isHuman == true;
 			});
 			return playerCount != 0;
 		});
+
+		console.log(self.rooms.length)
 	}, Settings.roomDeleteInterval);
 
 }
 
 RoomHandler.prototype.getRoomWithSpace = function(){
+
 	//If we have no rooms.
 	if (this.rooms.length <= 0){
 		this.rooms.push(new GameRunner( gameInitializer() , [elementFoodManager, elementAIManager], Settings.maxStateMemory))
@@ -28,7 +42,6 @@ RoomHandler.prototype.getRoomWithSpace = function(){
 
 	//If we have some rooms, can we add to any of them.
 	if (this.rooms.length > 0){
-		console.log("!")
 		for(var x = 0; x < this.rooms.length; x++){
 			var roomState = this.rooms[x].gameState
 			var numPlayers = roomState.elements.filter(function(n){

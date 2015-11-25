@@ -13,21 +13,33 @@ var HighScore = function(elementManager, ctx, playerId){
 		var length = plyr.places.length;
 		var width = 16;
 		var fromTop = 50 + x * 20;
+		var textFromTop = fromTop + 5;
+		var offset = 50;
+
+	    var pad = function(n, width, z) {
+	      z = z || '0';
+	      n = n + '';
+	      return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+	    }
+
+	    var name = (plyr.name == "") ? "Unnamed Snake" : plyr.name;
 
 		ctx.font = "16px Arial";
 		if (playerId == plyr.id){
 			ctx.fillStyle = "red";
-			ctx.fillText(plyr.name,100,fromTop+5);
+			ctx.fillText(name,100+offset,textFromTop);
+			ctx.fillText(pad(plyr.places.length, 4), 10, textFromTop)
 		}else{
 			ctx.fillStyle = "black";
-			ctx.fillText(plyr.name,100,fromTop+5);
+			ctx.fillText(name,100+offset,fromTop+5);
+			ctx.fillText(pad(plyr.places.length, 4), 10, textFromTop)
 		}
 
 	 	for(var y = 0; y < plyr.colors.length; y++){
 			var color = plyr.colors[y]
 			var pth = new Path2D();
-			pth.moveTo(y*width, fromTop)
-			pth.lineTo((y+1)*width-2, fromTop)
+			pth.moveTo(offset+y*width, fromTop)
+			pth.lineTo(offset+(y+1)*width-2, fromTop)
 			ctx.lineWidth = 7;
 			ctx.strokeStyle = color;
 			ctx.stroke(pth);

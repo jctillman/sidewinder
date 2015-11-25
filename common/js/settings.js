@@ -3,10 +3,12 @@ module.exports = {
 	resizeRate: 50,
 	physicsRate: 25,
 	sendMoveInterval: 1,
-	sendBoardInterval: 8,
+	sendBoardInterval: 10,
 
 	clientAheadDistance: 8, //steps
 	clientAdjustAmount: 3, //ms
+
+	viewBorder: 100, //border around window to character, in distance
 
 	maxStateMemory: 30,
 

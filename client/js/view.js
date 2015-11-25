@@ -32,8 +32,9 @@ View.prototype.drawPath = function(arrVector, width, color){
 View.prototype.drawCircle = function(center, width, thickness, color){
 	var path = []
 	for(var x = 0; x <= 2; x = x + 0.25){
-		var pointX = center.x + width * Math.sin(x*Math.PI)
-		var pointY = center.y + width * Math.cos(x*Math.PI)
+		var val = x * Math.PI
+		var pointX = center.x + width * Math.sin(val)
+		var pointY = center.y + width * Math.cos(val)
 		path.push(new Vector(pointX, pointY))
 	}
 	this.drawPath(path, thickness, color);

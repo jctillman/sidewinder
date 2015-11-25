@@ -11,6 +11,7 @@ require('../../client/js/pageSetUp.js')({
 'use strict';
 
 var BoundingBox = require('../../common/js/boundingbox.js');
+var Settings = require('../../common/js/settings.js');
 
 //This function returns the area which will be displayed on the screen--that is
 //it displays the bounding box giving, in world-coordinates,
@@ -19,24 +20,19 @@ var BoundingBox = require('../../common/js/boundingbox.js');
 //Should shift some stuff to here?
 module.exports = function (player, canvas) {
 	//Get the ratio for the screen
-	var screenWidth = canvas.width;
-	var screenHeight = canvas.height;
-	var screenRatio = screenWidth / screenHeight;
+	var screenRatio = canvas.width / canvas.height;
 
-	//Get initial ratio for bounding box
-	var temp = new BoundingBox(player.places).expanded(200);
+	//Get the ratio for bounding box
+	var temp = new BoundingBox(player.places).expanded(Settings.viewBorder);
 	var boxRatio = (temp.right - temp.left) / (temp.bottom - temp.top);
+
+	//Return altered bounding box ratio
 	var vertScale = boxRatio / screenRatio;
 	var horizScale = screenRatio / boxRatio;
-	if (vertScale >= 1) {
-		var viewBoundingBox = temp.scaleVert(vertScale);
-	} else {
-		var viewBoundingBox = temp.scaleHoriz(horizScale);
-	}
-	return viewBoundingBox;
+	return vertScale >= 1 ? temp.scaleVert(vertScale) : temp.scaleHoriz(horizScale);
 };
 
-},{"../../common/js/boundingbox.js":12}],3:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":12,"../../common/js/settings.js":25}],3:[function(require,module,exports){
 'use strict';
 
 var ElementManager = require('../../common/js/ElementManager.js');
@@ -64,6 +60,9 @@ var playGame = function playGame(gameState, appState, playerId, finished, socket
 	});
 	socket.onmessage = function (data) {
 		var data = JSON.parse(data.data);
+		console.log("!!!");
+		console.log(data.contents.frameNumber);
+		console.log(runningInstance.gameState.frameNumber);
 		runningInstance.update(data.contents);
 	};
 };
@@ -77,11 +76,9 @@ module.exports = function (appState, finishedCallback) {
 	socket.onmessage = function (data) {
 		var data = JSON.parse(data.data);
 		var gameState = ElementManager.copy(data.contents.elementManager);
-
 		for (var x = 0; x < Settings.clientAheadDistance; x++) {
 			gameState = gameState.step();
 		}
-
 		var playerId = data.contents.playerId;
 		playGame(gameState, appState, playerId, finishedCallback, socket, appState.menu.nameText.value);
 	};
@@ -355,7 +352,7 @@ var clientUtilities = {
 module.exports = clientUtilities;
 
 },{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/boundingbox.js":12,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":28}],8:[function(require,module,exports){
-"use strict";
+'use strict';
 
 var HighScore = function HighScore(elementManager, ctx, playerId) {
 
@@ -372,21 +369,33 @@ var HighScore = function HighScore(elementManager, ctx, playerId) {
 		var length = plyr.places.length;
 		var width = 16;
 		var fromTop = 50 + x * 20;
+		var textFromTop = fromTop + 5;
+		var offset = 50;
+
+		var pad = function pad(n, width, z) {
+			z = z || '0';
+			n = n + '';
+			return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+		};
+
+		var name = plyr.name == "" ? "Unnamed Snake" : plyr.name;
 
 		ctx.font = "16px Arial";
 		if (playerId == plyr.id) {
 			ctx.fillStyle = "red";
-			ctx.fillText(plyr.name, 100, fromTop + 5);
+			ctx.fillText(name, 100 + offset, textFromTop);
+			ctx.fillText(pad(plyr.places.length, 4), 10, textFromTop);
 		} else {
 			ctx.fillStyle = "black";
-			ctx.fillText(plyr.name, 100, fromTop + 5);
+			ctx.fillText(name, 100 + offset, fromTop + 5);
+			ctx.fillText(pad(plyr.places.length, 4), 10, textFromTop);
 		}
 
 		for (var y = 0; y < plyr.colors.length; y++) {
 			var color = plyr.colors[y];
 			var pth = new Path2D();
-			pth.moveTo(y * width, fromTop);
-			pth.lineTo((y + 1) * width - 2, fromTop);
+			pth.moveTo(offset + y * width, fromTop);
+			pth.lineTo(offset + (y + 1) * width - 2, fromTop);
 			ctx.lineWidth = 7;
 			ctx.strokeStyle = color;
 			ctx.stroke(pth);
@@ -494,8 +503,9 @@ View.prototype.drawPath = function (arrVector, width, color) {
 View.prototype.drawCircle = function (center, width, thickness, color) {
 	var path = [];
 	for (var x = 0; x <= 2; x = x + 0.25) {
-		var pointX = center.x + width * Math.sin(x * Math.PI);
-		var pointY = center.y + width * Math.cos(x * Math.PI);
+		var val = x * Math.PI;
+		var pointX = center.x + width * Math.sin(val);
+		var pointY = center.y + width * Math.cos(val);
 		path.push(new Vector(pointX, pointY));
 	}
 	this.drawPath(path, thickness, color);
@@ -1291,14 +1301,14 @@ function gameRunner(gameState, extras, maxStateMemory) {
 	this.over = false;
 	this.client = false;
 	this.updateMemory = new UpdateMemory(maxStateMemory);
-	this.ahead = 0;
-	this.lastUpdateNum = 0;
+	this.ahead = Settings.clientAheadDistance;
 	this.extras = extras;
 	this.listeners = [];
 	this.gameStates = [gameState];
 	this.gameState = gameState;
 
 	var runFunc = function runFunc() {
+
 		var startTime = new Date().getTime();
 		for (var x = 0; x < self.listeners.length; x++) {
 			self.listeners[x].func(self.gameState, self.gameState.frameNumber, self);
@@ -1309,7 +1319,7 @@ function gameRunner(gameState, extras, maxStateMemory) {
 		self.gameStates.length > maxStateMemory && self.gameStates.shift();
 		var endTime = new Date().getTime();
 
-		console.log(self.ahead);
+		console.log(self.ahead, self.gameState.frameNumber);
 		if (!self.over) {
 			var delay = endTime - startTime + Settings.physicsRate;
 			if (self.client) {
@@ -1318,7 +1328,6 @@ function gameRunner(gameState, extras, maxStateMemory) {
 			self.physicsLoops = setTimeout(Utilities.timed(false, runFunc), delay);
 		}
 	};
-
 	this.physicsLoops = setTimeout(Utilities.timed(false, runFunc), Settings.physicsRate);
 }
 
@@ -1346,10 +1355,6 @@ gameRunner.prototype.update = function (gameState) {
 
 gameRunner.prototype.addListener = function (name, callback) {
 	this.listeners.push({ name: name, func: callback });
-	this.listeners.sort(function (a, b) {
-		return b.name < a.name ? 1 : -1;
-	});
-	//console.log(this.listeners.map(function(n){return n.name}));
 };
 
 gameRunner.prototype.killListener = function (name) {
@@ -1456,10 +1461,12 @@ module.exports = {
 	resizeRate: 50,
 	physicsRate: 25,
 	sendMoveInterval: 1,
-	sendBoardInterval: 8,
+	sendBoardInterval: 10,
 
 	clientAheadDistance: 8, //steps
 	clientAdjustAmount: 3, //ms
+
+	viewBorder: 100, //border around window to character, in distance
 
 	maxStateMemory: 30,
 
