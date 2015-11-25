@@ -3,14 +3,14 @@ module.exports = {
 	resizeRate: 50,
 	physicsRate: 25,
 	sendMoveInterval: 1,
-	sendBoardInterval: 10,
+	sendBoardInterval: 6,
 
 	clientAheadDistance: 8, //steps
 	clientAdjustAmount: 3, //ms
 
 	viewBorder: 100, //border around window to character, in distance
 
-	maxStateMemory: 30,
+	maxStateMemory: 35,
 
 	portNum: (process.env.PORT || 3000),
 
