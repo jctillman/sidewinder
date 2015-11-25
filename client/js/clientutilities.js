@@ -95,7 +95,6 @@ var clientUtilities = {
       view.clear()
     }
 
-
 };
 
 module.exports = clientUtilities;

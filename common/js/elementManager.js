@@ -1,7 +1,3 @@
-var Settings = require('../../common/js/settings.js');
-var BoundingBox = require('../../common/js/boundingbox.js');
-var Grid = require('../../common/js/grid.js');
-
 var members = {
 	grid: require('../../common/js/elementGrid.js'),
 	player: require('../../common/js/elementPlayer.js'),
@@ -77,6 +73,16 @@ ElementManager.prototype.step = function(mods){
 		mods[x](ret);
 	}
 	return ret;
+}
+
+ElementManager.prototype.stepMultiple = function(mods, times){
+	var times = times || 1;
+	var gameState = this
+	for (var x = 0; x < times; x++){
+		console.log(x)
+		gameState = gameState.step(mods);
+	}
+	return gameState;
 }
 
 module.exports = ElementManager

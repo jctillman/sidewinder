@@ -3,12 +3,13 @@ var Settings = require('../../common/js/settings.js');
 var Move = require('../../common/js/move.js');
 var elementFoodManager = require('../../common/js/elementManagerFood.js');
 var elementAIManager = require('../../common/js/elementManagerAi.js');
+var elementAIAdderManager = require('../../common/js/elementManagerAiAdder.js');
 var GameRunner = require('../../common/js/gameRunner.js');
 var Utilities = require('../../common/js/utilities.js');
 var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function(gameState, appState, playerId, finished){
-	var runningInstance = new GameRunner(gameState, [elementFoodManager, elementAIManager], Settings.maxStateMemory);
+	var runningInstance = new GameRunner(gameState, [elementFoodManager, elementAIManager, elementAIAdderManager], Settings.maxStateMemory);
 	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished));
 } 
 

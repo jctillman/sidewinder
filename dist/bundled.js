@@ -48,7 +48,6 @@ var playGame = function playGame(gameState, appState, playerId, finished, socket
 	var runningInstance = new GameRunner(gameState, [elementAIManager], Settings.maxStateMemory);
 
 	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished, socket));
-
 	runningInstance.addListener('moveEmitter', function (gameState, frameNumber) {
 		var player = gameState.getElement(playerId);
 		if (player) {
@@ -59,11 +58,7 @@ var playGame = function playGame(gameState, appState, playerId, finished, socket
 		}
 	});
 	socket.onmessage = function (data) {
-		var data = JSON.parse(data.data);
-		console.log("!!!");
-		console.log(data.contents.frameNumber);
-		console.log(runningInstance.gameState.frameNumber);
-		runningInstance.update(data.contents);
+		runningInstance.update(JSON.parse(data.data).contents);
 	};
 };
 
@@ -75,16 +70,13 @@ module.exports = function (appState, finishedCallback) {
 	};
 	socket.onmessage = function (data) {
 		var data = JSON.parse(data.data);
-		var gameState = ElementManager.copy(data.contents.elementManager);
-		for (var x = 0; x < Settings.clientAheadDistance; x++) {
-			gameState = gameState.step();
-		}
+		var gameState = ElementManager.copy(data.contents.elementManager).stepMultiple([elementAIManager], Settings.clientAheadDistance);
 		var playerId = data.contents.playerId;
 		playGame(gameState, appState, playerId, finishedCallback, socket, appState.menu.nameText.value);
 	};
 };
 
-},{"../../client/js/clientUtilities.js":5,"../../common/js/ElementManager.js":11,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":21,"../../common/js/move.js":24,"../../common/js/settings.js":25}],4:[function(require,module,exports){
+},{"../../client/js/clientUtilities.js":5,"../../common/js/ElementManager.js":11,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":20,"../../common/js/gameRunner.js":22,"../../common/js/move.js":24,"../../common/js/settings.js":25}],4:[function(require,module,exports){
 'use strict';
 
 var ElementManager = require('../../common/js/ElementManager.js');
@@ -92,12 +84,13 @@ var Settings = require('../../common/js/settings.js');
 var Move = require('../../common/js/move.js');
 var elementFoodManager = require('../../common/js/elementManagerFood.js');
 var elementAIManager = require('../../common/js/elementManagerAi.js');
+var elementAIAdderManager = require('../../common/js/elementManagerAiAdder.js');
 var GameRunner = require('../../common/js/gameRunner.js');
 var Utilities = require('../../common/js/utilities.js');
 var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function playGame(gameState, appState, playerId, finished) {
-	var runningInstance = new GameRunner(gameState, [elementFoodManager, elementAIManager], Settings.maxStateMemory);
+	var runningInstance = new GameRunner(gameState, [elementFoodManager, elementAIManager, elementAIAdderManager], Settings.maxStateMemory);
 	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished));
 };
 
@@ -107,7 +100,7 @@ module.exports = function (appState, finishedCallback) {
 	playGame(gameState, appState, playerId, finishedCallback);
 };
 
-},{"../../client/js/clientUtilities.js":5,"../../common/js/ElementManager.js":11,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":21,"../../common/js/initialgamecreator.js":23,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":27}],5:[function(require,module,exports){
+},{"../../client/js/clientUtilities.js":5,"../../common/js/ElementManager.js":11,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerAiAdder.js":19,"../../common/js/elementManagerFood.js":20,"../../common/js/gameRunner.js":22,"../../common/js/initialgamecreator.js":23,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":27}],5:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -246,7 +239,7 @@ module.exports = function (appState, finishedCallback) {
 	};
 };
 
-},{"../../client/js/clientUtilities.js":5,"../../common/js/elementManager.js":17,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":19,"../../common/js/gameRunner.js":21,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":27}],7:[function(require,module,exports){
+},{"../../client/js/clientUtilities.js":5,"../../common/js/elementManager.js":17,"../../common/js/elementManagerAi.js":18,"../../common/js/elementManagerFood.js":20,"../../common/js/gameRunner.js":22,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":27}],7:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -516,10 +509,6 @@ module.exports = View;
 },{"../../common/js/boundingbox.js":12,"../../common/js/vector.js":28}],11:[function(require,module,exports){
 'use strict';
 
-var Settings = require('../../common/js/settings.js');
-var BoundingBox = require('../../common/js/boundingbox.js');
-var Grid = require('../../common/js/grid.js');
-
 var members = {
 	grid: require('../../common/js/elementGrid.js'),
 	player: require('../../common/js/elementPlayer.js'),
@@ -596,9 +585,19 @@ ElementManager.prototype.step = function (mods) {
 	return ret;
 };
 
+ElementManager.prototype.stepMultiple = function (mods, times) {
+	var times = times || 1;
+	var gameState = this;
+	for (var x = 0; x < times; x++) {
+		console.log(x);
+		gameState = gameState.step(mods);
+	}
+	return gameState;
+};
+
 module.exports = ElementManager;
 
-},{"../../common/js/boundingbox.js":12,"../../common/js/elementFood.js":15,"../../common/js/elementGrid.js":16,"../../common/js/elementPlayer.js":20,"../../common/js/grid.js":22,"../../common/js/settings.js":25}],12:[function(require,module,exports){
+},{"../../common/js/elementFood.js":15,"../../common/js/elementGrid.js":16,"../../common/js/elementPlayer.js":21}],12:[function(require,module,exports){
 'use strict';
 
 var Vector = require('../../common/js/vector.js');
@@ -1007,10 +1006,6 @@ module.exports = ElementGrid;
 },{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/settings.js":25,"../../common/js/utilities.js":27,"../../common/js/vector.js":28,"lodash":30}],17:[function(require,module,exports){
 'use strict';
 
-var Settings = require('../../common/js/settings.js');
-var BoundingBox = require('../../common/js/boundingbox.js');
-var Grid = require('../../common/js/grid.js');
-
 var members = {
 	grid: require('../../common/js/elementGrid.js'),
 	player: require('../../common/js/elementPlayer.js'),
@@ -1087,9 +1082,19 @@ ElementManager.prototype.step = function (mods) {
 	return ret;
 };
 
+ElementManager.prototype.stepMultiple = function (mods, times) {
+	var times = times || 1;
+	var gameState = this;
+	for (var x = 0; x < times; x++) {
+		console.log(x);
+		gameState = gameState.step(mods);
+	}
+	return gameState;
+};
+
 module.exports = ElementManager;
 
-},{"../../common/js/boundingbox.js":12,"../../common/js/elementFood.js":15,"../../common/js/elementGrid.js":16,"../../common/js/elementPlayer.js":20,"../../common/js/grid.js":22,"../../common/js/settings.js":25}],18:[function(require,module,exports){
+},{"../../common/js/elementFood.js":15,"../../common/js/elementGrid.js":16,"../../common/js/elementPlayer.js":21}],18:[function(require,module,exports){
 'use strict';
 
 var Food = require('../../common/js/elementFood.js');
@@ -1100,12 +1105,8 @@ var Move = require('../../common/js/move.js');
 
 var Brain = require('../../common/js/brain.js');
 
-//This is passed into the step function.  The step function, for the
-//state manager.
-var time = 0;
-
+//This is passed into the step function.  The step function, for the state manager
 var elementManagerAi = function elementManagerAi(elementManager) {
-	time++;
 	var Players = elementManager.elements.filter(function (ele) {
 		return ele.type == 'player';
 	});
@@ -1115,19 +1116,36 @@ var elementManagerAi = function elementManagerAi(elementManager) {
 	var Feed = elementManager.elements.filter(function (ele) {
 		return ele.type == 'food' && ele.shrinking == false;
 	});
-	if (time % Settings.aiCheckFrequency == 0) {
+	if (elementManager.frameNumber % Settings.aiCheckFrequency == 0) {
 		for (var x = 0, len = AIs.length; x < len; x++) {
 			Brain.setMove(AIs[x], Players, Feed);
 		}
-	}
-	if (AIs.length < Settings.aiMinimum) {
-		Utilities.addPlayer({ isHuman: false }, elementManager);
 	}
 };
 
 module.exports = elementManagerAi;
 
 },{"../../common/js/brain.js":13,"../../common/js/elementFood.js":15,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":27,"../../common/js/vector.js":28}],19:[function(require,module,exports){
+'use strict';
+
+var Food = require('../../common/js/elementFood.js');
+var Settings = require('../../common/js/settings.js');
+var Vector = require('../../common/js/vector.js');
+var Utilities = require('../../common/js/utilities.js');
+var Move = require('../../common/js/move.js');
+
+var elementManagerAiAdder = function elementManagerAiAdder(elementManager) {
+	var AIs = elementManager.elements.filter(function (ele) {
+		return ele.type == 'player' && ele.isHuman == false;
+	});
+	if (AIs.length < Settings.aiMinimum) {
+		Utilities.addPlayer({ isHuman: false }, elementManager);
+	}
+};
+
+module.exports = elementManagerAiAdder;
+
+},{"../../common/js/elementFood.js":15,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/utilities.js":27,"../../common/js/vector.js":28}],20:[function(require,module,exports){
 'use strict';
 
 var Food = require('../../common/js/elementFood.js');
@@ -1154,7 +1172,7 @@ var elementFoodManager = function elementFoodManager(elementManager) {
 
 module.exports = elementFoodManager;
 
-},{"../../common/js/elementFood.js":15,"../../common/js/settings.js":25,"../../common/js/vector.js":28}],20:[function(require,module,exports){
+},{"../../common/js/elementFood.js":15,"../../common/js/settings.js":25,"../../common/js/vector.js":28}],21:[function(require,module,exports){
 'use strict';
 
 var Element = require('../../common/js/element.js');
@@ -1284,7 +1302,7 @@ var ElementPlayer = Element({
 
 module.exports = ElementPlayer;
 
-},{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/elementFood.js":15,"../../common/js/settings.js":25,"../../common/js/utilities.js":27,"../../common/js/vector.js":28,"lodash":30}],21:[function(require,module,exports){
+},{"../../common/js/boundingbox.js":12,"../../common/js/element.js":14,"../../common/js/elementFood.js":15,"../../common/js/settings.js":25,"../../common/js/utilities.js":27,"../../common/js/vector.js":28,"lodash":30}],22:[function(require,module,exports){
 'use strict';
 
 var Utilities = require('../../common/js/utilities.js');
@@ -1373,25 +1391,7 @@ gameRunner.prototype.end = function () {
 
 module.exports = gameRunner;
 
-},{"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/elementManager.js":17,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/updateMemory.js":26,"../../common/js/utilities.js":27}],22:[function(require,module,exports){
-'use strict';
-
-var BoundingBox = require('../../common/js/boundingbox.js');
-var Vector = require('../../common/js/vector.js');
-var Settings = require('../../common/js/settings.js');
-
-var grids = [];
-var gridSize = Settings.gridSize;
-var inc = Settings.treeResolution;
-for (var x = 0; x < gridSize; x = x + inc) {
-	for (var y = 0; y < gridSize; y = y + inc) {
-		grids.push({ box: new BoundingBox([new Vector(x, y), new Vector(x + inc, y + inc)]), items: [] });
-	}
-}
-
-module.exports = grids;
-
-},{"../../common/js/boundingbox.js":12,"../../common/js/settings.js":25,"../../common/js/vector.js":28}],23:[function(require,module,exports){
+},{"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/elementManager.js":17,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/updateMemory.js":26,"../../common/js/utilities.js":27}],23:[function(require,module,exports){
 'use strict';
 
 var ElementManager = require('../../common/js/elementManager.js');

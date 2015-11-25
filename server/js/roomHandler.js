@@ -4,6 +4,7 @@ var Settings = require('../../common/js/settings.js');
 var GameRunner = require('../../common/js/gameRunner.js');
 var elementFoodManager = require('../../common/js/elementManagerFood.js');
 var elementAIManager = require('../../common/js/elementManagerAi.js');
+var elementAIAdderManager = require('../../common/js/elementManagerAiAdder.js');
 
 var RoomHandler = function(maxOccupancy){
 	var self = this;	
@@ -36,7 +37,7 @@ RoomHandler.prototype.getRoomWithSpace = function(){
 
 	//If we have no rooms.
 	if (this.rooms.length <= 0){
-		this.rooms.push(new GameRunner( gameInitializer() , [elementFoodManager, elementAIManager], Settings.maxStateMemory))
+		this.rooms.push(new GameRunner( gameInitializer() , [elementFoodManager, elementAIManager, elementAIAdderManager], Settings.maxStateMemory))
 		return this.rooms[0];
 	}
 

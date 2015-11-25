@@ -6,22 +6,15 @@ var Move = require('../../common/js/move.js');
 
 var Brain = require('../../common/js/brain.js');
 
-//This is passed into the step function.  The step function, for the 
-//state manager.
-var time = 0;
-
+//This is passed into the step function.  The step function, for the state manager
 var elementManagerAi = function(elementManager){
-	time++;
 	var Players = elementManager.elements.filter(function(ele){return ele.type == 'player'})
 	var AIs = elementManager.elements.filter(function(ele){return ele.type == 'player' && ele.isHuman == false;});
 	var Feed = elementManager.elements.filter(function(ele){return ele.type == 'food' && ele.shrinking == false;});
-	if ( (time % Settings.aiCheckFrequency) == 0){
+	if ( (elementManager.frameNumber % Settings.aiCheckFrequency) == 0){
 		for(var x = 0, len = AIs.length; x < len; x++){
 			Brain.setMove(AIs[x], Players, Feed)
 		}
-	}
-	if (AIs.length < Settings.aiMinimum){
-		Utilities.addPlayer({isHuman: false}, elementManager);
 	}
 }
 

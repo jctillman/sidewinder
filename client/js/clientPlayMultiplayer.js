@@ -11,7 +11,6 @@ var playGame = function(gameState, appState, playerId, finished, socket, name){
 	var runningInstance = new GameRunner(gameState, [elementAIManager], Settings.maxStateMemory);
 	
 	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished, socket));
-	
 	runningInstance.addListener('moveEmitter', function(gameState, frameNumber){
 		var player = gameState.getElement(playerId);
 		if (player){
@@ -22,11 +21,7 @@ var playGame = function(gameState, appState, playerId, finished, socket, name){
 		}
 	});
 	socket.onmessage = function(data){
-		var data = JSON.parse(data.data);
-		console.log("!!!")
-		console.log(data.contents.frameNumber);
-		console.log(runningInstance.gameState.frameNumber)
-		runningInstance.update(data.contents);
+		runningInstance.update(JSON.parse(data.data).contents);
 	};
 
 }
@@ -37,10 +32,9 @@ module.exports = function(appState, finishedCallback){
 	socket.onopen = function(){ socket.send("multiplayer") };
 	socket.onmessage = function(data){
 		var data = JSON.parse(data.data);
-		var gameState = ElementManager.copy(data.contents.elementManager);
-		for(var x = 0; x < Settings.clientAheadDistance; x++){
-			gameState = gameState.step();
-		}
+		var gameState = ElementManager
+			.copy(data.contents.elementManager)
+			.stepMultiple([elementAIManager], Settings.clientAheadDistance)
 		var playerId = data.contents.playerId;
 		playGame(gameState, appState, playerId, finishedCallback, socket, appState.menu.nameText.value)
 	};
