@@ -97,10 +97,8 @@ module.exports = {
 	},
  
 	timed: function(verbose, func){
-
 		var num = 0;
 		var ellapsed = 0;
-
 		return function(){
 			var start = Date.now();
 			func();

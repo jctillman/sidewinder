@@ -81,7 +81,7 @@ var clientUtilities = {
         if (done){
           clientUtilities.shutdown(socket, self, finished, tempView);
         }
-        var bb = new BoundingView({places:[new Vector(100,100), new Vector(Settings.gridSize-100, Settings.gridSize-100)]}, appState.game.canvas)
+        var bb = new BoundingView({places:[new Vector(150,150), new Vector(Settings.gridSize-150, Settings.gridSize-150)]}, appState.game.canvas)
         tempView = new View(bb, appState.game.canvas);
       };
 

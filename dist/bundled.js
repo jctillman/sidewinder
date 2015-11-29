@@ -46,15 +46,18 @@ var clientUtilities = require('../../client/js/clientUtilities.js');
 
 var playGame = function playGame(gameState, appState, playerId, finished, socket, name) {
 	var runningInstance = new GameRunner(gameState, [elementAIManager], Settings.maxStateMemory);
-
 	runningInstance.addListener('clientHandler', clientUtilities.clientHandling(appState, playerId, finished, socket));
 	runningInstance.addListener('moveEmitter', function (gameState, frameNumber) {
 		var player = gameState.getElement(playerId);
-		if (player) {
-			var movr = new Move({ aim: player.aim });
-			if (frameNumber % Settings.sendMoveInterval == 0 && movr) {
-				socket.send(JSON.stringify({ 'tag': 'playerMove', 'contents': { 'frameNumber': frameNumber, aim: player.aim, playerId: playerId, name: name } }));
-			}
+		if (player && frameNumber % Settings.sendMoveInterval == 0) {
+			socket.send(JSON.stringify({ 'tag': 'playerMove',
+				'contents': {
+					'frameNumber': frameNumber,
+					'aim': player.aim,
+					'playerId': playerId,
+					'name': name
+				}
+			}));
 		}
 	});
 	socket.onmessage = function (data) {
@@ -188,7 +191,7 @@ var clientUtilities = {
       if (done) {
         clientUtilities.shutdown(socket, self, finished, tempView);
       }
-      var bb = new BoundingView({ places: [new Vector(100, 100), new Vector(Settings.gridSize - 100, Settings.gridSize - 100)] }, appState.game.canvas);
+      var bb = new BoundingView({ places: [new Vector(150, 150), new Vector(Settings.gridSize - 150, Settings.gridSize - 150)] }, appState.game.canvas);
       tempView = new View(bb, appState.game.canvas);
     };
   },
@@ -327,7 +330,7 @@ var clientUtilities = {
       if (done) {
         clientUtilities.shutdown(socket, self, finished, tempView);
       }
-      var bb = new BoundingView({ places: [new Vector(100, 100), new Vector(Settings.gridSize - 100, Settings.gridSize - 100)] }, appState.game.canvas);
+      var bb = new BoundingView({ places: [new Vector(150, 150), new Vector(Settings.gridSize - 150, Settings.gridSize - 150)] }, appState.game.canvas);
       tempView = new View(bb, appState.game.canvas);
     };
   },
@@ -1643,10 +1646,8 @@ module.exports = {
 	},
 
 	timed: function timed(verbose, func) {
-
 		var num = 0;
 		var ellapsed = 0;
-
 		return function () {
 			var start = Date.now();
 			func();
