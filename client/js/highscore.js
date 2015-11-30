@@ -1,3 +1,6 @@
+var previousHighScore = 0;
+var previouslyAlivePlayerId;
+
 var HighScore = function(elementManager, ctx, playerId){
 
 	var done = elementManager.elements.map(function(n){
@@ -7,6 +10,8 @@ var HighScore = function(elementManager, ctx, playerId){
 	}).sort(function(a,b){
 		return b.places.length - a.places.length;
 	}).slice(0,10);
+
+	var playerAlive = false;
 	
 	for(var x = 0; x < done.length; x++){
 		var plyr = done[x];
@@ -29,6 +34,8 @@ var HighScore = function(elementManager, ctx, playerId){
 			ctx.fillStyle = "red";
 			ctx.fillText(name,100+offset,textFromTop);
 			ctx.fillText(pad(plyr.places.length, 4), 10, textFromTop)
+			playerAlive = true;
+			previousHighScore = plyr.places.length || previousHighScore;
 		}else{
 			ctx.fillStyle = "black";
 			ctx.fillText(name,100+offset,fromTop+5);
@@ -44,6 +51,14 @@ var HighScore = function(elementManager, ctx, playerId){
 			ctx.strokeStyle = color;
 			ctx.stroke(pth);
 		}
+	}
+
+	if(!playerAlive){
+		var width = ctx.canvas.width;
+		var height = ctx.canvas.height;
+		ctx.font = "72px Arial";
+		ctx.fillStyle = "red";
+		ctx.fillText("Score: " + pad(previousHighScore, 4), width/2-150, height/2-100)
 	}
 }
 

@@ -350,6 +350,9 @@ module.exports = clientUtilities;
 },{"../../client/js/boundingview.js":2,"../../client/js/highscore.js":8,"../../client/js/view.js":10,"../../common/js/boundingbox.js":12,"../../common/js/move.js":24,"../../common/js/settings.js":25,"../../common/js/vector.js":28}],8:[function(require,module,exports){
 'use strict';
 
+var previousHighScore = 0;
+var previouslyAlivePlayerId;
+
 var HighScore = function HighScore(elementManager, ctx, playerId) {
 
 	var done = elementManager.elements.map(function (n) {
@@ -359,6 +362,8 @@ var HighScore = function HighScore(elementManager, ctx, playerId) {
 	}).sort(function (a, b) {
 		return b.places.length - a.places.length;
 	}).slice(0, 10);
+
+	var playerAlive = false;
 
 	for (var x = 0; x < done.length; x++) {
 		var plyr = done[x];
@@ -381,6 +386,8 @@ var HighScore = function HighScore(elementManager, ctx, playerId) {
 			ctx.fillStyle = "red";
 			ctx.fillText(name, 100 + offset, textFromTop);
 			ctx.fillText(pad(plyr.places.length, 4), 10, textFromTop);
+			playerAlive = true;
+			previousHighScore = plyr.places.length || previousHighScore;
 		} else {
 			ctx.fillStyle = "black";
 			ctx.fillText(name, 100 + offset, fromTop + 5);
@@ -396,6 +403,14 @@ var HighScore = function HighScore(elementManager, ctx, playerId) {
 			ctx.strokeStyle = color;
 			ctx.stroke(pth);
 		}
+	}
+
+	if (!playerAlive) {
+		var width = ctx.canvas.width;
+		var height = ctx.canvas.height;
+		ctx.font = "72px Arial";
+		ctx.fillStyle = "red";
+		ctx.fillText("Score: " + pad(previousHighScore, 4), width / 2 - 150, height / 2 - 100);
 	}
 };
 
