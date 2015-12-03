@@ -14,7 +14,7 @@ var elementFoodManager = function(elementManager){
 	}
 	
 	//Create more until we're at the minimum, foodStartAmount
-	var total = Settings.foodStartAmount;
+	var total = Settings.foodMinimum();
 	for(var x = foodCount; x < total; x++){
 		elementManager.addElement(
 			'food',

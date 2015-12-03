@@ -6,7 +6,8 @@ var Move = require('../../common/js/move.js');
 
 var elementManagerAiAdder = function(elementManager){
 	var AIs = elementManager.elements.filter(function(ele){return ele.type == 'player' && ele.isHuman == false;});
-	if (AIs.length < Settings.aiMinimum){
+	var num = Settings.playerNumber();
+	if (AIs.length < num){
 		Utilities.addPlayer({isHuman: false}, elementManager);
 	}
 }

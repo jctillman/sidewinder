@@ -3,15 +3,28 @@ var previouslyAlivePlayerId;
 
 var HighScore = function(elementManager, ctx, playerId){
 
-	var done = elementManager.elements.map(function(n){
+	var it = elementManager.elements.map(function(n){
 		return n;
 	}).filter(function(m){
 		return m.type == 'player'
 	}).sort(function(a,b){
 		return b.places.length - a.places.length;
-	}).slice(0,10);
+	})
+
+
+
+	var done = it.slice(0,10);
 
 	var playerAlive = false;
+	if(it.some(function(n){return playerId == n.id})){
+		playerAlive = true;
+	}
+
+	var pad = function(n, width, z) {
+      z = z || '0';
+      n = n + '';
+      return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+	}
 	
 	for(var x = 0; x < done.length; x++){
 		var plyr = done[x];
@@ -21,11 +34,6 @@ var HighScore = function(elementManager, ctx, playerId){
 		var textFromTop = fromTop + 5;
 		var offset = 50;
 
-	    var pad = function(n, width, z) {
-	      z = z || '0';
-	      n = n + '';
-	      return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
-	    }
 
 	    var name = (plyr.name == "") ? "Unnamed Snake" : plyr.name;
 
@@ -34,7 +42,6 @@ var HighScore = function(elementManager, ctx, playerId){
 			ctx.fillStyle = "red";
 			ctx.fillText(name,100+offset,textFromTop);
 			ctx.fillText(pad(plyr.places.length, 4), 10, textFromTop)
-			playerAlive = true;
 			previousHighScore = plyr.places.length || previousHighScore;
 		}else{
 			ctx.fillStyle = "black";

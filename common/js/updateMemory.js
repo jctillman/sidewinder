@@ -1,8 +1,6 @@
 var UpdateMemory = function(maxFrames){
-
-	this.maxFrames = maxFrames
-	this.updates = {}
-
+	this.maxFrames = maxFrames;
+	this.updates = {};
 }
 
 UpdateMemory.prototype.update = function(elementId, update, frameNumber){

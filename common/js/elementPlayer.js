@@ -13,7 +13,7 @@ var ElementPlayer = Element({
 		//Optional--game elements
 		this.isHuman = (options.isHuman === undefined) ? true : options.isHuman;
 		this.places = Vector.chain(location, {
-			segments: Settings.startSegments,
+			segments: Settings.startSegments + Math.floor(Math.random() * 5),
 			spacing: Settings.startSpacing,
 			direction: options.direction || 0
 		});
@@ -23,8 +23,14 @@ var ElementPlayer = Element({
 		this.speed = 1;
 		this.kink = 0; 
 		this.dying = false;
+		this.loseElement = Math.random() * Settings.loseElementLimit;
 		this.dead = undefined;
-		this.name = options.name || "Unnamed Snake"
+
+		if(this.isHuman){
+			this.name = options.name || "Unnamed Snake";
+		} else {
+			this.name = Settings.aiNames[Math.floor( Settings.aiNames.length * Math.random()) ]
+		}
 
 		//Optional--display elements.	
 		var colorLength = 1 + ( Math.random() * Settings.maxColorLength );
@@ -78,6 +84,13 @@ var ElementPlayer = Element({
 		}
 
 		var ret = this.constructor.copy(this);
+
+		ret.loseElement = ret.loseElement + this.places.length;
+		if(ret.loseElement > Settings.loseElementLimit && ret.places.length > 20){
+			ret.places = ret.places.slice(0,ret.places.length-1)
+			ret.loseElement = 0;
+		}
+
 		ret.speed = ret.kink / Math.sqrt(ret.places.length) + 1;
 		ret.location = Vector.average(ret.places);
 		if (ret.amountToGrow > 0){
@@ -90,7 +103,7 @@ var ElementPlayer = Element({
 		var pointing = this.aim.sub(ret.places[0]).toUnit();
 		var directionScaled = goal.add(pointing).toUnit().scale(ret.speed);
 		var addendum = ret.places[0].add(directionScaled)
-		ret.box = new BoundingBox(this.places);
+		ret.box = new BoundingBox(ret.places);
 		ret.places.unshift(addendum);
 		ret.places.pop(); 
 		ret.kink = kinkiness(ret);
@@ -104,7 +117,9 @@ var ElementPlayer = Element({
 		ret.location = Vector.average(stuff.places);
 		ret.box = BoundingBox.copy(stuff.box);
 		var temp = new this(ret.location, {})
-		return _.merge(temp, ret);
+		var secondStep = _.merge(temp, ret);
+		secondStep.places = stuff.places.map(function(n){return Vector.copy(n);});
+		return secondStep
 	},
 	matters: function(element){
 		return Utilities.foodPlayerCollision(element, this) || Utilities.playerPlayer(element, this);

@@ -1,5 +1,50 @@
 module.exports = {
 
+	alter: function(propName, propValue){
+		if (propName in this && typeof propValue == typeof this[propName]){
+			this[propName] = propValue
+		}else{
+			throw new Error("Something went wrong when trying to set the settings.");
+		}
+
+	},
+
+	gridSizes: {
+		verysmall: 200,
+		small: 300,
+		medium: 400,
+		large: 500,
+		verylarge: 600 
+	},
+
+	playerDensities: {
+		verysmall: 0,
+		small: 3,
+		medium: 5,
+		large: 7,
+		verylarge: 11 
+	},
+
+	foodDensities: {
+		verysmall: 0,
+		small: 200,
+		medium: 400,
+		large: 600,
+		verylarge: 800 
+	},
+
+	gridSize: 400,
+	playerDensity: 5,
+	foodDensity: 400,
+
+	foodMinimum: function(){
+		return ( this.gridSize ) * (this.gridSize ) * 0.0000002 * this.foodDensity;
+	},
+
+	playerNumber: function(){
+		return ( this.gridSize ) * (this.gridSize ) * 0.000005 * this.playerDensity;
+	},
+
 	resizeRate: 50,
 	physicsRate: 25,
 	sendMoveInterval: 1,
@@ -14,7 +59,10 @@ module.exports = {
 
 	portNum: (process.env.PORT || 3000),
 
-	gridSize: 500,
+	loseElementLimit: 5000,
+
+	aiNames: ['Winalagalis','Egle','Coi Coi-Vilu','Naga','Ouroboros','Serpent','Ajatar','Ilomba','Quetzalcoatl','Cockatrice','Fafnir','Sisiutl','Bashe','Nammu','Madre de Aguas','Falak'],
+	
 	gridSpace: 50,
 	gridColor: '#CCC', 
 
@@ -30,9 +78,9 @@ module.exports = {
 	minStripeLength: 10,
 	playerPossibleColors: [ 'black', '#444', '#50C878', '#FFD300', 'purple'],
 
-	framesToViewAfterDeath: 50,
+	framesToViewAfterDeath: 100,
 
-	roomCapacity: 3,
+	roomCapacity: 5,
 	roomDeleteInterval: 5000,
 
 	treeResolution: 2500,

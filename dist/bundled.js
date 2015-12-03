@@ -355,15 +355,28 @@ var previouslyAlivePlayerId;
 
 var HighScore = function HighScore(elementManager, ctx, playerId) {
 
-	var done = elementManager.elements.map(function (n) {
+	var it = elementManager.elements.map(function (n) {
 		return n;
 	}).filter(function (m) {
 		return m.type == 'player';
 	}).sort(function (a, b) {
 		return b.places.length - a.places.length;
-	}).slice(0, 10);
+	});
+
+	var done = it.slice(0, 10);
 
 	var playerAlive = false;
+	if (it.some(function (n) {
+		return playerId == n.id;
+	})) {
+		playerAlive = true;
+	}
+
+	var pad = function pad(n, width, z) {
+		z = z || '0';
+		n = n + '';
+		return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+	};
 
 	for (var x = 0; x < done.length; x++) {
 		var plyr = done[x];
@@ -373,12 +386,6 @@ var HighScore = function HighScore(elementManager, ctx, playerId) {
 		var textFromTop = fromTop + 5;
 		var offset = 50;
 
-		var pad = function pad(n, width, z) {
-			z = z || '0';
-			n = n + '';
-			return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
-		};
-
 		var name = plyr.name == "" ? "Unnamed Snake" : plyr.name;
 
 		ctx.font = "16px Arial";
@@ -386,7 +393,6 @@ var HighScore = function HighScore(elementManager, ctx, playerId) {
 			ctx.fillStyle = "red";
 			ctx.fillText(name, 100 + offset, textFromTop);
 			ctx.fillText(pad(plyr.places.length, 4), 10, textFromTop);
-			playerAlive = true;
 			previousHighScore = plyr.places.length || previousHighScore;
 		} else {
 			ctx.fillStyle = "black";
@@ -433,8 +439,32 @@ module.exports = function (options) {
 	ClientUtilities.throttledResize(Settings.resizeRate, cnv);
 
 	var menu = document.getElementById('menu');
+
 	var singularButton = document.getElementById('singular');
+	var optionsButton = document.getElementById('options');
 	var multiplayerButton = document.getElementById('multiplayer');
+	var advancedButton = document.getElementById('advanced');
+
+	var advancedDisplay = document.getElementById('advancedDisplay');
+	var optionsDisplay = document.getElementById('optionsDisplay');
+	var optionGridSize = document.getElementById('gridSize');
+	var optionPlayerDensity = document.getElementById('playerDensity');
+	var optionFoodDensity = document.getElementById('foodDensity');
+
+	var update = function update() {
+		var gridSize = optionGridSize.value;
+		var playerDensity = optionPlayerDensity.value;
+		var foodDensity = optionFoodDensity.value;
+		Settings.alter('gridSize', Settings.gridSizes[gridSize]);
+		Settings.alter('playerDensity', Settings.playerDensities[playerDensity]);
+		Settings.alter('foodDensity', Settings.foodDensities[foodDensity]);
+	};
+
+	optionGridSize.onchange = update;
+	optionPlayerDensity.onchange = update;
+	optionFoodDensity.onchange = update;
+	update();
+
 	var watchButton = document.getElementById('watch');
 	var nameText = document.getElementById('name');
 
@@ -454,8 +484,17 @@ module.exports = function (options) {
 	};
 
 	var goBack = function goBack() {
+		update();
 		game.style.display = "none";
 		menu.style.display = "block";
+	};
+
+	optionsButton.onclick = function () {
+		optionsDisplay.style.display = optionsDisplay.style.display == "block" ? "none" : "block";
+	};
+
+	advancedButton.onclick = function () {
+		advancedDisplay.style.display = advancedDisplay.style.display == "block" ? "none" : "block";
 	};
 
 	singularButton.onclick = function () {
@@ -465,6 +504,9 @@ module.exports = function (options) {
 	};
 
 	multiplayerButton.onclick = function () {
+		Settings.alter('gridSize', Settings.gridSizes['medium']);
+		Settings.alter('playerDensity', Settings.gridSizes['medium']);
+		Settings.alter('foodDensity', Settings.gridSizes['medium']);
 		game.style.display = "block";
 		menu.style.display = "none";
 		options.multiplayerGame(state, goBack);
@@ -1156,7 +1198,8 @@ var elementManagerAiAdder = function elementManagerAiAdder(elementManager) {
 	var AIs = elementManager.elements.filter(function (ele) {
 		return ele.type == 'player' && ele.isHuman == false;
 	});
-	if (AIs.length < Settings.aiMinimum) {
+	var num = Settings.playerNumber();
+	if (AIs.length < num) {
 		Utilities.addPlayer({ isHuman: false }, elementManager);
 	}
 };
@@ -1182,7 +1225,7 @@ var elementFoodManager = function elementFoodManager(elementManager) {
 	}
 
 	//Create more until we're at the minimum, foodStartAmount
-	var total = Settings.foodStartAmount;
+	var total = Settings.foodMinimum();
 	for (var x = foodCount; x < total; x++) {
 		elementManager.addElement('food', new Vector(Math.random() * Settings.gridSize, Math.random() * Settings.gridSize), { growing: true });
 	}
@@ -1207,7 +1250,7 @@ var ElementPlayer = Element({
 		//Optional--game elements
 		this.isHuman = options.isHuman === undefined ? true : options.isHuman;
 		this.places = Vector.chain(location, {
-			segments: Settings.startSegments,
+			segments: Settings.startSegments + Math.floor(Math.random() * 5),
 			spacing: Settings.startSpacing,
 			direction: options.direction || 0
 		});
@@ -1217,8 +1260,14 @@ var ElementPlayer = Element({
 		this.speed = 1;
 		this.kink = 0;
 		this.dying = false;
+		this.loseElement = Math.random() * Settings.loseElementLimit;
 		this.dead = undefined;
-		this.name = options.name || "Unnamed Snake";
+
+		if (this.isHuman) {
+			this.name = options.name || "Unnamed Snake";
+		} else {
+			this.name = Settings.aiNames[Math.floor(Settings.aiNames.length * Math.random())];
+		}
 
 		//Optional--display elements.	
 		var colorLength = 1 + Math.random() * Settings.maxColorLength;
@@ -1267,6 +1316,13 @@ var ElementPlayer = Element({
 		};
 
 		var ret = this.constructor.copy(this);
+
+		ret.loseElement = ret.loseElement + this.places.length;
+		if (ret.loseElement > Settings.loseElementLimit && ret.places.length > 20) {
+			ret.places = ret.places.slice(0, ret.places.length - 1);
+			ret.loseElement = 0;
+		}
+
 		ret.speed = ret.kink / Math.sqrt(ret.places.length) + 1;
 		ret.location = Vector.average(ret.places);
 		if (ret.amountToGrow > 0) {
@@ -1279,7 +1335,7 @@ var ElementPlayer = Element({
 		var pointing = this.aim.sub(ret.places[0]).toUnit();
 		var directionScaled = goal.add(pointing).toUnit().scale(ret.speed);
 		var addendum = ret.places[0].add(directionScaled);
-		ret.box = new BoundingBox(this.places);
+		ret.box = new BoundingBox(ret.places);
 		ret.places.unshift(addendum);
 		ret.places.pop();
 		ret.kink = kinkiness(ret);
@@ -1295,7 +1351,11 @@ var ElementPlayer = Element({
 		ret.location = Vector.average(stuff.places);
 		ret.box = BoundingBox.copy(stuff.box);
 		var temp = new this(ret.location, {});
-		return _.merge(temp, ret);
+		var secondStep = _.merge(temp, ret);
+		secondStep.places = stuff.places.map(function (n) {
+			return Vector.copy(n);
+		});
+		return secondStep;
 	},
 	matters: function matters(element) {
 		return Utilities.foodPlayerCollision(element, this) || Utilities.playerPlayer(element, this);
@@ -1419,7 +1479,8 @@ var Settings = require('../../common/js/settings.js');
 var maker = function maker() {
 	var gameState = new ElementManager();
 	var gridId = gameState.addElement('grid', new Vector(0, 0), {});
-	for (var x = 0; x < Settings.foodStartAmount; x++) {
+	var foodStartAmount = Settings.foodMinimum();
+	for (var x = 0; x < foodStartAmount; x++) {
 		gameState.addElement('food', new Vector(Math.random() * Settings.gridSize, Math.random() * Settings.gridSize), {});
 	}
 	return gameState;
@@ -1476,6 +1537,50 @@ module.exports = Move;
 
 module.exports = {
 
+	alter: function alter(propName, propValue) {
+		if (propName in this && typeof propValue == typeof this[propName]) {
+			this[propName] = propValue;
+		} else {
+			throw new Error("Something went wrong when trying to set the settings.");
+		}
+	},
+
+	gridSizes: {
+		verysmall: 200,
+		small: 300,
+		medium: 400,
+		large: 500,
+		verylarge: 600
+	},
+
+	playerDensities: {
+		verysmall: 0,
+		small: 3,
+		medium: 5,
+		large: 7,
+		verylarge: 11
+	},
+
+	foodDensities: {
+		verysmall: 0,
+		small: 200,
+		medium: 400,
+		large: 600,
+		verylarge: 800
+	},
+
+	gridSize: 400,
+	playerDensity: 5,
+	foodDensity: 400,
+
+	foodMinimum: function foodMinimum() {
+		return this.gridSize * this.gridSize * 0.0000002 * this.foodDensity;
+	},
+
+	playerNumber: function playerNumber() {
+		return this.gridSize * this.gridSize * 0.000005 * this.playerDensity;
+	},
+
 	resizeRate: 50,
 	physicsRate: 25,
 	sendMoveInterval: 1,
@@ -1490,7 +1595,10 @@ module.exports = {
 
 	portNum: process.env.PORT || 3000,
 
-	gridSize: 500,
+	loseElementLimit: 5000,
+
+	aiNames: ['Winalagalis', 'Egle', 'Coi Coi-Vilu', 'Naga', 'Ouroboros', 'Serpent', 'Ajatar', 'Ilomba', 'Quetzalcoatl', 'Cockatrice', 'Fafnir', 'Sisiutl', 'Bashe', 'Nammu', 'Madre de Aguas', 'Falak'],
+
 	gridSpace: 50,
 	gridColor: '#CCC',
 
@@ -1506,9 +1614,9 @@ module.exports = {
 	minStripeLength: 10,
 	playerPossibleColors: ['black', '#444', '#50C878', '#FFD300', 'purple'],
 
-	framesToViewAfterDeath: 50,
+	framesToViewAfterDeath: 100,
 
-	roomCapacity: 3,
+	roomCapacity: 5,
 	roomDeleteInterval: 5000,
 
 	treeResolution: 2500,
@@ -1530,7 +1638,6 @@ module.exports = {
 "use strict";
 
 var UpdateMemory = function UpdateMemory(maxFrames) {
-
 	this.maxFrames = maxFrames;
 	this.updates = {};
 };

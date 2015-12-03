@@ -20,10 +20,42 @@
 			</div>
 			<input class="txt" type="text"   id="name" value="" placeholder="Unnamed Snake"></input></br>
 			<input class="btn" type="button" id="singular" value="Singleplayer"></input><br/>
-			<input class="btn" type="button" id="options" value = "Options"></input><br />
-			<div id="options"></div>
-			<input class="btn" type="button" id="multiplayer" value="Multiplayer - Beta"></input><br/>
-			<input class="btn" type="button" id="watch" value="Watch"></input><br/>
+			<input class="btn" type="button" id="advanced" value="Advanced"></input><br/>
+			<div id="advancedDisplay">
+				<input class="btn" type="button" id="options" value = "Singleplayer Options"></input><br />
+				<div id="optionsDisplay">
+					<div>
+						<label for="gridSize">Grid Size:</label>
+						<select class="dropDown" id="gridSize">
+							 <option value="verysmall">Very Small</option>
+							 <option value="small">Small</option>
+							 <option value="medium" selected="selected">Medium</option>
+							 <option value="large">Large</option>
+							 <option value="verylarge">Very Large</option>
+						</select>
+					</br>
+						<label for="playerDensity">AI Density:</label>
+						<select class="dropDown" id="playerDensity">
+							 <option value="verysmall">No AI</option>
+							 <option value="small">Low</option>
+							 <option value="medium" selected="selected">Medium</option>
+							 <option value="large">High</option>
+							 <option value="verylarge">Very High</option>
+						</select>
+					</br>
+						<label for="foodDensity">Food Density:</label>
+						<select class="dropDown" id="foodDensity">
+							 <option value="verysmall">No Food</option>
+							 <option value="small">Low</option>
+							 <option value="medium" selected="selected">Medium</option>
+							 <option value="large">High</option>
+							 <option value="verylarge">Very High</option>
+						</select>
+					</div>
+				</div>
+				<input class="btn" type="button" id="multiplayer" value="Multiplayer - Beta"></input><br/>
+				<input class="btn" type="button" id="watch" style="display: none" value="Watch"></input><br/>
+			</div>
 			<div class="advertisement">
 				<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 				<!-- MainAdd -->
